@@ -1,3 +1,4 @@
 # Group-ECHO
 
-Hi guys, testing... testing...
+Members:
+Justine Gulmatico
