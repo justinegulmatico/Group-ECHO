@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrustFund — Admin · Group Details</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/group-details.css" />
+</head>
+<body>
+  <div class="app-layout">
+
+    <!-- ══════════════════════════════
+         SIDEBAR
+    ══════════════════════════════ -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">TrustFund</div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">Main</div>
+
+        <a href="dashboard.html" class="sidebar-nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/>
+          </svg>
+          Dashboard
+        </a>
+        <a href="my-groups.html" class="sidebar-nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          My Groups
+        </a>
+        <a href="payments.html" class="sidebar-nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+          </svg>
+          Payments
+        </a>
+        <a href="my-profile.html" class="sidebar-nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          My Profile
+        </a>
+
+        <div class="sidebar-section-label">Admin</div>
+
+        <a href="admin-panel.html" class="sidebar-nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          Admin Panel
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="avatar admin-avatar" id="sidebar-avatar">SA</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">System Admin</div>
+          <div class="sidebar-user-role">Administrator</div>
+        </div>
+        <a href="../index.html" class="sidebar-logout-btn" title="Log out">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ══════════════════════════════
+         MAIN CONTENT
+    ══════════════════════════════ -->
+    <div class="main-content">
+
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <span class="topbar-title">Group Details</span>
+        </div>
+        <div class="topbar-right">
+          <button class="notif-btn" id="notif-btn" aria-label="Notifications">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Page Body — flex column so chat tab can fill remaining height -->
+      <div class="page-content" id="page-content">
+
+        <!-- ── Group Hero Banner ── -->
+        <div class="group-hero">
+          <div class="hero-action-btns">
+            <button class="hero-btn" onclick="openModal('modal-record-payment')">+Payment</button>
+            <button class="hero-btn" onclick="openModal('modal-record-payout')">+Payout</button>
+          </div>
+          <div class="hero-name" id="hero-name">—</div>
+          <div class="hero-desc" id="hero-desc">—</div>
+          <div class="hero-stats-row">
+            <div class="hero-stat">
+              <div class="hero-stat-label">Contribution</div>
+              <div class="hero-stat-value" id="stat-contribution">₱0</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-label">Total Slots</div>
+              <div class="hero-stat-value" id="stat-slots">0/0</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-label">Collected</div>
+              <div class="hero-stat-value" id="stat-collected">₱0</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-label">Frequency</div>
+              <div class="hero-stat-value" id="stat-frequency">—</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-label">Status</div>
+              <div class="hero-stat-value" id="stat-status">—</div>
+            </div>
+          </div>
+          <div class="hero-invite-row">
+            <div class="invite-code-pill">
+              Invite Code: <span class="invite-code-val" id="invite-code">——————<button class="invite-copy-btn" id="invite-copy-btn" onclick="copyInviteCode()">Copy</button></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Detail Tabs ── -->
+        <div class="detail-tabs">
+          <button class="detail-tab active" onclick="switchTab('overview', this)">Overview</button>
+          <button class="detail-tab" onclick="switchTab('members', this)">Members</button>
+          <button class="detail-tab" onclick="switchTab('schedule', this)">Schedule</button>
+          <button class="detail-tab" onclick="switchTab('payments', this)">Payments</button>
+          <button class="detail-tab" onclick="switchTab('chat', this)">Chat</button>
+        </div>
+
+        <!-- ══ TAB: OVERVIEW ══ -->
+        <div class="tab-panel active" id="tab-overview">
+          <div class="overview-stats">
+            <div class="overview-stat-card">
+              <div class="ov-label">Total Collected</div>
+              <div class="ov-value" id="ov-collected">₱0</div>
+            </div>
+            <div class="overview-stat-card">
+              <div class="ov-label">Total Paid Out</div>
+              <div class="ov-value green" id="ov-paidout">₱0</div>
+            </div>
+            <div class="overview-stat-card">
+              <div class="ov-label">In Pool</div>
+              <div class="ov-value green" id="ov-pool">₱0</div>
+            </div>
+            <div class="overview-stat-card">
+              <div class="ov-label">My Balance Due</div>
+              <div class="ov-value red" id="ov-balance">₱0</div>
+            </div>
+          </div>
+          <div class="upcoming-section">
+            <div class="upcoming-title">Upcoming Payouts</div>
+            <div id="upcoming-list">
+              <div class="upcoming-empty">No upcoming payouts.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ TAB: MEMBERS ══ -->
+        <div class="tab-panel" id="tab-members">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Slot</th>
+                  <th>Role</th>
+                  <th>Balance</th>
+                  <th>Payout</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="members-tbody">
+                <tr>
+                  <td colspan="6">
+                    <div class="table-empty">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                      </svg>
+                      <p>No members yet</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══ TAB: SCHEDULE ══ -->
+        <div class="tab-panel" id="tab-schedule">
+          <div class="schedule-list" id="schedule-list">
+            <div class="table-empty" style="padding:48px 24px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <path d="M16 2v4M8 2v4M3 10h18"/>
+              </svg>
+              <p>No schedule yet</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ TAB: PAYMENTS ══ -->
+        <div class="tab-panel" id="tab-payments">
+          <div class="payments-actions">
+            <button class="btn-record-payment" onclick="openModal('modal-record-payment')">+Record Payment</button>
+            <button class="btn-record-payout" onclick="openModal('modal-record-payout')">+Record Payout</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Slot</th>
+                  <th>Total Paid</th>
+                  <th>Owned</th>
+                  <th>Balance</th>
+                  <th>Payout</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="payments-tbody">
+                <tr>
+                  <td colspan="7">
+                    <div class="table-empty">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2"/>
+                        <path d="M2 10h20"/>
+                      </svg>
+                      <p>No payment records yet</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══ TAB: CHAT ══ -->
+        <div class="tab-panel chat-tab-panel" id="tab-chat">
+          <div class="chat-wrap">
+            <div class="chat-messages" id="chat-messages">
+              <div class="chat-empty" id="chat-empty">
+                <p>No messages yet. Start the conversation!</p>
+              </div>
+            </div>
+            <div class="chat-input-bar">
+              <input class="input-field chat-input" type="text"
+                     id="chat-input" placeholder="Type a message…" />
+              <button class="chat-send-btn" onclick="sendMessage()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /page-content -->
+    </div><!-- /main-content -->
+  </div><!-- /app-layout -->
+
+
+  <!-- ══════════════════════════════
+       MODAL: RECORD PAYMENT
+  ══════════════════════════════ -->
+  <div class="modal-backdrop" id="modal-record-payment">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Record Payment</span>
+        <button class="modal-close-btn" onclick="closeModal('modal-record-payment')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-record-payment" onsubmit="handleRecordPayment(event)">
+          <div class="form-group">
+            <label class="input-label" for="rp-member">Member</label>
+            <select class="select-field" id="rp-member">
+              <option value="">— Select member —</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div>
+              <label class="input-label" for="rp-amount">Amount (₱)</label>
+              <input class="input-field" type="number" id="rp-amount" min="1" placeholder="0" required />
+            </div>
+            <div>
+              <label class="input-label" for="rp-cycle">Cycle #</label>
+              <input class="input-field" type="number" id="rp-cycle" min="1" value="1" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="input-label" for="rp-method">Payment Method</label>
+            <select class="select-field" id="rp-method">
+              <option>Cash</option>
+              <option>GCash</option>
+              <option>Bank Transfer</option>
+              <option>Maya</option>
+            </select>
+          </div>
+          <button class="btn-primary" type="submit" style="margin-top:8px;">Record Payment</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       MODAL: RECORD PAYOUT
+  ══════════════════════════════ -->
+  <div class="modal-backdrop" id="modal-record-payout">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Record Payout</span>
+        <button class="modal-close-btn" onclick="closeModal('modal-record-payout')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-record-payout" onsubmit="handleRecordPayout(event)">
+          <div class="form-group">
+            <label class="input-label" for="rpay-member">Member</label>
+            <select class="select-field" id="rpay-member">
+              <option value="">— Select member —</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div>
+              <label class="input-label" for="rpay-amount">Amount (₱)</label>
+              <input class="input-field" type="number" id="rpay-amount" min="1" placeholder="0" required />
+            </div>
+            <div>
+              <label class="input-label" for="rpay-cycle">Cycle #</label>
+              <input class="input-field" type="number" id="rpay-cycle" min="1" value="1" required />
+            </div>
+          </div>
+          <button class="btn-primary" type="submit" style="margin-top:8px;">Record Payout</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       NOTIFICATION PANEL
+  ══════════════════════════════ -->
+  <div class="notif-overlay" id="notif-overlay"></div>
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-panel-header">
+      <span class="notif-panel-title">Notifications</span>
+      <button class="mark-all-btn" onclick="markAllRead()">Mark all read</button>
+    </div>
+    <div class="notif-list" id="notif-list">
+      <div class="notif-empty">
+        <p>No notifications</p>
+        <span>You're all caught up!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       TOAST
+  ══════════════════════════════ -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+  /* ═══════════════════════════════════════════════
+     STATE
+  ═══════════════════════════════════════════════ */
+  const state = {
+    members: [],       // { id, name, username, slot, role, totalPaid, owned, balance, payout }
+    payments: [],      // { id, memberId, memberName, slot, amount, owned, balance, payout, method, cycle, date }
+    payouts: [],       // { id, memberId, memberName, amount, cycle, date }
+    notifications: [], // { id, title, body, time, read }
+    messages: [],      // { id, author, text, time, mine }
+    group: {
+      name: '—', desc: '—', contribution: 0,
+      slots: 0, filled: 0, collected: 0,
+      frequency: '—', status: '—', inviteCode: '——————'
+    }
+  };
+
+  /* ═══════════════════════════════════════════════
+     TABS
+  ═══════════════════════════════════════════════ */
+  function switchTab(name, btn) {
+    document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+
+    // When chat tab opens, scroll messages to bottom
+    if (name === 'chat') {
+      setTimeout(() => {
+        const msgs = document.getElementById('chat-messages');
+        msgs.scrollTop = msgs.scrollHeight;
+      }, 50);
+    }
+  }
+
+  /* ═══════════════════════════════════════════════
+     MODALS
+  ═══════════════════════════════════════════════ */
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  // Close modal on backdrop click
+  document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+    backdrop.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('open');
+    });
+  });
+
+  // Close modal on Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
+      closeNotifPanel();
+    }
+  });
+
+  /* ═══════════════════════════════════════════════
+     RECORD PAYMENT
+  ═══════════════════════════════════════════════ */
+  function handleRecordPayment(e) {
+    e.preventDefault();
+    const memberId = document.getElementById('rp-member').value;
+    const amount   = parseFloat(document.getElementById('rp-amount').value);
+    const cycle    = parseInt(document.getElementById('rp-cycle').value);
+    const method   = document.getElementById('rp-method').value;
+
+    if (!memberId) { showToast('Please select a member.', 'error'); return; }
+    if (!amount || amount <= 0) { showToast('Enter a valid amount.', 'error'); return; }
+
+    const member = state.members.find(m => m.id === memberId);
+    if (!member) return;
+
+    const payment = {
+      id: Date.now(),
+      memberId,
+      memberName: member.name,
+      slot: member.slot,
+      amount,
+      owned: member.owned,
+      balance: Math.max(0, (member.balance || 0) - amount),
+      payout: member.payout,
+      method,
+      cycle,
+      date: new Date().toLocaleDateString()
+    };
+
+    state.payments.push(payment);
+    member.totalPaid = (member.totalPaid || 0) + amount;
+    member.balance   = Math.max(0, (member.balance || 0) - amount);
+    state.group.collected += amount;
+
+    renderPaymentsTab();
+    renderMembersTab();
+    updateHeroStats();
+    updateOverviewStats();
+
+    addNotification('Payment Recorded', `₱${amount.toLocaleString()} recorded for ${member.name} (Cycle ${cycle}).`);
+    showToast('Payment recorded successfully!', 'success');
+    closeModal('modal-record-payment');
+    document.getElementById('form-record-payment').reset();
+  }
+
+  /* ═══════════════════════════════════════════════
+     RECORD PAYOUT
+  ═══════════════════════════════════════════════ */
+  function handleRecordPayout(e) {
+    e.preventDefault();
+    const memberId = document.getElementById('rpay-member').value;
+    const amount   = parseFloat(document.getElementById('rpay-amount').value);
+    const cycle    = parseInt(document.getElementById('rpay-cycle').value);
+
+    if (!memberId) { showToast('Please select a member.', 'error'); return; }
+    if (!amount || amount <= 0) { showToast('Enter a valid amount.', 'error'); return; }
+
+    const member = state.members.find(m => m.id === memberId);
+    if (!member) return;
+
+    const payout = { id: Date.now(), memberId, memberName: member.name, amount, cycle, date: new Date().toLocaleDateString() };
+    state.payouts.push(payout);
+    member.payout = (member.payout || 0) + amount;
+
+    renderMembersTab();
+    renderPaymentsTab();
+    renderScheduleTab();
+    updateOverviewStats();
+
+    addNotification('Payout Recorded', `₱${amount.toLocaleString()} paid out to ${member.name} (Cycle ${cycle}).`);
+    showToast('Payout recorded successfully!', 'success');
+    closeModal('modal-record-payout');
+    document.getElementById('form-record-payout').reset();
+  }
+
+  /* ═══════════════════════════════════════════════
+     RENDER: MEMBERS TAB
+  ═══════════════════════════════════════════════ */
+  function renderMembersTab() {
+    const tbody = document.getElementById('members-tbody');
+    if (state.members.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="table-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg><p>No members yet</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = state.members.map(m => `
+      <tr>
+        <td>
+          <div class="user-cell">
+            <div class="user-cell-avatar">${initials(m.name)}</div>
+            <div>
+              <div class="user-cell-name">${m.name}</div>
+              <div class="user-cell-sub">@${m.username}</div>
+            </div>
+          </div>
+        </td>
+        <td>Slot ${m.slot}</td>
+        <td><span class="badge ${m.role === 'Owner' ? 'badge-owner' : 'badge-member'}">${m.role}</span></td>
+        <td class="${(m.balance || 0) > 0 ? 'text-red' : ''}">${(m.balance || 0) > 0 ? '₱' + m.balance.toLocaleString() + ' due' : '₱0'}</td>
+        <td><span class="badge ${(m.payout || 0) > 0 ? 'badge-paid' : 'badge-pending'}">${(m.payout || 0) > 0 ? 'Received' : 'Pending'}</span></td>
+        <td><button class="btn-edit-slot">Edit Slot</button></td>
+      </tr>`).join('');
+  }
+
+  /* ═══════════════════════════════════════════════
+     RENDER: PAYMENTS TAB
+  ═══════════════════════════════════════════════ */
+  function renderPaymentsTab() {
+    const tbody = document.getElementById('payments-tbody');
+    if (state.payments.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7"><div class="table-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+        </svg><p>No payment records yet</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = state.payments.map(p => `
+      <tr>
+        <td>
+          <div class="user-cell">
+            <div class="user-cell-avatar">${initials(p.memberName)}</div>
+            <div class="user-cell-name">${p.memberName}</div>
+          </div>
+        </td>
+        <td>${p.slot}</td>
+        <td>₱${p.amount.toLocaleString()}</td>
+        <td>₱${(p.owned || 0).toLocaleString()}</td>
+        <td class="${(p.balance || 0) > 0 ? 'text-red' : ''}">₱${(p.balance || 0).toLocaleString()}${(p.balance || 0) > 0 ? ' owned' : ''}</td>
+        <td>${(p.payout || 0) > 0 ? '₱' + p.payout.toLocaleString() : '—'}</td>
+        <td><button class="btn-icon-sm">···</button></td>
+      </tr>`).join('');
+  }
+
+  /* ═══════════════════════════════════════════════
+     RENDER: SCHEDULE TAB
+  ═══════════════════════════════════════════════ */
+  function renderScheduleTab() {
+    const list = document.getElementById('schedule-list');
+    if (state.members.length === 0) {
+      list.innerHTML = `<div class="table-empty" style="padding:48px 24px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+        </svg><p>No schedule yet</p></div>`;
+      return;
+    }
+    list.innerHTML = state.members
+      .sort((a, b) => a.slot - b.slot)
+      .map(m => `
+        <div class="schedule-row ${m.isMe ? 'is-mine' : ''}">
+          <div class="schedule-row-left">
+            <div class="schedule-slot-num">${m.slot}</div>
+            <div>
+              <div class="schedule-member-name">${m.name}${m.isMe ? ' <span class="schedule-member-tag">(You)</span>' : ''}</div>
+            </div>
+          </div>
+          <div class="schedule-amount">₱${state.group.contribution.toLocaleString()}</div>
+        </div>`).join('');
+  }
+
+  /* ═══════════════════════════════════════════════
+     RENDER: OVERVIEW STATS
+  ═══════════════════════════════════════════════ */
+  function updateOverviewStats() {
+    const totalPaidOut = state.payouts.reduce((s, p) => s + p.amount, 0);
+    const inPool       = state.group.collected - totalPaidOut;
+    const myBalance    = state.members.find(m => m.isMe)?.balance || 0;
+
+    document.getElementById('ov-collected').textContent = '₱' + state.group.collected.toLocaleString();
+    document.getElementById('ov-paidout').textContent   = '₱' + totalPaidOut.toLocaleString();
+    document.getElementById('ov-pool').textContent      = '₱' + Math.max(0, inPool).toLocaleString();
+    document.getElementById('ov-balance').textContent   = '₱' + myBalance.toLocaleString();
+
+    // Upcoming payouts list
+    const upcomingList = document.getElementById('upcoming-list');
+    const sorted = [...state.members].sort((a, b) => a.slot - b.slot).filter(m => (m.payout || 0) === 0);
+    if (sorted.length === 0) {
+      upcomingList.innerHTML = '<div class="upcoming-empty">No upcoming payouts.</div>';
+    } else {
+      upcomingList.innerHTML = sorted.map((m, i) => `
+        <div class="upcoming-row ${m.isMe ? 'is-mine' : ''}">
+          <div class="upcoming-row-left">
+            <div class="upcoming-slot-num">${m.slot}</div>
+            <div>
+              <div class="upcoming-name">${m.name}${m.isMe ? ' (You)' : ''}</div>
+            </div>
+          </div>
+          <div class="upcoming-amount">₱${state.group.contribution.toLocaleString()}</div>
+        </div>`).join('');
+    }
+  }
+
+  /* ═══════════════════════════════════════════════
+     HERO STATS
+  ═══════════════════════════════════════════════ */
+  function updateHeroStats() {
+    document.getElementById('stat-collected').textContent = '₱' + state.group.collected.toLocaleString();
+  }
+
+  /* ═══════════════════════════════════════════════
+     MEMBER SELECTS (for modals)
+  ═══════════════════════════════════════════════ */
+  function populateMemberSelects() {
+    const opts = state.members.length
+      ? state.members.map(m => `<option value="${m.id}">${m.name}</option>`).join('')
+      : '<option value="">No members yet</option>';
+    document.getElementById('rp-member').innerHTML   = '<option value="">— Select member —</option>' + opts;
+    document.getElementById('rpay-member').innerHTML = '<option value="">— Select member —</option>' + opts;
+  }
+
+  /* ═══════════════════════════════════════════════
+     INVITE CODE COPY
+  ═══════════════════════════════════════════════ */
+  function copyInviteCode() {
+    const code = document.getElementById('invite-code').textContent.trim();
+    if (code === '——————') { showToast('No invite code available.', 'error'); return; }
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.getElementById('invite-copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 1800);
+      showToast('Invite code copied!', 'success');
+    });
+  }
+
+  /* ═══════════════════════════════════════════════
+     CHAT
+  ═══════════════════════════════════════════════ */
+  function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const text  = input.value.trim();
+    if (!text) return;
+
+    const empty = document.getElementById('chat-empty');
+    if (empty) empty.remove();
+
+    const msg = { id: Date.now(), author: 'You', text, time: now(), mine: true };
+    state.messages.push(msg);
+
+    const messages = document.getElementById('chat-messages');
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble mine';
+    bubble.innerHTML = `
+      <div class="bubble-inner">
+        <div class="bubble-text">${escHtml(text)}</div>
+        <div class="bubble-time">${msg.time}</div>
+      </div>`;
+    messages.appendChild(bubble);
+    messages.scrollTop = messages.scrollHeight;
+    input.value = '';
+  }
+
+  document.getElementById('chat-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  /* ═══════════════════════════════════════════════
+     NOTIFICATIONS
+  ═══════════════════════════════════════════════ */
+  document.getElementById('notif-btn').addEventListener('click', toggleNotifPanel);
+  document.getElementById('notif-overlay').addEventListener('click', closeNotifPanel);
+
+  function toggleNotifPanel() {
+    const panel   = document.getElementById('notif-panel');
+    const overlay = document.getElementById('notif-overlay');
+    const isOpen  = panel.classList.contains('open');
+    if (isOpen) { closeNotifPanel(); } else { panel.classList.add('open'); overlay.classList.add('open'); }
+  }
+
+  function closeNotifPanel() {
+    document.getElementById('notif-panel').classList.remove('open');
+    document.getElementById('notif-overlay').classList.remove('open');
+  }
+
+  function addNotification(title, body) {
+    const notif = { id: Date.now(), title, body, time: now(), read: false };
+    state.notifications.unshift(notif);
+    renderNotifications();
+    updateNotifBadge();
+  }
+
+  function renderNotifications() {
+    const list = document.getElementById('notif-list');
+    if (state.notifications.length === 0) {
+      list.innerHTML = `<div class="notif-empty"><p>No notifications</p><span>You're all caught up!</span></div>`;
+      return;
+    }
+    list.innerHTML = state.notifications.map(n => `
+      <div class="notif-item ${n.read ? '' : 'unread'}" onclick="readNotif(${n.id})">
+        <div class="notif-dot" ${n.read ? 'style="visibility:hidden"' : ''}></div>
+        <div>
+          <div class="notif-item-text">${n.title}</div>
+          <div class="notif-item-body">${n.body}</div>
+          <div class="notif-item-time">${n.time}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  function readNotif(id) {
+    const n = state.notifications.find(n => n.id === id);
+    if (n) n.read = true;
+    renderNotifications();
+    updateNotifBadge();
+  }
+
+  function markAllRead() {
+    state.notifications.forEach(n => n.read = true);
+    renderNotifications();
+    updateNotifBadge();
+  }
+
+  function updateNotifBadge() {
+    const unread = state.notifications.filter(n => !n.read).length;
+    const badge  = document.getElementById('notif-badge');
+    badge.style.display = unread > 0 ? 'flex' : 'none';
+    badge.textContent   = unread;
+  }
+
+  /* ═══════════════════════════════════════════════
+     TOAST
+  ═══════════════════════════════════════════════ */
+  function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  /* ═══════════════════════════════════════════════
+     HELPERS
+  ═══════════════════════════════════════════════ */
+  function initials(name) {
+    return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+  }
+
+  function now() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  </script>
+</body>
+</html>
