@@ -127,7 +127,7 @@
         <!-- Active Groups Section -->
         <div class="section-header">
           <span class="section-title">Active Groups</span>
-          <button class="new-group-btn">+ New Group</button>
+          <button class="new-group-btn" id="open-create-modal">+ New Group</button>
         </div>
 
         <!-- Empty State (default — no groups yet) -->
@@ -170,7 +170,85 @@
       </div>
     </div>
   </div>
+  <div class="modal-overlay" id="modal-create" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Create New Group</span>
+        <button class="modal-close" type="button">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="input-label" for="cg-name">Group Name</label>
+          <input class="input-field" id="cg-name" type="text" placeholder="e.g. Barkada Savings 2025" />
+        </div>
+        <div class="form-group">
+          <label class="input-label" for="cg-desc">Description <span style="font-weight:400;color:#7c7c7c;">(optional)</span></label>
+          <input class="input-field" id="cg-desc" type="text" placeholder="What is this group for?" />
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label class="input-label" for="cg-amount">Contribution Amount (₱)</label>
+            <input class="input-field" id="cg-amount" type="number" placeholder="1000" min="1" />
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="input-label" for="cg-slots">Total Slots</label>
+            <input class="input-field" id="cg-slots" type="number" placeholder="10" min="2" max="50" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label class="input-label" for="cg-frequency">Payment Frequency</label>
+            <select class="input-field" id="cg-frequency">
+              <option value="monthly">Monthly</option>
+              <option value="biweekly">Bi-weekly</option>
+              <option value="weekly">Weekly</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="input-label" for="cg-startdate">Start Date</label>
+            <input class="input-field" id="cg-startdate" type="date" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" type="button">Create Group</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-container" id="toast-container"></div>
+  <script>
+    const openCreateModal = document.getElementById('open-create-modal');
+    const modalCreate = document.getElementById('modal-create');
+    const modalClose = modalCreate?.querySelector('.modal-close');
+    const cancelCreateModal = document.getElementById('cancel-create-modal');
+
+    const closeModal = () => {
+      if (modalCreate) modalCreate.style.display = 'none';
+    };
+
+    if (openCreateModal) {
+      openCreateModal.addEventListener('click', () => {
+        if (modalCreate) modalCreate.style.display = 'flex';
+      });
+    }
+
+    if (modalClose) {
+      modalClose.addEventListener('click', closeModal);
+    }
+
+    if (cancelCreateModal) {
+      cancelCreateModal.addEventListener('click', closeModal);
+    }
+
+    if (modalCreate) {
+      modalCreate.addEventListener('click', event => {
+        if (event.target === modalCreate) {
+          closeModal();
+        }
+      });
+    }
+  </script>
   <script src="../js/notifications.js"></script>
 </body>
 </html>

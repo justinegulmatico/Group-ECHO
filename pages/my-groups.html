@@ -114,7 +114,7 @@
           </div>
           <div class="toolbar-right">
             <button class="btn-outline">Join with Code</button>
-            <button class="btn-create">+ Create Group</button>
+            <button class="btn-create" id="open-create-modal">+ Create Group</button>
           </div>
         </div>
 
@@ -217,8 +217,7 @@
 
       </div>
       <div class="modal-footer">
-        <button class="btn-outline">Cancel</button>
-        <button class="btn-create">Create Group</button>
+        <button class="btn-primary" type="button">Create Group</button>
       </div>
     </div>
   </div>
@@ -274,6 +273,29 @@
     </div>
   </div>
   <div class="toast-container" id="toast-container"></div>
+  <script>
+    const openCreateModal = document.getElementById('open-create-modal');
+    const modalCreate = document.getElementById('modal-create');
+
+    if (openCreateModal && modalCreate) {
+      openCreateModal.addEventListener('click', () => {
+        modalCreate.style.display = 'flex';
+      });
+
+      const closeButtons = modalCreate.querySelectorAll('.modal-close, .btn-outline');
+      closeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          modalCreate.style.display = 'none';
+        });
+      });
+
+      modalCreate.addEventListener('click', event => {
+        if (event.target === modalCreate) {
+          modalCreate.style.display = 'none';
+        }
+      });
+    }
+  </script>
   <script src="../js/notifications.js"></script>
 </body>
 </html>
