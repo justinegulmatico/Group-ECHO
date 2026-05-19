@@ -126,6 +126,78 @@
   background: var(--color-primary-hover);
 }
 
+/* ── Create Group Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.32);
+  z-index: 400;
+}
+
+.modal {
+  width: 100%;
+  max-width: 520px;
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.modal-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  background: var(--color-border);
+}
+
+.modal-body {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.modal-footer {
+  padding: 18px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
 /* ── Tables ── */
 .table-wrap {
   background: var(--color-surface);
