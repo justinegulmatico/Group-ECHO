@@ -93,6 +93,17 @@
   border-color: #ccc;
 }
 
+/* Toolbar-specific: make the Join with Code button a consistent size */
+.page-toolbar .btn-outline {
+  height: 44px;
+  min-width: 140px;
+  border-radius: 12px;
+  padding: 10px 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .btn-create {
   display: inline-flex;
   align-items: center;
@@ -337,15 +348,6 @@
 }
 
 /* ── Join preview box ── */
-.join-preview {
-  background: var(--color-surface-muted);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
 
 .join-preview-name {
   font-size: 15px;
@@ -356,4 +358,163 @@
 .join-preview-meta {
   font-size: 13px;
   color: var(--color-text-secondary);
+}
+
+/* =========================================
+   JOIN WITH CODE MODAL IMPROVEMENTS
+========================================= */
+
+.hidden {
+  display: none !important;
+}
+
+.modal-join {
+  background: rgba(0,0,0,0.24);
+}
+
+.modal {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Smooth opening */
+@keyframes joinModalFade {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header */
+.modal-header {
+  padding: 22px 22px 18px;
+}
+
+/* Body */
+.modal-body {
+  padding: 20px 22px;
+}
+
+.modal-footer {
+  padding: 16px 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-preview, .btn-outline {
+  width: 100%;
+  min-height: 48px;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.btn-create {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
+  padding: 10px 18px;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* Input */
+.join-code {
+  height: 48px;
+  border-radius: 14px;
+  font-size: 14px;
+  border: 1px solid var(--color-border);
+  padding: 0 14px;
+}
+
+/* Preview box */
+.join-preview {
+  margin-top: 8px;
+  background: #FFF7F2;
+  border: 1.5px solid #F2D7C9;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: previewFade 0.2s ease;
+}
+
+@keyframes previewFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.join-preview-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.join-preview-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.join-preview-meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 3px;
+}
+
+/* Progress bar */
+.join-preview-progress {
+  width: 100%;
+  height: 6px;
+  background: #F3E5DB;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.join-preview-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--color-primary);
+  border-radius: 999px;
+  transition: width 0.35s ease;
+}
+
+/* Members */
+.join-preview-members {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.join-preview-members span {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.btn-create:hover {
+  background: var(--color-primary-hover);
+}
+
+/* Mobile */
+@media (max-width: 520px) {
+  .modal {
+    max-width: 100%;
+    border-radius: 16px;
+  }
 }

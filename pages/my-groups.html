@@ -226,7 +226,7 @@
   <!-- ══════════════════════════════
        JOIN WITH CODE MODAL
   ══════════════════════════════ -->
-  <div class="modal-overlay" id="modal-join" style="display:none;">
+  <div class="modal-overlay modal-join" style="display:none;">
     <div class="modal">
       <div class="modal-header">
         <span class="modal-title">Join a Group</span>
@@ -235,9 +235,9 @@
       <div class="modal-body">
 
         <div class="form-group">
-          <label class="input-label" for="join-code">Invite Code</label>
-          <input class="input-field" id="join-code" type="text"
-                 placeholder="Enter 6-character code" maxlength="8" />
+          <label class="input-label" for="join-code">Invite code</label>
+          <input class="input-field join-code" id="join-code" type="text"
+                 placeholder="Enter code" maxlength="8" />
         </div>
 
         <!-- Join preview — shown after code lookup -->
@@ -251,7 +251,7 @@
 
       </div>
       <div class="modal-footer">
-        <button class="btn-outline">Preview</button>
+        <button class="btn-outline btn-preview">Preview</button>
         <button class="btn-create">Request to Join</button>
       </div>
     </div>
@@ -295,6 +295,173 @@
         }
       });
     }
+  </script>
+  /* =========================================
+     JOIN WITH CODE MODAL
+  ========================================= */
+  <script>
+    const joinBtn = document.querySelector('.btn-outline');
+    const joinModal = document.querySelector('.modal-join');
+    const joinCodeInput = document.querySelector('.join-code');
+
+  const joinCloseBtns =
+    joinModal.querySelectorAll('.modal-close');
+
+  const previewBtn =
+    joinModal.querySelector('.modal-footer .btn-outline');
+
+  const requestBtn =
+    joinModal.querySelector('.modal-footer .btn-create');
+
+  /* =========================================
+     CREATE PREVIEW CARD
+  ========================================= */
+
+  const joinPreviewContainer = document.createElement('div');
+
+  joinPreviewContainer.className =
+    'join-preview hidden';
+
+  joinPreviewContainer.innerHTML = `
+    <div class="join-preview-top">
+      <div>
+        <div class="join-preview-name" id="preview-name"></div>
+        <div class="join-preview-meta" id="preview-meta"></div>
+      </div>
+
+      <span class="badge badge-active">
+        active
+      </span>
+    </div>
+
+    <div class="join-preview-progress">
+      <div class="join-preview-progress-fill"></div>
+    </div>
+
+    <div class="join-preview-members">
+      <div class="member-chips">
+        <div class="member-chip">--</div>
+      </div>
+
+      <span id="preview-members-text"></span>
+    </div>
+  `;
+
+  joinModal
+    .querySelector('.modal-body')
+    .appendChild(joinPreviewContainer);
+
+  /* Hide request button initially */
+  requestBtn.style.display = 'none';
+
+  /* =========================================
+     OPEN JOIN MODAL
+  ========================================= */
+
+  joinBtn.addEventListener('click', () => {
+    joinModal.style.display = 'flex';
+  });
+
+  /* =========================================
+     CLOSE JOIN MODAL
+  ========================================= */
+
+  function closeJoinModal() {
+    joinModal.style.display = 'none';
+
+    joinCodeInput.value = '';
+
+    joinPreviewContainer.classList.add('hidden');
+
+    requestBtn.style.display = 'none';
+  }
+
+  joinCloseBtns.forEach(btn => {
+    btn.addEventListener('click', closeJoinModal);
+  });
+
+  joinModal.addEventListener('click', e => {
+    if (e.target === joinModal) {
+      closeJoinModal();
+    }
+  });
+
+  /* =========================================
+     PREVIEW GROUP
+  ========================================= */
+
+  previewBtn.addEventListener('click', () => {
+    const code =
+      joinCodeInput.value.trim().toUpperCase();
+
+    if (!code) {
+      alert('Please enter a group code.');
+      return;
+    }
+
+    /*
+      No groups yet.
+      Replace this later with real database lookup.
+    */
+    const group = null;
+
+    /* =====================================
+       NO GROUP FOUND
+    ===================================== */
+
+    if (!group) {
+      joinPreviewContainer.classList.remove('hidden');
+
+      const badgeEl = joinPreviewContainer.querySelector('.badge');
+      if (badgeEl) badgeEl.style.display = 'none';
+
+      document.getElementById('preview-name').textContent = 'No group found';
+
+      document.getElementById('preview-meta').textContent =
+        'The code you entered is invalid.';
+
+      joinPreviewContainer
+        .querySelector('.join-preview-progress-fill')
+        .style.width = '0%';
+
+      document.getElementById('preview-members-text').textContent = '';
+
+      requestBtn.style.display = 'none';
+
+      return;
+    }
+
+    /* =====================================
+       FUTURE REAL GROUP DATA
+    ===================================== */
+
+    document.getElementById('preview-name').textContent = group.name;
+
+    document.getElementById('preview-meta').textContent =
+      `${group.frequency} · ${group.amount}`;
+
+    document.getElementById('preview-members-text').textContent = group.members;
+
+    joinPreviewContainer
+      .querySelector('.join-preview-progress-fill')
+      .style.width = group.progress;
+
+    const badgeEl2 = joinPreviewContainer.querySelector('.badge');
+    if (badgeEl2) badgeEl2.style.display = 'inline-flex';
+
+    joinPreviewContainer.classList.remove('hidden');
+
+    requestBtn.style.display = 'inline-flex';
+  });
+
+  /* =========================================
+     REQUEST TO JOIN
+  ========================================= */
+
+  requestBtn.addEventListener('click', () => {
+    alert('Join request sent successfully!');
+    closeJoinModal();
+  });
   </script>
   <script src="../js/notifications.js"></script>
 </body>
