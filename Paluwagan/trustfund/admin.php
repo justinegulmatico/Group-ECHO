@@ -1,6 +1,6 @@
 <?php
 session_start();
-include "db.php";
+include "back-end/db.php";
 
 // Core Absolute Security Gate: Only let 'admin' accounts render this script
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {

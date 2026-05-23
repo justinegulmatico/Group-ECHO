@@ -1,6 +1,6 @@
 <?php
 session_start();
-include "db.php";
+include "back-end/db.php";
 
 // 1. Force safety checkpoint redirect if no logged-in user session exists
 if (!isset($_SESSION['user_id'])) {

@@ -301,3 +301,65 @@
   font-weight: 400;
   margin-left: 4px;
 }
+
+/* ==========================================================================
+   TrustFund Tab & Form Dynamic Behavior
+   ========================================================================== */
+
+/* Hide inactive tab contents by default */
+.tab-content {
+    display: none;
+}
+
+/* Display active tab content with smooth fade-in animation */
+.tab-content.active {
+    display: block;
+    animation: authFadeIn 0.3s ease;
+}
+
+/* Keyframes for the tab switching entry effect */
+@keyframes authFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dynamic Notification Alert Typography */
+.error-msg {
+    color: #e8481a;
+    font-size: 0.85rem;
+    margin-top: 10px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.success-msg {
+    color: #2e7d32;
+    font-size: 0.85rem;
+    margin-top: 10px;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Grid layout splitting for inline registration fields (e.g., Email & Phone) */
+.form-row {
+    display: flex;
+    gap: 12px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+/* Viewport restriction & custom scrolling logic for the long registration form */
+.auth-right-inner {
+    max-height: 92vh;
+    overflow-y: auto;
+    padding-right: 10px;
+    scrollbar-width: thin;
+}
