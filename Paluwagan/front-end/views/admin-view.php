@@ -1,171 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TrustFund — Admin Panel</title>
-    <link rel="stylesheet" href="../../assets/css/global.css" />
-    <link rel="stylesheet" href="../../assets/css/admin-panel.css" />
+  <meta charset="UTF-8" />
+  <title>TrustFund — Admin Panel</title>
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <link rel="stylesheet" href="../../assets/css/admin-panel.css" />
+  <link rel="stylesheet" href="../../assets/css/group-details.css" />
 </head>
-<body class="flex min-h-screen text-gray-800 antialiased">
-
+<body>
+  <div class="app-layout">
     <?php include "components/sidebar-view.php"; ?>
+    <div class="main-content">
+      <header class="topbar">
+        <span class="topbar-title">Admin Panel</span>
+      </header>
 
-    <div class="flex-1 flex flex-col pl-64">
-        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-10">
-            <div class="flex items-center space-x-3">
-                <button class="p-1.5 text-gray-500 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100">
-                    <i class="fa-solid fa-bars text-md"></i>
-                </button>
-                <h2 class="text-xl font-medium text-gray-800">Admin Panel</h2>
-            </div>
-            <button class="p-2 text-gray-500 hover:text-gray-800 relative bg-gray-50 rounded-full border border-gray-200">
-                <i class="fa-solid fa-bell text-lg"></i>
-            </button>
-        </header>
+      <div class="page-content">
+        <?php if (isset($_GET['success'])): ?>
+          <div style="background:#f0fdf4; color:#166534; padding:12px; margin-bottom:20px; border-radius:8px; border:1px solid #bbf7d0;">
+            <?= htmlspecialchars($_GET['success']); ?>
+          </div>
+        <?php endif; ?>
 
-        <main class="p-8 max-w-7xl w-full mx-auto space-y-8">
-            
-            <?php if (isset($_GET['success'])): ?>
-                <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm">
-                    <?= htmlspecialchars($_GET['success']); ?>
-                </div>
-            <?php endif; ?>
+        <div class="stat-cards">
+          <div class="stat-card" onclick="openSection('verifications-section')">
+            <div class="stat-card-label">Pending Approval</div>
+            <div class="stat-card-value amber"><?= $pending_verifications; ?></div>
+          </div>
+          <div class="stat-card" onclick="openSection('users-section')">
+            <div class="stat-card-label">Total Users</div>
+            <div class="stat-card-value"><?= $total_users; ?></div>
+          </div>
+          <div class="stat-card" onclick="openSection('groups-section')">
+            <div class="stat-card-label">Total Groups</div>
+            <div class="stat-card-value"><?= $total_groups; ?></div>
+          </div>
+        </div>
 
-            <div class="bg-[#2D2D2D] text-white rounded-2xl p-6 flex items-center space-x-4 shadow-sm">
-                <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500 flex items-center justify-center text-orange-500 text-xl">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </div>
-                <div>
-                    <h3 class="text-xl font-semibold tracking-wide">Admin Panel</h3>
-                    <p class="text-sm text-gray-400">Manage users, verify accounts, oversee all groups</p>
-                </div>
-            </div>
+        <div class="detail-tabs" style="margin-bottom:20px;">
+          <button class="detail-tab active" id="btn-verifications-section" onclick="openSection('verifications-section')">Approvals</button>
+          <button class="detail-tab" id="btn-users-section" onclick="openSection('users-section')">Users</button>
+          <button class="detail-tab" id="btn-groups-section" onclick="openSection('groups-section')">Groups</button>
+        </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-                    <p class="text-sm font-medium text-gray-400">Total Users</p>
-                    <h4 class="text-4xl font-normal mt-2 text-gray-900"><?= $total_users; ?></h4>
-                </div>
-                <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-                    <p class="text-sm font-medium text-gray-400">Pending Verification</p>
-                    <h4 class="text-4xl font-normal mt-2 text-amber-600"><?= $pending_verifications; ?></h4>
-                </div>
-                <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-                    <p class="text-sm font-medium text-gray-400">Total Groups</p>
-                    <h4 class="text-4xl font-normal mt-2 text-gray-900"><?= $total_groups; ?></h4>
-                </div>
-                <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-                    <p class="text-sm font-medium text-gray-400">Active Groups</p>
-                    <h4 class="text-4xl font-normal mt-2 text-emerald-600"><?= $active_groups; ?></h4>
-                </div>
-            </div>
+        <div class="admin-panel-section" id="verifications-section">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Email</th><th>Date</th><th>Action</th></tr></thead>
+              <tbody>
+                <?php while ($v = mysqli_fetch_assoc($verifications_res)): ?>
+                  <tr>
+                    <td><?= htmlspecialchars($v['first_name']." ".$v['last_name']); ?></td>
+                    <td><?= htmlspecialchars($v['email']); ?></td>
+                    <td><?= date('M d, Y - h:i A', strtotime($v['submitted_at'])); ?></td>
+                    <td>
+                      <button onclick="openDetailsModal('<?= $v['verification_id']; ?>','<?= $v['first_name'].' '.$v['last_name']; ?>','<?= $v['username']; ?>','<?= $v['email']; ?>','<?= $v['phone']; ?>','<?= $v['occupation']; ?>','<?= $v['address']; ?>','<?= $v['user_id']; ?>','<?= $v['document']; ?>')" class="btn-primary">View Details</button>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-            <div class="space-y-3">
-                <h3 class="text-lg font-semibold text-gray-900">All Users</h3>
-                <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead>
-                            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                                <th class="px-6 py-3.5">User</th>
-                                <th class="px-6 py-3.5">Email</th>
-                                <th class="px-6 py-3.5">Status</th>
-                                <th class="px-6 py-3.5">Joined</th>
-                                <th class="px-6 py-3.5">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 font-medium">
-                            <?php if (mysqli_num_rows($users_res) > 0): ?>
-                                <?php while ($row = mysqli_fetch_assoc($users_res)): 
-                                    $user_initial = strtoupper(substr($row['first_name'], 0, 1));
-                                    $status_label = "suspended"; 
-                                    $status_class = "bg-rose-50 text-rose-600 border-rose-100";
-                                ?>
-                                    <tr class="hover:bg-gray-50/50 transition">
-                                        <td class="px-6 py-4 flex items-center space-x-3">
-                                            <div class="w-9 h-9 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-xs">
-                                                <?= $user_initial; ?>
-                                            </div>
-                                            <div>
-                                                <p class="text-gray-900 font-semibold"><?= htmlspecialchars($row['first_name'] . ' ' . $row['last_name']); ?></p>
-                                                <p class="text-xs text-gray-400 font-normal">@<?= htmlspecialchars($row['username']); ?></p>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 text-gray-500 font-normal"><?= htmlspecialchars($row['email']); ?></td>
-                                        <td class="px-6 py-4">
-                                            <span class="text-xs px-2.5 py-0.5 border rounded-md font-semibold tracking-wide <?= $status_class; ?>"><?= $status_label; ?></span>
-                                        </td>
-                                        <td class="px-6 py-4 text-gray-400 font-normal"><?= date('m/d/Y', strtotime($row['created_at'])); ?></td>
-                                        <td class="px-6 py-4">
-                                            <a href="process/admin_process.php?activate_user=<?= $row['user_id']; ?>" class="text-xs bg-emerald-100 border border-emerald-200 text-emerald-700 px-3 py-1 rounded-lg hover:bg-emerald-200 transition">Activate</a>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">No active members found in the database system logs.</td></tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="admin-panel-section" id="users-section" style="display:none;">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>User</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                <?php while ($u = mysqli_fetch_assoc($users_res)): ?>
+                  <tr>
+                    <td><?= htmlspecialchars($u['first_name']." ".$u['last_name']); ?></td>
+                    <td><?= ucfirst($u['status']); ?></td>
+                    <td>
+                      <a href="admin.php?action=<?= ($u['status']=='suspended')?'activate':'suspend'; ?>&id=<?= $u['user_id']; ?>">
+                        <?= ($u['status']=='suspended')?'Unsuspend':'Suspend'; ?>
+                      </a>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-            <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-lg font-semibold text-gray-900">All Groups</h3>
-                    <button class="bg-[#FF5722] hover:bg-orange-600 text-white font-medium text-xs px-4 py-2 rounded-xl transition shadow-sm">+ Create Group</button>
-                </div>
-                <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead>
-                            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                                <th class="px-6 py-3.5">Group</th>
-                                <th class="px-6 py-3.5">Owner</th>
-                                <th class="px-6 py-3.5">Members</th>
-                                <th class="px-6 py-3.5">Collected</th>
-                                <th class="px-6 py-3.5">Status</th>
-                                <th class="px-6 py-3.5">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 font-medium">
-                            <?php if (mysqli_num_rows($groups_res) > 0): ?>
-                                <?php while ($group = mysqli_fetch_assoc($groups_res)): 
-                                    $group_status = ($group['is_active'] == 1) ? 'active' : 'closed';
-                                    $group_status_class = ($group['is_active'] == 1) ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-gray-100 text-gray-600 border-gray-200';
-                                ?>
-                                    <tr class="hover:bg-gray-50/50 transition">
-                                        <td class="px-6 py-4">
-                                            <p class="text-gray-900 font-semibold"><?= htmlspecialchars($group['group_name']); ?></p>
-                                            <p class="text-xs text-gray-400 font-mono font-normal">Code: <?= htmlspecialchars($group['invite_code']); ?></p>
-                                        </td>
-                                        <td class="px-6 py-4 text-gray-600 font-normal"><?= htmlspecialchars($group['first_name'] . ' ' . $group['last_name']); ?></td>
-                                        <td class="px-6 py-4 text-gray-500 font-normal"><?= $group['total_members']; ?>/<?= $group['cycle_length']; ?></td>
-                                        <td class="px-6 py-4 text-gray-900 font-semibold">₱0</td>
-                                        <td class="px-6 py-4">
-                                            <span class="text-xs px-2.5 py-0.5 border rounded-md font-semibold tracking-wide uppercase <?= $group_status_class; ?>"><?= $group_status; ?></span>
-                                        </td>
-                                        <td class="px-6 py-4 flex items-center space-x-2">
-                                            <a href="group_details.php?id=<?= $group['group_id']; ?>" class="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-200 transition">View</a>
-                                            
-                                            <form method="POST" action="process/admin_process.php" class="inline-flex items-center">
-                                                <input type="hidden" name="group_id" value="<?= $group['group_id']; ?>">
-                                                <select name="group_status" onchange="this.form.submit()" class="text-xs bg-white text-gray-500 px-2 py-1.5 border border-gray-200 rounded-lg cursor-pointer focus:outline-none focus:border-orange-500">
-                                                    <option value="" disabled selected>Change status</option>
-                                                    <option value="active">Active</option>
-                                                    <option value="closed">Closed</option>
-                                                </select>
-                                                <input type="hidden" name="action_update_group_status" value="1">
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr><td colspan="6" class="px-6 py-8 text-center text-gray-400">No savings vaults have been generated yet.</td></tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
+        <div class="admin-panel-section" id="groups-section" style="display:none;">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Group</th><th>Status</th></tr></thead>
+              <tbody>
+                <?php while ($g = mysqli_fetch_assoc($groups_res)): ?>
+                  <tr><td><?= htmlspecialchars($g['group_name']); ?></td><td><?= $g['is_active']?'Active':'Closed'; ?></td></tr>
+                <?php endwhile; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <div class="modal-backdrop" id="detailsModal">
+    <div class="modal">
+      <div class="modal-header"><h3>Application Details</h3></div>
+      <div class="modal-body">
+        <p>Name: <span id="md-name"></span></p>
+        <p>Occupation: <span id="md-occ"></span></p>
+        <a id="md-file" href="#" target="_blank">View Proof</a>
+        <form method="POST" action="admin.php">
+          <input type="hidden" name="verification_id" id="md-vid">
+          <input type="hidden" name="target_user_id" id="md-uid">
+          <input type="hidden" name="action_verify" value="1">
+          <button type="submit" name="status" value="approved">Approve</button>
+          <button type="submit" name="status" value="denied">Reject</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openSection(id) {
+        document.querySelectorAll('.admin-panel-section').forEach(p => p.style.display='none');
+        document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(id).style.display='block';
+        document.getElementById('btn-'+id).classList.add('active');
+    }
+    function openDetailsModal(vid, name, user, email, phone, occ, addr, uid, file) {
+        document.getElementById('md-name').textContent = name;
+        document.getElementById('md-occ').textContent = occ;
+        document.getElementById('md-file').href = '../../assets/uploads/'+file;
+        document.getElementById('md-vid').value = vid;
+        document.getElementById('md-uid').value = uid;
+        document.getElementById('detailsModal').classList.add('open');
+    }
+    function closeDetailsModal() { document.getElementById('detailsModal').classList.remove('open'); }
+  </script>
 </body>
 </html>

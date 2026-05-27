@@ -5,8 +5,7 @@ include "../db.php";
 
 // 1. Core Absolute Security Gate: Only let 'admin' accounts render this script
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    // Silently redirect standard members away to their dashboard
-    header("Location: dashboard.php");
+    header("Location: ../../front-end/views/dashboard.php");
     exit();
 }
 
@@ -44,3 +43,4 @@ $groups_res = mysqli_query($conn, $groups_query);
 // Corrected path to go out of php/ and back-end/, then enter front-end/views/
 include "../../front-end/views/admin-view.php";
 ?>
+

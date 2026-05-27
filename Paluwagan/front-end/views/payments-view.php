@@ -1,47 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrustFund - Payments</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style> body { background-color: #FDFBF7; } </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrustFund — Payments</title>
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <link rel="stylesheet" href="../../assets/css/payments.css" />
 </head>
-<body class="flex min-h-screen text-gray-800 antialiased">
+<body>
+  <div class="app-layout">
 
     <?php include "components/sidebar-view.php"; ?>
 
-    <div class="flex-1 flex flex-col pl-64">
-        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-10">
-            <h2 class="text-2xl font-medium text-gray-800">Payments</h2>
-            <button class="p-2 text-gray-500 hover:text-gray-800 bg-gray-50 rounded-full border border-gray-200 relative"><i class="fa-solid fa-bell text-lg"></i></button>
-        </header>
+    <div class="main-content">
 
-        <main class="p-8 max-w-7xl w-full mx-auto space-y-6">
-            <h3 class="text-xl font-medium text-gray-900">Payment History Ledger</h3>
+      <header class="topbar">
+        <div class="topbar-left">
+          <span class="topbar-title">Payments</span>
+        </div>
+        <div class="topbar-right">
+          <button class="notif-btn" id="notif-btn" aria-label="Notifications">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span class="notif-badge" id="notif-badge" style="display:none;"></span>
+          </button>
+        </div>
+      </header>
 
-            <div class="space-y-4">
-                <?php if (mysqli_num_rows($payments_log_res) > 0): ?>
-                    <?php while ($pay_row = mysqli_fetch_assoc($payments_log_res)): ?>
-                        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div class="space-y-1">
-                                <h4 class="text-base font-semibold text-gray-800"><?= htmlspecialchars($pay_row['group_name']); ?></h4>
-                                <span class="inline-block bg-emerald-50 text-emerald-700 text-[11px] font-medium px-2 py-0.5 rounded-md uppercase"><?= htmlspecialchars($pay_row['status']); ?></span>
-                                <p class="text-xs text-gray-400 pt-1">Method: <span class="capitalize font-mono"><?= htmlspecialchars($pay_row['payment_method']); ?></span></p>
-                            </div>
-                            <div class="text-left sm:text-right">
-                                <p class="text-xs font-medium text-gray-400">Paid Amount</p>
-                                <p class="text-xl font-bold text-emerald-600 mt-0.5">₱<?= number_format($pay_row['amount'], 2); ?></p>
-                            </div>
-                        </div>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                    <div class="bg-white p-8 rounded-2xl border border-gray-200 text-center text-gray-400 text-sm">No transaction records logged inside this profile pipeline.</div>
-                <?php endif; ?>
-            </div>
-        </main>
+      <div class="page-content">
+
+        <div class="section-title">Payment History</div>
+
+        <?php if (mysqli_num_rows($payments_log_res) > 0): ?>
+          <div class="table-card">
+            <table class="payments-table">
+              <thead>
+                <tr>
+                  <th>Group</th>
+                  <th>Cycle</th>
+                  <th>Amount</th>
+                  <th>Method</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php while ($pay_row = mysqli_fetch_assoc($payments_log_res)): 
+                    $is_payout = (isset($pay_row['tx_type']) && $pay_row['tx_type'] === 'payout');
+                    $status_cleaned = lowercase(htmlspecialchars($pay_row['status']));
+                    
+                    // Assigns proper badge configuration styles out of your custom design system layers
+                    $badge_class = ($status_cleaned === 'paid' || $status_cleaned === 'success' || $status_cleaned === 'approved') ? 'badge-paid' : 'badge-pending';
+                ?>
+                  <tr>
+                    <td class="cell-group"><?= htmlspecialchars($pay_row['group_name']); ?></td>
+                    <td>#<?= isset($pay_row['cycle_number']) ? htmlspecialchars($pay_row['cycle_number']) : '1'; ?></td>
+                    
+                    <td class="cell-amount <?= $is_payout ? 'received' : ''; ?>">
+                      ₱<?= number_format($pay_row['amount'], 2); ?>
+                    </td>
+                    
+                    <td class="cell-method" style="text-transform: capitalize; font-family: monospace;">
+                      <?= htmlspecialchars($pay_row['payment_method']); ?>
+                    </td>
+                    <td class="cell-date">
+                      <?= isset($pay_row['created_at']) ? date('M d, Y', strtotime($pay_row['created_at'])) : date('M d, Y'); ?>
+                    </td>
+                    <td>
+                      <span class="badge <?= $badge_class; ?>" style="text-transform: capitalize;">
+                        <?= htmlspecialchars($pay_row['status']); ?>
+                      </span>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              </tbody>
+            </table>
+          </div>
+        <?php else: ?>
+          <div class="empty-state">
+            <div class="empty-state-title">No payment records</div>
+            <div class="empty-state-desc">Join a group to start tracing payments.</div>
+          </div>
+        <?php endif; ?>
+
+      </div></div></div><div class="notif-overlay" id="notif-overlay"></div>
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-panel-header">
+      <span class="notif-panel-title">Notifications</span>
+      <button class="mark-all-btn" id="mark-all-btn">Mark all read</button>
     </div>
-
+    <div class="notif-list" id="notif-list">
+      <div class="notif-empty">
+        <p>No notifications</p>
+        <span>You're all caught up!</span>
+      </div>
+    </div>
+  </div>
+  <div class="toast-container" id="toast-container"></div>
+  
+  <script src="../../front-end/js/notifications.js"></script>
 </body>
 </html>

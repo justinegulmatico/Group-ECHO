@@ -1,149 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrustFund - My Groups</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style> body { background-color: #FDFBF7; } </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrustFund — My Groups</title>
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <link rel="stylesheet" href="../../assets/css/my-groups.css" />
 </head>
-<body class="flex min-h-screen text-gray-800 antialiased">
+<body>
+  <div class="app-layout">
 
-    <!-- Corrected path: Targets the shared component in the local views/components folder -->
     <?php include "components/sidebar-view.php"; ?>
 
-    <div class="flex-1 flex flex-col pl-64">
-        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-10">
-            <div class="flex items-center space-x-4">
-                <h2 class="text-2xl font-medium text-gray-800">My Groups</h2>
-            </div>
-            <button class="p-2 text-gray-500 hover:text-gray-800 relative bg-gray-50 rounded-full border border-gray-200">
-                <i class="fa-solid fa-bell text-lg"></i>
-            </button>
-        </header>
+    <div class="main-content">
 
-        <main class="p-8 max-w-7xl w-full mx-auto space-y-6">
-            
-            <?php if (isset($error_message)): ?>
-                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm"><?= $error_message; ?></div>
-            <?php endif; ?>
-            <?php if (isset($_GET['success'])): ?>
-                <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm"><?= htmlspecialchars($_GET['success']); ?></div>
-            <?php endif; ?>
-
-            <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
-                <div class="relative flex-1 max-w-md">
-                    <span class="absolute inset-y-0 left-4 flex items-center text-gray-400"><i class="fa-solid fa-magnifying-glass text-sm"></i></span>
-                    <input type="text" placeholder="Search groups..." class="w-full pl-11 pr-4 py-2 border border-gray-200 rounded-xl bg-white text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-orange-500">
-                </div>
-                <div class="flex items-center space-x-2">
-                    <button onclick="toggleJoinModal(true)" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium text-sm px-4 py-2 rounded-xl transition">Join with code</button>
-                    <button onclick="toggleCreateModal(true)" class="bg-[#FF5722] hover:bg-orange-600 text-white font-medium text-sm px-4 py-2 rounded-xl shadow-sm transition">+ Create Group</button>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <?php if (mysqli_num_rows($groups_res) > 0): ?>
-                    <?php while ($group = mysqli_fetch_assoc($groups_res)):
-                        $progress = 0; 
-                        $status_label = ($group['is_active'] == 1) ? 'active' : 'closed';
-                        $status_badge = ($group['is_active'] == 1) ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-100 text-gray-500 border-gray-200';
-                    ?>
-                        <!-- Corrected path: Script executes from back-end/php/, so it links directly to group_details.php -->
-                        <div onclick="window.location.href='group_details.php?id=<?= $group['group_id']; ?>'" class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between hover:border-orange-200 transition duration-150 cursor-pointer">
-                            <div>
-                                <div class="flex justify-between items-start mb-1">
-                                    <h4 class="text-lg font-semibold text-gray-900 truncate max-w-[180px]"><?= htmlspecialchars($group['group_name']); ?></h4>
-                                    <span class="text-[11px] px-2 py-0.5 rounded-md font-medium tracking-wide border <?= $status_badge; ?> uppercase"><?= $status_label; ?></span>
-                                </div>
-                                <p class="text-xs text-gray-400 mb-1 font-mono tracking-wider">Invite Code: <?= htmlspecialchars($group['invite_code'] ?? '—'); ?></p>
-                                <p class="text-xs text-gray-500 mb-3 capitalize font-medium"><?= htmlspecialchars($group['frequency'] ?? 'monthly'); ?> · ₱<?= number_format($group['contribution_amount'], 0); ?>/cycle</p>
-                                
-                                <div class="flex justify-between text-[11px] text-gray-400 font-medium mb-1">
-                                    <span>₱0 collected</span>
-                                    <span><?= $progress; ?>%</span>
-                                </div>
-                                <div class="w-full bg-amber-50 h-1.5 rounded-full overflow-hidden">
-                                    <div class="bg-[#FFDCA9] h-full rounded-full w-0"></div>
-                                </div>
-                            </div>
-
-                            <div class="mt-6 flex items-center justify-between">
-                                <div class="w-6 h-6 rounded-full bg-rose-100 text-rose-600 font-bold text-[10px] flex items-center justify-center">TF</div>
-                                <span class="text-xs text-gray-400 font-medium"><?= $group['members_count']; ?> / <?= intval($group['cycle_length']); ?> members</span>
-                            </div>
-                        </div>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                    <div class="col-span-full bg-white p-12 rounded-2xl border border-gray-200 text-center text-gray-400 text-sm font-medium">No active savings circles found. Click "+ Create Group" to spin up a new custom vault!</div>
-                <?php endif; ?>
-            </div>
-        </main>
-    </div>
-
-    <div id="createGroupModal" class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl space-y-4">
-            <div class="flex justify-between items-center">
-                <h3 class="text-xl font-bold text-gray-900">Create Savings Group</h3>
-                <button onclick="toggleCreateModal(false)" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-            </div>
-            <!-- Submits to the parent PHP script in the same directory -->
-            <form method="POST" action="my_groups.php" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Group Title</label>
-                    <input type="text" name="group_name" required placeholder="e.g., Office Savings Pool" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Contribution (₱)</label>
-                        <input type="number" name="contribution" required placeholder="1000" min="50" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Max Capacity (Slots)</label>
-                        <input type="number" name="cycle_length" required placeholder="10" min="2" max="20" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Rotation Frequency</label>
-                    <select name="frequency" class="w-full border border-gray-200 bg-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500 cursor-pointer">
-                        <option value="monthly">Monthly</option>
-                        <option value="weekly">Weekly</option>
-                    </select>
-                </div>
-                <button type="submit" name="action_create_group" class="w-full bg-[#FF5722] hover:bg-orange-600 text-white font-medium text-sm py-2.5 rounded-xl transition">Launch Group Circle</button>
-            </form>
+      <header class="topbar">
+        <div class="topbar-left">
+          <span class="topbar-title">My Groups</span>
         </div>
-    </div>
-
-    <div id="joinGroupModal" class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl space-y-4">
-            <div class="flex justify-between items-center">
-                <h3 class="text-xl font-bold text-gray-900">Join Circle Group</h3>
-                <button onclick="toggleJoinModal(false)" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-            </div>
-            <!-- Submits to the parent PHP script in the same directory -->
-            <form method="POST" action="my_groups.php" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Invite Code</label>
-                    <input type="text" name="target_invite_code" required placeholder="e.g., 1KUOD5" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono uppercase tracking-widest focus:outline-none focus:border-orange-500">
-                </div>
-                <button type="submit" name="action_join_group" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-medium text-sm py-2.5 rounded-xl transition">Enter Savings Group</button>
-            </form>
+        <div class="topbar-right">
+          <button class="notif-btn" id="notif-btn" aria-label="Notifications">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span class="notif-badge" id="notif-badge" style="display:none;"></span>
+          </button>
         </div>
-    </div>
+      </header>
 
-    <script>
-    function toggleCreateModal(show) {
-        const modal = document.getElementById('createGroupModal');
-        modal.classList.toggle('hidden', !show);
-        modal.classList.toggle('flex', show);
-    }
-    function toggleJoinModal(show) {
-        const modal = document.getElementById('joinGroupModal');
-        modal.classList.toggle('hidden', !show);
-        modal.classList.toggle('flex', show);
-    }
-    </script>
+      <div class="page-content">
+
+        <?php if (isset($error_message)): ?>
+            <div style="background-color: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 14px;">
+                <?= $error_message; ?>
+            </div>
+        <?php endif; ?>
+        <?php if (isset($_GET['success'])): ?>
+            <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 14px;">
+                <?= htmlspecialchars($_GET['success']); ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="page-toolbar">
+          <div class="toolbar-left">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+              </svg>
+              <input class="search-input" type="text" placeholder="Search groups…" />
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn-outline" onclick="toggleJoinModal(true)">Join with Code</button>
+            <button class="btn-create" onclick="toggleCreateModal(true)">+ Create Group</button>
+          </div>
+        </div>
+
+        <?php if (mysqli_num_rows($groups_res) > 0): ?>
+          <div class="group-cards-grid">
+            <?php while ($group = mysqli_fetch_assoc($groups_res)):
+                $progress = 0; 
+                $status_label = ($group['is_active'] == 1) ? 'active' : 'closed';
+                $status_badge_class = ($group['is_active'] == 1) ? 'badge-active' : 'badge-closed';
+            ?>
+              <div onclick="window.location.href='group_details.php?id=<?= $group['group_id']; ?>'" class="group-card" style="cursor: pointer;">
+                <div class="group-card-top">
+                  <div>
+                    <div class="group-card-name"><?= htmlspecialchars($group['group_name']); ?></div>
+                    <div class="group-card-meta" style="text-transform: capitalize;"><?= htmlspecialchars($group['frequency'] ?? 'monthly'); ?> · ₱<?= number_format($group['contribution_amount'], 0); ?>/cycle</div>
+                  </div>
+                  <span class="badge <?= $status_badge_class; ?>"><?= $status_label; ?></span>
+                </div>
+                
+                <div class="group-card-meta" style="font-family: monospace; font-size: 11px; margin-bottom: 4px; color: #9ca3af;">
+                  Invite Code: <?= htmlspecialchars($group['invite_code'] ?? '—'); ?>
+                </div>
+
+                <div class="group-card-collected">₱0 collected</div>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar-fill" style="width: <?= $progress; ?>%"></div>
+                </div>
+                
+                <div class="group-card-bottom">
+                  <div class="member-chips">
+                    <div class="member-chip" style="background-color: #f1f5f9; color: #475569; font-size: 10px; font-weight: bold; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">TF</div>
+                  </div>
+                  <span class="group-card-members"><?= $group['members_count']; ?> / <?= intval($group['cycle_length']); ?> members</span>
+                </div>
+              </div>
+            <?php endwhile; ?>
+          </div>
+        <?php else: ?>
+          <div class="empty-state">
+            <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <div class="empty-state-title">No Groups Found</div>
+            <div class="empty-state-desc">Create a new group or join one with an invite code to get started.</div>
+          </div>
+        <?php endif; ?>
+
+      </div></div></div><div class="modal-overlay" id="createGroupModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Create New Group</span>
+        <button class="modal-close" onclick="toggleCreateModal(false)">✕</button>
+      </div>
+      <div class="modal-body">
+        <form method="POST" action="my_groups.php">
+          <div class="form-group">
+            <label class="input-label" for="cg-name">Group Name</label>
+            <input class="input-field" id="cg-name" type="text" name="group_name" required placeholder="e.g. Office Savings Pool" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="input-label" for="cg-amount">Contribution Amount (₱)</label>
+              <input class="input-field" id="cg-amount" type="number" name="contribution" required placeholder="1000" min="50" />
+            </div>
+            <div class="form-group">
+              <label class="input-label" for="cg-slots">Total Slots</label>
+              <input class="input-field" id="cg-slots" type="number" name="cycle_length" required placeholder="10" min="2" max="20" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="input-label" for="cg-frequency">Payment Frequency</label>
+            <select class="input-field select-field" id="cg-frequency" name="frequency" style="appearance: auto;">
+              <option value="monthly">Monthly</option>
+              <option value="weekly">Weekly</option>
+            </select>
+          </div>
+
+          <div class="modal-footer" style="padding: 16px 0 0 0; border: none;">
+            <button class="btn-outline" type="button" onclick="toggleCreateModal(false)">Cancel</button>
+            <button class="btn-create" type="submit" name="action_create_group">Create Group</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal-overlay" id="joinGroupModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Join a Group</span>
+        <button class="modal-close" onclick="toggleJoinModal(false)">✕</button>
+      </div>
+      <div class="modal-body">
+        <form method="POST" action="my_groups.php">
+          <div class="form-group">
+            <label class="input-label" for="join-code">Invite Code</label>
+            <input class="input-field" id="join-code" type="text" name="target_invite_code" required placeholder="Enter 6-character code" maxlength="8" style="text-transform: uppercase; font-family: monospace; tracking-content: 0.1em;" />
+          </div>
+
+          <div class="modal-footer" style="padding: 16px 0 0 0; border: none;">
+            <button class="btn-outline" type="button" onclick="toggleJoinModal(false)">Cancel</button>
+            <button class="btn-create" type="submit" name="action_join_group">Join Group</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="notif-overlay" id="notif-overlay"></div>
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-panel-header">
+      <span class="notif-panel-title">Notifications</span>
+      <button class="mark-all-btn" id="mark-all-btn">Mark all read</button>
+    </div>
+    <div class="notif-list" id="notif-list">
+      <div class="notif-empty">
+        <p>No notifications</p>
+        <span>You're all caught up!</span>
+      </div>
+    </div>
+  </div>
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+  function toggleCreateModal(show) {
+      const modal = document.getElementById('createGroupModal');
+      modal.style.display = show ? 'flex' : 'none';
+  }
+  function toggleJoinModal(show) {
+      const modal = document.getElementById('joinGroupModal');
+      modal.style.display = show ? 'flex' : 'none';
+  }
+
+  // Close modals on backdrop selection click logic array
+  window.addEventListener('click', function(e) {
+      const createModal = document.getElementById('createGroupModal');
+      const joinModal = document.getElementById('joinGroupModal');
+      if (e.target === createModal) toggleCreateModal(false);
+      if (e.target === joinModal) toggleJoinModal(false);
+  });
+  </script>
+  <script src="../../front-end/js/notifications.js"></script>
 </body>
 </html>

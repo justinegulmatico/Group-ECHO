@@ -18,6 +18,6 @@ session_destroy();
 
 // 4. Redirect safely back to the login portal page
 // Corrected path: move up 3 steps (php/ -> back-end/ -> Paluwagan/ -> Group-ECHO/) to reach index.php
-header("Location: ../../../index.php");
+header("Location: ../../index.php");
 exit();
 ?>

@@ -817,3 +817,63 @@ input, select, textarea {
   justify-content: center;
   border: 2px solid var(--color-surface);
 }
+
+.centered-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  background-color: var(--color-bg);
+}
+.status-card {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 40px;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+}
+.status-icon-box {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+.status-icon-box.pending {
+  background-color: #FEF3C7; /* Soft yellow accent */
+  color: var(--color-warning);
+}
+.status-icon-box.denied {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+.app-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: var(--color-text-primary);
+}
+.app-description {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+.btn-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.danger-action-btn {
+  background: var(--color-danger);
+}
+.danger-action-btn:hover {
+  background: #A93226;
+}

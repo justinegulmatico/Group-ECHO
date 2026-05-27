@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TrustFund — Authentication</title>
+  <title>Welcome to TrustFund</title>
   <link rel="stylesheet" href="assets/css/global.css" />
   <link rel="stylesheet" href="assets/css/auth.css" />
 </head>
@@ -38,7 +38,7 @@
           <h2 class="auth-heading">Welcome Back</h2>
           <p class="auth-subheading">Sign in to manage your savings groups</p>
 
-          <form method="POST">
+          <form method="POST" action="index.php">
             <div class="form-group">
               <label class="input-label">Username</label>
               <input type="text" name="login_username" class="input-field" required />
@@ -63,7 +63,7 @@
           <h2 class="auth-heading">Create Account</h2>
           <p class="auth-subheading">Join the community savings platform</p>
 
-          <form method="POST" enctype="multipart/form-data">
+          <form method="POST" action="index.php" enctype="multipart/form-data">
             <div class="form-group">
               <label class="input-label">Full Name</label>
               <input type="text" name="fullname" class="input-field" placeholder="Juan Dela Cruz" required />
@@ -111,17 +111,6 @@
             <?php if(isset($success) && $success): ?> <div class="success-msg"><?= $success ?></div> <?php endif; ?>
           </form>
         </div>
-
-        <div class="demo-divider">
-          <span class="demo-divider-line"></span>
-          <span class="demo-divider-text">Demo Access</span>
-          <span class="demo-divider-line"></span>
-        </div>
-
-        <button class="demo-btn" type="button" onclick="fillAdmin()">
-          Admin: admin / admin123
-        </button>
-
       </div>
     </div>
 </div>
@@ -142,12 +131,6 @@
       btn.innerHTML = isPass
         ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M1 1l22 22"/></svg>`
         : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`;
-    }
-
-    function fillAdmin() {
-      switchTab('login');
-      document.getElementsByName('login_username')[0].value = 'admin';
-      document.getElementsByName('login_password')[0].value = 'admin123';
     }
 
     <?php if (isset($_POST['register']) || !empty($success)): ?>

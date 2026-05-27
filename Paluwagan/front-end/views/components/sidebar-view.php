@@ -1,79 +1,81 @@
 <?php
-// Ensure session is started to read user info securely
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 $current_page = basename($_SERVER['PHP_SELF']);
 
-// ─── SAFE SESSION RECOVERY FOR USER PROFILE CONTAINER ───
-// Prioritizes explicit session properties, falling back to database column shapes
-$first_name = $_SESSION['first_name'] ?? ($_SESSION['username'] ?? 'arvin');
+$first_name = $_SESSION['first_name'] ?? ($_SESSION['username'] ?? 'User');
 $last_name  = $_SESSION['last_name'] ?? '';
 $full_name  = !empty($last_name) ? "$first_name $last_name" : $first_name;
-
 $user_role  = $_SESSION['role'] ?? 'Member';
 
-// Generate profile initials dynamically matching user badge layout grids
 $initials   = strtoupper(substr($first_name, 0, 1) . (!empty($last_name) ? substr($last_name, 0, 1) : ''));
 if (empty($initials)) { 
     $initials = !empty($first_name) ? strtoupper(substr($first_name, 0, 2)) : "US"; 
 }
 
-// Check if current view is nested deeper inside the process directory folder structure
 $is_nested_process = (strpos($_SERVER['PHP_SELF'], '/process/') !== false);
 $prefix = $is_nested_process ? '../' : '';
 ?>
-<aside class="w-64 bg-white border-r border-gray-200 flex flex-col justify-between fixed h-full z-10">
-    <div>
-        <div class="p-6 border-b border-gray-100">
-            <h1 class="text-2xl font-serif font-semibold tracking-wide text-gray-900">TrustFund</h1>
-        </div>
-        
-        <nav class="p-4 space-y-1">
-            <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Main</p>
-            
-            <a href="<?= $prefix ?>dashboard.php" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition <?= ($current_page == 'dashboard.php') ? 'bg-orange-50 text-orange-600 font-medium' : 'text-gray-600 hover:bg-gray-50' ?>">
-                <i class="fa-solid fa-house text-lg"></i><span>Dashboard</span>
-            </a>
-            
-            <a href="<?= $prefix ?>my_groups.php" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition <?= ($current_page == 'my_groups.php' || $current_page == 'group_details.php' || $current_page == 'process_create_group.php' || $current_page == 'process_join_group.php') ? 'bg-orange-50 text-orange-600 font-medium' : 'text-gray-600 hover:bg-gray-50' ?>">
-                <i class="fa-solid fa-users text-lg"></i><span>My Groups</span>
-            </a>
-            
-            <a href="<?= $prefix ?>payments.php" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition <?= ($current_page == 'payments.php') ? 'bg-orange-50 text-orange-600 font-medium' : 'text-gray-600 hover:bg-gray-50' ?>">
-                <i class="fa-solid fa-wallet text-lg"></i><span>Payments</span>
-            </a>
-            
-            <a href="<?= $prefix ?>my_profile.php" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition <?= ($current_page == 'my_profile.php') ? 'bg-orange-50 text-orange-600 font-medium' : 'text-gray-600 hover:bg-gray-50' ?>">
-                <i class="fa-solid fa-user text-lg"></i><span>My Profile</span>
-            </a>
+<aside class="sidebar">
+  <div class="sidebar-logo">TrustFund</div>
 
-            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                <div class="pt-4 mt-4 border-t border-gray-100">
-                    <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Admin</p>
-                    <a href="<?= $prefix ?>admin.php" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition <?= ($current_page == 'admin.php' || $current_page == 'admin_process.php') ? 'bg-orange-50 text-orange-600 font-medium' : 'text-gray-600 hover:bg-gray-50' ?>">
-                        <i class="fa-solid fa-shield-halved text-lg"></i><span>Admin Panel</span>
-                    </a>
-                </div>
-            <?php endif; ?>
-        </nav>
-    </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">Main</div>
 
-    <div class="p-4 border-t border-gray-200 flex items-center justify-between bg-white">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-full bg-orange-200 text-orange-700 font-semibold text-sm flex items-center justify-center tokens-avatar">
-                <?= htmlspecialchars($initials); ?>
-            </div>
-            <div>
-                <h4 class="text-sm font-semibold text-gray-900 truncate max-w-[110px]" title="<?= htmlspecialchars($full_name); ?>">
-                    <?= htmlspecialchars($full_name); ?>
-                </h4>
-                <p class="text-xs text-gray-500 capitalize"><?= htmlspecialchars($user_role); ?></p>
-            </div>
-        </div>
-        <a href="<?= $prefix ?>logout.php" class="p-2 border border-gray-200 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition" title="Sign Out">
-            <i class="fa-solid fa-arrow-right-from-bracket text-lg"></i>
-        </a>
+    <a href="<?= $prefix ?>dashboard.php" class="sidebar-nav-item <?= ($current_page == 'dashboard.php') ? 'active' : '' ?>">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/>
+      </svg>
+      Dashboard
+    </a>
+
+    <a href="<?= $prefix ?>my_groups.php" class="sidebar-nav-item <?= ($current_page == 'my_groups.php' || $current_page == 'group_details.php' || $current_page == 'process_create_group.php' || $current_page == 'process_join_group.php') ? 'active' : '' ?>">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      My Groups
+    </a>
+
+    <a href="<?= $prefix ?>payments.php" class="sidebar-nav-item <?= ($current_page == 'payments.php') ? 'active' : '' ?>">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+      </svg>
+      Payments
+    </a>
+
+    <a href="<?= $prefix ?>my_profile.php" class="sidebar-nav-item <?= ($current_page == 'my_profile.php') ? 'active' : '' ?>">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      My Profile
+    </a>
+
+    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+      <div class="sidebar-section-label" style="margin-top: 20px;">Admin</div>
+      <a href="<?= $prefix ?>admin.php" class="sidebar-nav-item <?= ($current_page == 'admin.php' || $current_page == 'admin_process.php') ? 'active' : '' ?>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <polyline points="9 12 11 14 15 10"/>
+        </svg>
+        Admin Panel
+      </a>
+    <?php endif; ?>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="avatar" id="sidebar-avatar"><?= htmlspecialchars($initials); ?></div>
+    <div class="sidebar-user-info">
+      <div class="sidebar-user-name" title="<?= htmlspecialchars($full_name); ?>"><?= htmlspecialchars($full_name); ?></div>
+      <div class="sidebar-user-role" style="text-transform: capitalize;"><?= htmlspecialchars($user_role); ?></div>
     </div>
+    <a href="<?= $prefix ?>logout.php" class="sidebar-logout-btn" title="Sign Out">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </a>
+  </div>
 </aside>
