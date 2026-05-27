@@ -1,126 +1,15 @@
-<?php
-session_start();
-include "db.php";
-
-// 1. Authentication Check
-if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit();
-}
-
-$current_user_id = $_SESSION['user_id'];
-$group_id = isset($_GET['id']) ? int_escape($conn, $_GET['id']) : 0;
-$active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'overview';
-
-// Helper to clean variables safely
-function int_escape($link, $data) {
-    return (int)mysqli_real_escape_string($link, trim($data));
-}
-
-// 2. Fetch User Profile Context
-$user_query = "SELECT first_name, last_name, role FROM users WHERE user_id = '$current_user_id'";
-$user_result = mysqli_query($conn, $user_query);
-$user_data = mysqli_fetch_assoc($user_result);
-$full_name = ($user_data) ? $user_data['first_name'] . " " . $user_data['last_name'] : "User";
-$user_role = ($user_data) ? ucfirst($user_data['role']) : "Member";
-
-$initials = "U";
-if ($user_data) {
-    $initials = strtoupper(substr($user_data['first_name'], 0, 1) . substr($user_data['last_name'], 0, 1));
-}
-
-// 3. Group Validity & Membership Guard Check
-$group_guard_q = "SELECT g.*, m.member_id FROM groups g 
-                  JOIN group_members m ON g.group_id = m.group_id 
-                  WHERE g.group_id = '$group_id' AND m.user_id = '$current_user_id' AND m.status = 'active'";
-$group_guard_res = mysqli_query($conn, $group_guard_q);
-$current_group = mysqli_fetch_assoc($group_guard_res);
-
-if (!$current_group) {
-    // If the group doesn't exist or user isn't a member, kick back to main hub safely
-    header("Location: my_groups.php");
-    exit();
-}
-
-$my_member_id = $current_group['member_id'];
-
-// 4. Financial Statistics Aggregation for Header Metrics
-// Total Collected across all historic cycles for this specific group
-$collected_q = "SELECT SUM(c.amount) as total_coll FROM contributions c 
-                JOIN cycles cy ON c.cycle_id = cy.cycle_id 
-                WHERE cy.group_id = '$group_id' AND c.status = 'paid'";
-$collected_res = mysqli_query($conn, $collected_q);
-$collected_data = mysqli_fetch_assoc($collected_res);
-$total_collected = $collected_data['total_coll'] ?? 0.00;
-
-// Total Payouts Released out of the ecosystem pool
-$payouts_q = "SELECT SUM(p.amount) as total_pay FROM payouts p 
-              JOIN cycles cy ON p.cycle_id = cy.cycle_id 
-              WHERE cy.group_id = '$group_id' AND p.status = 'released'";
-$payouts_res = mysqli_query($conn, $payouts_q);
-$payouts_data = mysqli_fetch_assoc($payouts_res);
-$total_paid_out = $payouts_data['total_pay'] ?? 0.00;
-
-// Current Capital Available inside the Pool Vault
-$in_pool = $total_collected - $total_paid_out;
-
-// Total slots filled metric configuration mapping
-$slots_q = "SELECT COUNT(*) as active_members FROM group_members WHERE group_id = '$group_id' AND status = 'active'";
-$slots_res = mysqli_query($conn, $slots_q);
-$slots_data = mysqli_fetch_assoc($slots_res);
-$slots_filled = $slots_data['active_members'] ?? 0;
-
-// Calculate My Specific Due Balance configuration parameters
-$my_due_q = "SELECT SUM(c.amount) as due_amt FROM contributions c 
-             WHERE c.member_id = '$my_member_id' AND c.status = 'pending'";
-$my_due_res = mysqli_query($conn, $my_due_q);
-$my_due_data = mysqli_fetch_assoc($my_due_res);
-$my_balance_due = $my_due_data['due_amt'] ?? $current_group['contribution_amount'];
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>TrustFund — Group Details</title>
+    <link rel="stylesheet" href="../../assets/css/global.css" />
+    <link rel="stylesheet" href="../../assets/css/group-details.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrustFund - <?= htmlspecialchars($current_group['group_name']); ?> Details</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style> body { background-color: #FDFBF7; } </style>
 </head>
 <body class="flex min-h-screen text-gray-800 antialiased">
 
-    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col justify-between fixed h-full z-10">
-        <div>
-            <div class="p-6 border-b border-gray-100">
-                <h1 class="text-2xl font-serif font-semibold tracking-wide text-gray-900">TrustFund</h1>
-            </div>
-            <nav class="p-4 space-y-1">
-                <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Main</p>
-                <a href="dashboard.php" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 transition">
-                    <i class="fa-solid fa-house text-lg"></i><span>Dashboard</span>
-                </a>
-                <a href="my_groups.php" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg bg-orange-50 text-orange-600 font-medium">
-                    <i class="fa-solid fa-users text-lg"></i><span>My Groups</span>
-                </a>
-                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 transition">
-                    <i class="fa-solid fa-wallet text-lg"></i><span>Payments</span>
-                </a>
-                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 transition">
-                    <i class="fa-solid fa-user text-lg"></i><span>My Profile</span>
-                </a>
-            </nav>
-        </div>
-        <div class="p-4 border-t border-gray-200 flex items-center justify-between bg-white">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-full bg-orange-200 text-orange-700 font-semibold text-sm flex items-center justify-center"><?= $initials; ?></div>
-                <div>
-                    <h4 class="text-sm font-semibold text-gray-900 truncate max-w-[110px]"><?= htmlspecialchars($full_name); ?></h4>
-                    <p class="text-xs text-gray-500"><?= $user_role; ?></p>
-                </div>
-            </div>
-            <a href="logout.php" class="p-2 border border-gray-200 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition"><i class="fa-solid fa-arrow-right-from-bracket text-lg"></i></a>
-        </div>
-    </aside>
+    <?php include "components/sidebar-view.php"; ?>
 
     <div class="flex-1 flex flex-col pl-64">
         <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-10">
@@ -153,17 +42,17 @@ $my_balance_due = $my_due_data['due_amt'] ?? $current_group['contribution_amount
                         </div>
                         <div>
                             <p class="text-gray-400 text-xs uppercase tracking-wider font-medium">Frequency</p>
-                            <p class="text-xl font-bold mt-0.5 capitalize">monthly</p>
+                            <p class="text-xl font-bold mt-0.5 capitalize"><?= htmlspecialchars($current_group['frequency']); ?></p>
                         </div>
                         <div>
                             <p class="text-gray-400 text-xs uppercase tracking-wider font-medium">Status</p>
-                            <p class="text-xl font-bold mt-0.5 text-emerald-400">Active</p>
+                            <p class="text-xl font-bold mt-0.5 text-emerald-400"><?= $current_group['is_active'] == 1 ? 'Active' : 'Closed'; ?></p>
                         </div>
                     </div>
 
                     <div class="mt-6 flex items-center space-x-2">
                         <span class="text-xs text-gray-400">Invite Code:</span>
-                        <span class="bg-white/10 text-white font-mono text-xs px-3 py-1 rounded-lg border border-white/10 tracking-wider">70303<?= $current_group['group_id']; ?>L</span>
+                        <span class="bg-white/10 text-white font-mono text-xs px-3 py-1 rounded-lg border border-white/10 tracking-wider"><?= htmlspecialchars($current_group['invite_code']); ?></span>
                         <button class="text-xs bg-white/20 hover:bg-white/30 text-white px-2.5 py-1 rounded-lg transition font-medium">Copy</button>
                     </div>
                 </div>
@@ -230,7 +119,7 @@ $my_balance_due = $my_due_data['due_amt'] ?? $current_group['contribution_amount
                                 <th class="p-4">Member</th>
                                 <th class="p-4">Slot</th>
                                 <th class="p-4">Total Paid</th>
-                                <th class="p-4">Owned</th>
+                                <th class="p-4">Owed</th>
                                 <th class="p-4">Balance</th>
                                 <th class="p-4">Payout</th>
                             </tr>
@@ -246,7 +135,7 @@ $my_balance_due = $my_due_data['due_amt'] ?? $current_group['contribution_amount
                                 <td class="p-4 text-gray-900">₱<?= number_format($current_group['contribution_amount'], 0); ?></td>
                                 <td class="p-4">
                                     <?php if($my_balance_due > 0): ?>
-                                        <span class="text-red-500 font-medium">₱<?= number_format($my_balance_due, 0); ?> owned</span>
+                                        <span class="text-red-500 font-medium">₱<?= number_format($my_balance_due, 0); ?> owed</span>
                                     <?php else: ?>
                                         <span class="text-emerald-600 font-medium">Settled</span>
                                     <?php endif; ?>
@@ -269,7 +158,7 @@ $my_balance_due = $my_due_data['due_amt'] ?? $current_group['contribution_amount
                 <button onclick="closeRecordPaymentModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-50 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
-            <form action="process_record_payment.php" method="POST" class="space-y-4">
+            <form action="process/process_record_payment.php" method="POST" class="space-y-4">
                 <input type="hidden" name="group_id" value="<?= $group_id; ?>">
                 <input type="hidden" name="member_id" value="<?= $my_member_id; ?>">
                 
@@ -296,7 +185,7 @@ $my_balance_due = $my_due_data['due_amt'] ?? $current_group['contribution_amount
                     <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Payment Method</label>
                     <div class="relative">
                         <select name="payment_method" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 font-medium focus:outline-none focus:border-orange-500 bg-white appearance-none cursor-pointer">
-                            <option value="cash">cash</option>
+                            <option value="cash">Cash</option>
                             <option value="gcash">GCash</option>
                             <option value="bank_transfer">Bank Transfer</option>
                         </select>

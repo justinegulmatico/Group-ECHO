@@ -1,11 +1,3 @@
-/* ================================================
-   TrustFund — Shared Notifications & Toast
-   Include on every page that has:
-     #notif-btn, #notif-overlay, #notif-panel,
-     #notif-list, #notif-badge, #mark-all-btn,
-     #toast-container
-   ================================================ */
-
 (function () {
 
   /* ── Internal state ── */
@@ -135,6 +127,7 @@
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
+  /* HTML Sanitizer */
   function esc(str) {
     return String(str)
       .replace(/&/g, '&amp;')
@@ -170,3 +163,13 @@ function showToast(msg, type) {
     setTimeout(function () { toast.remove(); }, 300);
   }, 3000);
 }
+
+/* ── AUTOMATED SYSTEM INTERCEPTOR FOR URL FLAGGED MESSAGES ── */
+document.addEventListener("DOMContentLoaded", function() {
+  var urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('success')) {
+    showToast(urlParams.get('success'), 'success');
+  } else if (urlParams.has('error')) {
+    showToast(urlParams.get('error'), 'error');
+  }
+});

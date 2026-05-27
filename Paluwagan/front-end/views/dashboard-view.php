@@ -1,110 +1,16 @@
-<?php
-session_start();
-// absolute file path fallback mapping to reach back-end configuration out of your local subfolder 
-include "back-end/db.php";
-
-// Core Session Security Gate: Kick unauthenticated guests back to index.php
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit();
-}
-
-$current_user_id = $_SESSION['user_id'];
-
-// ─── DATA ENGINE: FETCH CURRENT ACTIVE USER PROFILE ───
-$user_query = "SELECT first_name, last_name, role FROM users WHERE user_id = '$current_user_id'";
-$user_res = mysqli_query($conn, $user_query);
-$user_data = mysqli_fetch_assoc($user_res);
-
-$display_name = htmlspecialchars($user_data['first_name'] ?? 'User');
-$display_fullname = htmlspecialchars(($user_data['first_name'] ?? 'User') . ' ' . ($user_data['last_name'] ?? ''));
-$display_role = htmlspecialchars(ucfirst($user_data['role'] ?? 'Member'));
-$avatar_initial = strtoupper(substr($display_name, 0, 1));
-
-// ─── CALCULATION ENGINE: COMPUTE PERSONAL PALUWAGAN STATS ───
-// Count total active group memberships for this user
-$count_my_groups_query = "SELECT COUNT(*) as total FROM group_members WHERE user_id = '$current_user_id' AND status = 'active'";
-$count_my_groups_res = mysqli_query($conn, $count_my_groups_query);
-$active_groups_count = mysqli_fetch_assoc($count_my_groups_res)['total'] ?? 0;
-
-// Placeholder values for financial aggregation balances (can be wired to your upcoming payment logs tables)
-$total_contributed = 0;
-$total_received = 0;
-$net_position = $total_received - $total_contributed;
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TrustFund — Dashboard</title>
-  <link rel="stylesheet" href="../css/global.css" />
-  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <link rel="stylesheet" href="../../assets/css/dashboard.css" />
 </head>
 <body>
   <div class="app-layout">
 
-    <aside class="sidebar">
-      <div class="sidebar-logo">TrustFund</div>
-
-      <nav class="sidebar-nav">
-        <div class="sidebar-section-label">Main</div>
-
-        <a href="dashboard.php" class="sidebar-nav-item active">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/>
-            <path d="M9 21V12h6v9"/>
-          </svg>
-          Dashboard
-        </a>
-
-        <a href="my_groups.php" class="sidebar-nav-item">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          My Groups
-        </a>
-
-        <a href="payments.php" class="sidebar-nav-item">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="5" width="20" height="14" rx="2"/>
-            <path d="M2 10h20"/>
-          </svg>
-          Payments
-        </a>
-
-        <a href="my_profile.php" class="sidebar-nav-item">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-          My Profile
-        </a>
-      </nav>
-
-      <div class="sidebar-footer">
-        <div class="avatar" id="sidebar-avatar"><?= $avatar_initial; ?></div>
-        <div class="sidebar-user-info">
-          <div class="sidebar-user-name"><?= $display_name; ?></div>
-          <div class="sidebar-user-role"><?= $display_role; ?></div>
-        </div>
-        <a href="back-end/logout.php" class="sidebar-logout-btn" title="Log out">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-        </a>
-      </div>
-    </aside>
+    <?php include "components/sidebar-view.php"; ?>
 
     <div class="main-content">
 
@@ -166,18 +72,22 @@ $net_position = $total_received - $total_contributed;
               </svg>
               <div class="empty-state-title">No Groups Yet</div>
               <div class="empty-state-desc">Create or join a savings group to get started</div>
-              <a href="my-groups.php" class="btn-primary" style="width:auto; padding:12px 28px; margin-top:8px; text-decoration:none; display:inline-block; text-align:center;">
+              <a href="my_groups.php" class="btn-primary" style="width:auto; padding:12px 28px; margin-top:8px; text-decoration:none; display:inline-block; text-align:center;">
                 Browse Groups →
               </a>
             </div>
         <?php else: ?>
             <div class="active-groups-container" style="background:#fff; border:1px solid #e3e3e3; padding:20px; border-radius:12px;">
                 <p style="color:#4a4a4a; font-weight:500;">You are currently participating in <?= $active_groups_count; ?> savings loop(s).</p>
-                <a href="my-groups.php" style="color:var(--color-primary, #e8481a); font-size:0.9rem; font-weight:600; text-decoration:none; margin-top:10px; display:inline-block;">Go to My Groups dashboard to track individual charts →</a>
+                <a href="my_groups.php" style="color:var(--color-primary, #e8481a); font-size:0.9rem; font-weight:600; text-decoration:none; margin-top:10px; display:inline-block;">Go to My Groups dashboard to track individual charts →</a>
             </div>
         <?php endif; ?>
 
-      </div></div></div><div class="notif-overlay" id="notif-overlay"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notif-overlay" id="notif-overlay"></div>
   <div class="notif-panel" id="notif-panel">
     <div class="notif-panel-header">
       <span class="notif-panel-title">Notifications</span>
@@ -197,7 +107,7 @@ $net_position = $total_received - $total_contributed;
         <span class="modal-title">Create New Group</span>
         <button class="modal-close" type="button">✕</button>
       </div>
-      <form method="POST" action="back-end/create_group_process.php">
+      <form method="POST" action="process/process_create_group.php">
           <div class="modal-body">
             <div class="form-group">
               <label class="input-label" for="cg-name">Group Name</label>
@@ -210,17 +120,17 @@ $net_position = $total_received - $total_contributed;
             <div class="form-row">
               <div class="form-group" style="flex:1;">
                 <label class="input-label" for="cg-amount">Contribution Amount (₱)</label>
-                <input class="input-field" id="cg-amount" name="contribution_amount" type="number" placeholder="1000" min="1" required />
+                <input class="input-field" id="cg-amount" name="contribution" type="number" placeholder="1000" min="1" required />
               </div>
               <div class="form-group" style="flex:1;">
                 <label class="input-label" for="cg-slots">Total Slots</label>
-                <input class="input-field" id="cg-slots" name="total_slots" type="number" placeholder="10" min="2" max="50" required />
+                <input class="input-field" id="cg-slots" name="cycle_length" type="number" placeholder="10" min="2" max="50" required />
               </div>
             </div>
             <div class="form-row">
               <div class="form-group" style="flex:1;">
                 <label class="input-label" for="cg-frequency">Payment Frequency</label>
-                <select class="input-field" id="cg-frequency" name="payment_frequency">
+                <select class="input-field" id="cg-frequency" name="frequency">
                   <option value="monthly">Monthly</option>
                   <option value="biweekly">Bi-weekly</option>
                   <option value="weekly">Weekly</option>

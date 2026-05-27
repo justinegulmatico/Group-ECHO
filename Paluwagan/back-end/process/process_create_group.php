@@ -1,10 +1,12 @@
 <?php
 session_start();
-include "db.php";
+// Corrected path: move up 2 steps (process/ -> php/ -> back-end/) to reach db.php
+include "../../db.php";
 
 // 1. Force safety checkpoint redirect if no logged-in user session exists
 if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
+    // Corrected path: move up 4 steps (process/ -> php/ -> back-end/ -> Paluwagan/ -> Group-ECHO/) to reach root index.php
+    header("Location: ../../../../index.php");
     exit();
 }
 
@@ -35,11 +37,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         mysqli_query($conn, $join_creator);
 
         // Success redirect back to workspace dashboard array viewport rendering target
-        header("Location: my_groups.php?success=" . urlencode("Group created successfully!"));
+        // Corrected path: move up 1 step out of process/ to reach my_groups.php in php/
+        header("Location: ../my_groups.php?success=" . urlencode("Group created successfully!"));
         exit();
     } else {
         // Fallback error flag handling if database structure tracks error limits
-        header("Location: my_groups.php?error=" . urlencode("Failed to write structural records database context row: " . mysqli_error($conn)));
+        // Corrected path: move up 1 step out of process/ to reach my_groups.php in php/
+        header("Location: ../my_groups.php?error=" . urlencode("Failed to write structural records database context row: " . mysqli_error($conn)));
         exit();
     }
 }

@@ -1,10 +1,12 @@
 <?php
 session_start();
-include "db.php";
+// Corrected path: move up 2 steps (process/ -> php/ -> back-end/) to reach db.php
+include "../../db.php";
 
 // Tight Security Check: Kick out anyone who isn't a logged-in Admin
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header("Location: dashboard.php");
+    // Corrected path: move up 1 step out of process/ to reach dashboard.php in php/
+    header("Location: ../dashboard.php");
     exit();
 }
 
@@ -18,7 +20,8 @@ if (isset($_GET['activate_user'])) {
     $update_user = "UPDATE users SET role = 'member' WHERE user_id = '$target_user_id'";
     mysqli_query($conn, $update_user);
     
-    header("Location: admin.php?success=" . urlencode("User activated successfully."));
+    // Corrected path: move up 1 step out of process/ to reach admin.php in php/
+    header("Location: ../admin.php?success=" . urlencode("User activated successfully."));
     exit();
 }
 
@@ -33,11 +36,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action_update_group_st
     $update_group = "UPDATE groups SET is_active = '$is_active_val' WHERE group_id = '$target_group_id'";
     mysqli_query($conn, $update_group);
     
-    header("Location: admin.php?success=" . urlencode("Group status updated successfully."));
+    // Corrected path: move up 1 step out of process/ to reach admin.php in php/
+    header("Location: ../admin.php?success=" . urlencode("Group status updated successfully."));
     exit();
 }
 
 // If no valid actions are hit, route back to safety
-header("Location: admin.php");
+// Corrected path: move up 1 step out of process/ to reach admin.php in php/
+header("Location: ../admin.php");
 exit();
 ?>
