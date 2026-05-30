@@ -337,23 +337,3 @@
 }
 
 /* ── Join preview box ── */
-.join-preview {
-  background: var(--color-surface-muted);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.join-preview-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-.join-preview-meta {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-}

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Welcome to TrustFund</title>
   <link rel="stylesheet" href="assets/css/global.css" />
-  <link rel="stylesheet" href="assets/css/auth.css" />
+  <link rel="stylesheet" href="assets/css/auth.css?v=<?= filemtime('assets/css/auth.css'); ?>" />
 </head>
 <body>
 
@@ -64,9 +64,15 @@
           <p class="auth-subheading">Join the community savings platform</p>
 
           <form method="POST" action="index.php" enctype="multipart/form-data">
-            <div class="form-group">
-              <label class="input-label">Full Name</label>
-              <input type="text" name="fullname" class="input-field" placeholder="Juan Dela Cruz" required />
+            <div class="form-row">
+              <div class="form-group">
+                <label class="input-label">First Name</label>
+                <input type="text" name="firstname" class="input-field" placeholder="Juan" required />
+              </div>
+              <div class="form-group">
+                <label class="input-label">Last Name</label>
+                <input type="text" name="lastname" class="input-field" placeholder="Dela Cruz" required />
+              </div>
             </div>
 
             <div class="form-group">
@@ -115,6 +121,19 @@
     </div>
 </div>
 
+<div id="status-modal" class="tf-modal-overlay">
+  <div class="tf-modal-box">
+    <div id="modal-icon" style="margin-bottom: 15px;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f47321" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 8v4l3 3"></path>
+        </svg>
+    </div>
+    <h3 id="modal-title" style="margin-bottom: 10px; font-size: 1.5rem;">Account Status</h3>
+    <p id="modal-message" style="color: #666; margin-bottom: 25px; line-height: 1.5;"></p>
+    <button class="btn-primary" onclick="closeStatusModal()" style="width: 100%; padding: 12px;">Got it</button>
+  </div>
+</div>
 <script>
     function switchTab(type) {
       const isLogin = type === 'login';
@@ -132,6 +151,36 @@
         ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M1 1l22 22"/></svg>`
         : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`;
     }
+
+    // Modal Logic
+function openStatusModal(title, message) {
+        const modal = document.getElementById('status-modal');
+        document.getElementById('modal-title').textContent = title;
+        document.getElementById('modal-message').textContent = message;
+        
+        // Add a small "fade-in" animation effect
+        modal.style.display = 'flex';
+        modal.style.opacity = '0';
+        setTimeout(() => { modal.style.opacity = '1'; modal.style.transition = 'opacity 0.3s ease'; }, 10);
+    }
+
+    function closeStatusModal() {
+        document.getElementById('status-modal').style.setProperty('display', 'none', 'important');
+    }
+
+    // PHP Trigger Injection
+    document.addEventListener("DOMContentLoaded", function() {
+        <?php if (isset($status_trigger) && $status_trigger): ?>
+            openStatusModal("<?= $status_trigger['title'] ?>", "<?= $status_trigger['msg'] ?>");
+        <?php endif; ?>
+    });
+
+    // PHP Trigger Injection
+    <?php if (isset($status_trigger) && $status_trigger): ?>
+        window.onload = function() {
+            openStatusModal("<?= $status_trigger['title'] ?>", "<?= $status_trigger['msg'] ?>");
+        };
+    <?php endif; ?>
 
     <?php if (isset($_POST['register']) || !empty($success)): ?>
       switchTab('register');

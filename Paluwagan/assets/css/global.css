@@ -83,7 +83,7 @@ button {
   outline: none;
 }
 
-input, select, textarea {
+input, select {
   font-family: var(--font-body);
   outline: none;
 }
@@ -336,18 +336,6 @@ input, select, textarea {
   color: var(--color-text-primary);
 }
 
-.topbar-menu-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  background: var(--color-surface-muted);
-  border: 1.5px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-primary);
-}
-
 .notif-btn {
   position: relative;
   width: 40px;
@@ -471,16 +459,6 @@ input, select, textarea {
 }
 
 /* ── Overlay / Modal ── */
-.overlay-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.35);
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fadeIn 0.15s ease;
-}
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -716,9 +694,6 @@ input, select, textarea {
   font-family: var(--font-body);
 }
 .toast.show    { opacity: 1; transform: translateY(0); }
-.toast-success { background: var(--color-success); }
-.toast-error   { background: var(--color-danger);  }
-.toast-info    { background: var(--color-dark);    }
 
 /* ── Group Card ── */
 .group-card {
@@ -787,21 +762,8 @@ input, select, textarea {
   transition: width 0.4s ease;
 }
 
-.group-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--color-text-secondary);
-}
-
 .group-card-collected {
   font-weight: 500;
-}
-
-.group-members-avatars {
-  display: flex;
-  gap: -4px;
 }
 
 .member-chip {

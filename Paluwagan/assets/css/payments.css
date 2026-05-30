@@ -72,27 +72,6 @@
 }
 
 /* ── Filter Select ── */
-.filter-select {
-  padding: 10px 36px 10px 14px;
-  background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-size: 13.5px;
-  font-family: var(--font-body);
-  color: var(--color-text-primary);
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%236B6560' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-
-.filter-select:focus {
-  border-color: var(--color-primary);
-  outline: none;
-}
 
 /* ── Table Card ── */
 .table-card {
@@ -151,7 +130,6 @@
 }
 
 .cell-amount.received { color: var(--color-success); }
-.cell-amount.sent     { color: var(--color-text-primary); }
 
 .cell-method {
   color: var(--color-text-secondary);
@@ -176,7 +154,6 @@
 
 .badge-paid    { background: var(--color-success-bg); color: var(--color-success); }
 .badge-pending { background: #FFF4E0; color: var(--color-warning); }
-.badge-missed  { background: var(--color-danger-bg); color: var(--color-danger); }
 
 /* ── Empty State ── */
 .empty-state {

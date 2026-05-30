@@ -1,12 +1,11 @@
 <?php
 session_start();
-
-// Back out one folder to 'back-end/', then connect to 'db.php'
 include "back-end/db.php";
 
 $login_error = "";
 $register_error = "";
 $success = "";
+$status_trigger = null; // New: This will hold our modal data
 
 // ================= LOGIN PROCESSING =================
 if (isset($_POST['login'])) {
@@ -16,35 +15,31 @@ if (isset($_POST['login'])) {
     $result = mysqli_query($conn, "SELECT * FROM users WHERE username='$username'");
     $row = mysqli_fetch_assoc($result);
 
-    // 1. Check if the user even exists
     if (!$row) {
         $login_error = "User not found!";
-    } 
-    // 2. User exists, now check if the password is wrong
-    elseif (!password_verify($password, $row['password_hash'])) {
+    } elseif (!password_verify($password, $row['password_hash'])) {
         $login_error = "Invalid Password!";
-    } 
-    // 3. Username and Password are correct! Proceed to routing
-    else {
-        $_SESSION['user_id'] = $row['user_id'];
-        $_SESSION['username'] = $row['username'];
-        $_SESSION['role'] = $row['role'];
+    } elseif ($row['status'] === 'suspended') {
+        $login_error = "Your account has been suspended by an administrator.";
+    } else {
+        // NEW: Check status and set trigger instead of redirecting
+        if ($row['status'] === 'pending' || $row['status'] === 'denied') {
+            $status_trigger = [
+                'title' => ($row['status'] === 'pending') ? "Account Pending" : "Application Denied",
+                'msg'   => ($row['status'] === 'pending') ? "Your account is under review. Please wait." : "Your application was denied."
+            ];
+        } else {
+            $_SESSION['user_id'] = $row['user_id'];
+            $_SESSION['username'] = $row['username'];
+            $_SESSION['role'] = $row['role'];
 
-        // Admin Routing
-        if ($_SESSION['role'] === 'admin') {
-            header("Location: back-end/php/admin.php");
+            if ($_SESSION['role'] === 'admin') {
+                header("Location: back-end/php/admin.php");
+            } else {
+                header("Location: back-end/php/dashboard.php");
+            }
             exit();
         }
-        
-        // Pending or Denied Routing (Sends them to the review page we made)
-        if (isset($row['status']) && ($row['status'] === 'pending' || $row['status'] === 'denied')) {
-            header("Location: back-end/php/pending-review.php");
-            exit();
-        }
-
-        // Standard Verified Member Routing
-        header("Location: back-end/php/dashboard.php");
-        exit();
     }
 }
 
@@ -56,23 +51,8 @@ if (isset($_POST['register'])) {
     $occupation = mysqli_real_escape_string($conn, $_POST['occupation']);
     $address    = mysqli_real_escape_string($conn, $_POST['address']);
     $password   = password_hash($_POST['password'], PASSWORD_DEFAULT);
-
-    // FIXED: Split the raw string input by space first
-    $raw_name_parts = explode(" ", trim($_POST['fullname']));
-    
-    if (count($raw_name_parts) > 1) {
-        // Pop the very last element off as the last name
-        $raw_last  = array_pop($raw_name_parts);
-        // Keep all preceding elements together as the first name (handles multiple names like Mark Angelo)
-        $raw_first = implode(" ", $raw_name_parts);
-    } else {
-        $raw_first = $raw_name_parts[0];
-        $raw_last  = "";
-    }
-
-    // Now cleanly escape the isolated string pieces for the SQL statement
-    $first_name = mysqli_real_escape_string($conn, $raw_first);
-    $last_name  = mysqli_real_escape_string($conn, $raw_last);
+    $first_name = mysqli_real_escape_string($conn, trim($_POST['firstname']));
+    $last_name  = mysqli_real_escape_string($conn, trim($_POST['lastname']));
 
     $check = mysqli_query($conn, "SELECT user_id FROM users WHERE username='$username' OR email='$email'");
     if (mysqli_num_rows($check) > 0) {
@@ -83,31 +63,20 @@ if (isset($_POST['register'])) {
 
         if (mysqli_query($conn, $insertUser)) {
             $new_user_id = mysqli_insert_id($conn);
-
             if (!empty($_FILES['proof']['name'])) {
-                // Back out two folders to root, then save inside assets/uploads/
-                $target_dir = "../../assets/uploads/";
-                if (!is_dir($target_dir)) { 
-                    mkdir($target_dir, 0777, true); 
-                }
-
-                $file_ext = pathinfo($_FILES["proof"]["name"], PATHINFO_EXTENSION);
-                $filename = "verify_" . $new_user_id . "_" . time() . "." . $file_ext;
-                $target_path = $target_dir . $filename;
-
-                if (move_uploaded_file($_FILES['proof']['tmp_name'], $target_path)) {
-                    $insertVerify = "INSERT INTO user_verifications (user_id, document) 
-                                    VALUES ('$new_user_id', '$filename')";
-                    mysqli_query($conn, $insertVerify);
+                $target_dir = __DIR__ . "/assets/uploads/";
+                if (!is_dir($target_dir)) { mkdir($target_dir, 0777, true); }
+                $filename = "verify_" . $new_user_id . "_" . time() . "." . pathinfo($_FILES["proof"]["name"], PATHINFO_EXTENSION);
+                if (move_uploaded_file($_FILES['proof']['tmp_name'], $target_dir . $filename)) {
+                    mysqli_query($conn, "INSERT INTO user_verifications (user_id, document) VALUES ('$new_user_id', '$filename')");
                 }
             }
-            $success = "Account Created Successfully! Your application is now pending review.";
+            $success = "Account Created Successfully! Pending review.";
         } else {
-            $register_error = "Database Error: Could not process submission.";
+            $register_error = "Database Error.";
         }
     }
 }
 
-// Back out two folders to the root level to include your view file
 include "front-end/views/index-view.php";
 ?>
