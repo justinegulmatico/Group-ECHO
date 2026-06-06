@@ -1,0 +1,283 @@
+/* ================================================
+   TrustFund — Auth Pages (Sign In & Create Account)
+   ================================================ */
+
+.auth-page {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Left Panel ── */
+.auth-left {
+  width: 35%;
+  min-height: 100vh;
+  background: linear-gradient(160deg, #3B2810 0%, #1A1108 60%, #0D0A05 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 48px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-left::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  left: -80px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232, 72, 26, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.auth-brand-icon {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--color-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+
+.auth-brand-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary);
+  font-family: var(--font-display);
+}
+
+.auth-tagline {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.25;
+  margin-bottom: 16px;
+}
+
+.auth-tagline-desc {
+  font-size: 13.5px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+/* ── Right Panel ── */
+.auth-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 100px 56px 48px;
+  background: #FDFAF5;
+}
+
+.auth-right-inner {
+  width: 100%;
+  max-width: 520px;
+}
+
+/* ── Tab Toggle ── */
+.auth-tabs {
+  display: flex;
+  background: var(--color-surface-muted);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 4px;
+  margin-bottom: 16px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  cursor: pointer;
+}
+
+.auth-tab.active {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+
+/* ── Auth Form Heading ── */
+.auth-heading {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.auth-subheading {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-bottom: 16px;
+}
+
+/* ── Form Groups ── */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* ── Password Field ── */
+.password-wrap {
+  position: relative;
+}
+
+.password-wrap .input-field {
+  padding-right: 46px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.password-toggle:hover { color: var(--color-text-secondary); }
+
+/* ── Demo Accounts ── */
+
+/* ── Create Account: Photo Upload ── */
+
+/* ── File Input ── */
+
+.file-input-hidden { display: none; }
+
+/* ── Optional label ── */
+
+/* ==========================================================================
+   TrustFund Tab & Form Dynamic Behavior
+   ========================================================================== */
+
+/* Hide inactive tab contents by default */
+.tab-content {
+    display: none;
+}
+
+/* Display active tab content with smooth fade-in animation */
+.tab-content.active {
+    display: block;
+    animation: authFadeIn 0.3s ease;
+}
+
+/* Keyframes for the tab switching entry effect */
+@keyframes authFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dynamic Notification Alert Typography */
+.error-msg {
+    color: #e8481a;
+    font-size: 0.85rem;
+    margin-top: 10px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.success-msg {
+    color: #2e7d32;
+    font-size: 0.85rem;
+    margin-top: 10px;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Grid layout splitting for inline registration fields (e.g., Email & Phone) */
+.form-row {
+    display: flex;
+    gap: 12px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+/* Viewport restriction & custom scrolling logic for the long registration form */
+.auth-right-inner {
+    max-height: 92vh;
+    overflow-y: auto;
+    padding-right: 10px;
+    scrollbar-width: thin;
+}
+/* Modal Overlay: Makes the background dark and centers the box */
+.tf-modal-overlay {
+    position: fixed !important; /* Forces it to ignore page flow */
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    display: none; 
+    align-items: center;
+    justify-content: center;
+    z-index: 99999 !important; /* Keeps it on top of everything */
+}
+
+/* Modal Box: The white window */
+.tf-modal-box {
+    background: #ffffff !important;
+    padding: 40px !important; /* More breathing room */
+    border-radius: 20px !important; /* Softer, modern edges */
+    text-align: center !important;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+}
+
+/* Make the button stand out more */
+.tf-modal-box .btn-primary {
+    background-color: #f47321 !important; /* Your brand orange */
+    color: white !important;
+    border: none;
+    border-radius: 8px !important;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s;
+}
+
+.tf-modal-box .btn-primary:hover {
+    transform: scale(1.02);
+}
