@@ -3,6 +3,30 @@ session_start();
 // process/ sibling to php/ under back-end/
 include "../db.php";
 
+// Note: process/ is one level below php/, so redirects to controllers must use ../php/...
+// e.g. ../php/my_groups.php instead of ../my_groups.php (which would 404)
+
+// Auto-create group_history if missing
+$hist_check = mysqli_query($conn, "SHOW TABLES LIKE 'group_history'");
+if (!($hist_check && mysqli_num_rows($hist_check) > 0)) {
+    $hcreate = "
+    CREATE TABLE IF NOT EXISTS `group_history` (
+      `history_id` int(11) NOT NULL AUTO_INCREMENT,
+      `group_id` int(11) NOT NULL,
+      `event_type` varchar(50) NOT NULL,
+      `actor_user_id` int(11) DEFAULT NULL,
+      `target_user_id` int(11) DEFAULT NULL,
+      `cycle_number` int(11) DEFAULT NULL,
+      `amount` decimal(10,2) DEFAULT NULL,
+      `description` text,
+      `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+      PRIMARY KEY (`history_id`),
+      KEY `group_id` (`group_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    ";
+    mysqli_query($conn, $hcreate);
+}
+
 // 1. Auth guard
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../index.php");
@@ -39,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     mysqli_stmt_close($check_stmt);
 
     if ($duplicate) {
-        header("Location: ../my_groups.php?error=" . urlencode("A group with this name already exists. Please choose a different name."));
+        header("Location: ../php/my_groups.php?error=" . urlencode("A group with this name already exists. Please choose a different name."));
         exit();
     }
 
@@ -62,6 +86,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         mysqli_stmt_execute($stmt2);
         mysqli_stmt_close($stmt2);
 
+        // Log group created + creator joined
+        $create_desc = "Group created";
+        $chist = mysqli_prepare($conn, "
+            INSERT INTO group_history (group_id, event_type, actor_user_id, target_user_id, description) 
+            VALUES (?, 'group_created', ?, ?, ?)
+        ");
+        if ($chist) {
+            mysqli_stmt_bind_param($chist, "iiis", $new_group_id, $owner_id, $owner_id, $create_desc);
+            mysqli_stmt_execute($chist);
+            mysqli_stmt_close($chist);
+        }
+
+        $join_desc = "Joined as position #1 (creator)";
+        $jhist = mysqli_prepare($conn, "
+            INSERT INTO group_history (group_id, event_type, actor_user_id, target_user_id, description) 
+            VALUES (?, 'member_joined', ?, ?, ?)
+        ");
+        if ($jhist) {
+            mysqli_stmt_bind_param($jhist, "iiis", $new_group_id, $owner_id, $owner_id, $join_desc);
+            mysqli_stmt_execute($jhist);
+            mysqli_stmt_close($jhist);
+        }
+
         // Pre-create ALL cycles for the full rotation (Cycle #N pays the member with position #N)
         for ($c = 1; $c <= $max_members; $c++) {
             $stmtC = mysqli_prepare($conn, "INSERT INTO cycles (group_id, cycle_number, start_date, status, payout_status) VALUES (?, ?, CURDATE(), 'ongoing', 'pending')");
@@ -74,16 +121,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($invite_code) {
             $successMsg .= " Invite Code: " . $invite_code;
         }
-        header("Location: ../my_groups.php?success=" . urlencode($successMsg));
+        header("Location: ../php/my_groups.php?success=" . urlencode($successMsg));
         exit();
     } else {
         $err = mysqli_error($conn);
         mysqli_stmt_close($stmt);
-        header("Location: ../my_groups.php?error=" . urlencode("Failed to create group: " . $err));
+        header("Location: ../php/my_groups.php?error=" . urlencode("Failed to create group: " . $err));
         exit();
     }
 }
 
-header("Location: ../my_groups.php");
+header("Location: ../php/my_groups.php");
 exit();
 ?>

@@ -31,7 +31,7 @@
 
       <div class="page-content">
 
-        <div class="stat-cards">
+        <div class="stat-cards stat-cards-5">
           <div class="stat-card">
             <div class="stat-card-label">Active Groups</div>
             <div class="stat-card-value"><?= $active_groups_count; ?></div>
@@ -52,19 +52,22 @@
             <div class="stat-card-value <?= $net_position >= 0 ? 'green' : 'red'; ?>">₱<?= number_format($net_position); ?></div>
             <div class="stat-card-sub">received minus contributed</div>
           </div>
+
+          <!-- Wallet Balance Card -->
+          <div class="stat-card wallet-card">
+            <div class="stat-card-label" style="color:#9E9790; font-size:11px; letter-spacing:0.02em;">WALLET BALANCE</div>
+            <div class="wallet-balance-amount">₱<?= number_format($wallet_balance, 2); ?></div>
+            <div class="wallet-actions">
+              <button type="button" class="wallet-btn wallet-btn-deposit" id="btn-deposit">+ Deposit</button>
+              <button type="button" class="wallet-btn wallet-btn-withdraw" id="btn-withdraw">↑ Withdraw</button>
+            </div>
+          </div>
         </div>
 
         <div class="section-header">
           <span class="section-title">Active Groups</span>
           <button class="new-group-btn" id="open-group-choice">+ New Group</button>
         </div>
-
-        <!-- Simple Paluwagan rotation hint -->
-        <?php if (isset($next_payout_info)): ?>
-          <div style="background:#fff7ed; border:1px solid #fed7aa; padding:12px 16px; border-radius:10px; margin-bottom:20px; font-size:14px;">
-            <strong>Next in your rotation:</strong> <?= $next_payout_info ?>
-          </div>
-        <?php endif; ?>
 
         <?php if ($active_groups_count == 0): ?>
             <div class="empty-state">
@@ -79,9 +82,16 @@
               <a href="my_groups.php" class="btn-primary" style="width:auto; padding:12px 28px; margin-top:8px; text-decoration:none; display:inline-block; text-align:center;">Browse Groups →</a>
             </div>
         <?php else: ?>
-            <div class="active-groups-container" style="background:#fff; border:1px solid #e3e3e3; padding:20px; border-radius:12px;">
-                <p style="color:#4a4a4a; font-weight:500;">You are currently participating in <?= $active_groups_count; ?> savings loop(s).</p>
-                <a href="my_groups.php" style="color:var(--color-primary, #e8481a); font-size:0.9rem; font-weight:600; text-decoration:none; margin-top:10px; display:inline-block;">Go to My Groups dashboard to track individual charts →</a>
+            <!-- Polished singular dashboard alert panel (replaces loose notice bars) -->
+            <div class="dashboard-alert">
+              <div class="dashboard-alert-icon">💰</div>
+              <div class="dashboard-alert-content">
+                <div class="dashboard-alert-title">You're in <?= $active_groups_count; ?> active savings loop<?= $active_groups_count > 1 ? 's' : ''; ?>.</div>
+                <?php if (isset($next_payout_info) && strpos($next_payout_info, 'Join or create') === false): ?>
+                  <div class="dashboard-alert-sub"><strong>Next in rotation:</strong> <?= htmlspecialchars($next_payout_info) ?></div>
+                <?php endif; ?>
+                <a href="my_groups.php" class="dashboard-alert-link">Track detailed progress and payouts in My Groups →</a>
+              </div>
             </div>
         <?php endif; ?>
 
@@ -237,6 +247,136 @@
     </div>
   </div>
 </div>
+
+  <!-- ==================== DEPOSIT FUNDS MODAL ==================== -->
+  <div class="modal-overlay" id="deposit-modal" style="display:none;">
+    <div class="tx-modal">
+      <div class="tx-modal-header">
+        <span class="tx-modal-title">Deposit Funds</span>
+        <button type="button" class="tx-modal-close" id="close-deposit">&times;</button>
+      </div>
+
+      <form method="POST" action="dashboard.php" enctype="multipart/form-data" id="deposit-form">
+        <input type="hidden" name="action_wallet_deposit" value="1">
+
+        <div class="tx-form-group">
+          <label class="tx-input-label">Amount</label>
+          <div class="tx-amount-wrap">
+            <span class="tx-currency">₱</span>
+            <input type="number" name="amount" class="tx-amount-input" placeholder="0.00" step="0.01" min="1" required>
+          </div>
+        </div>
+
+        <div class="tx-form-group">
+          <label class="tx-input-label">Payment Method</label>
+          <select name="payment_method" class="tx-input-field" required>
+            <option value="GCash">GCash</option>
+            <option value="Maya">Maya</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Cash">Cash (in-person)</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="tx-form-group">
+          <label class="tx-input-label">Upload Receipt / Screenshot <span style="font-weight:400;color:#9E9790;">(required for verification)</span></label>
+          <input type="file" name="receipt" class="tx-file-input" accept="image/*,.pdf" required>
+          <div class="tx-hint">JPG, PNG or PDF up to 5MB</div>
+        </div>
+
+        <div class="tx-notice">
+          Transactions are subject to admin review. Funds will reflect upon approval.
+        </div>
+
+        <div class="tx-modal-actions">
+          <button type="button" class="tx-btn tx-btn-cancel" id="cancel-deposit">Cancel</button>
+          <button type="submit" class="tx-btn tx-btn-submit">Submit Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== WITHDRAW FUNDS MODAL ==================== -->
+  <div class="modal-overlay" id="withdraw-modal" style="display:none;">
+    <div class="tx-modal">
+      <div class="tx-modal-header">
+        <span class="tx-modal-title">Withdraw Funds</span>
+        <button type="button" class="tx-modal-close" id="close-withdraw">&times;</button>
+      </div>
+
+      <form method="POST" action="dashboard.php" id="withdraw-form">
+        <input type="hidden" name="action_wallet_withdraw" value="1">
+
+        <div class="tx-form-group">
+          <label class="tx-input-label">Amount</label>
+          <div class="tx-amount-wrap">
+            <span class="tx-currency">₱</span>
+            <input type="number" name="amount" class="tx-amount-input" placeholder="0.00" step="0.01" min="1" required>
+          </div>
+          <div class="tx-hint">Available: ₱<?= number_format($wallet_balance, 2); ?></div>
+        </div>
+
+        <div class="tx-form-group">
+          <label class="tx-input-label">Payment Method / Destination</label>
+          <select name="payment_method" class="tx-input-field" required>
+            <option value="GCash">GCash</option>
+            <option value="Maya">Maya</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="tx-form-group">
+          <label class="tx-input-label">Account Details</label>
+          <textarea name="account_details" class="tx-input-field tx-textarea" rows="2" placeholder="GCash number / Bank account name &amp; number / E-wallet ID" required></textarea>
+        </div>
+
+        <div class="tx-notice">
+          Transactions are subject to admin review. Funds will reflect upon approval.
+        </div>
+
+        <div class="tx-modal-actions">
+          <button type="button" class="tx-btn tx-btn-cancel" id="cancel-withdraw">Cancel</button>
+          <button type="submit" class="tx-btn tx-btn-submit">Submit Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Deposit Pending Approval Modal (shown after regular user submits a deposit) -->
+  <div class="modal-overlay" id="deposit-pending-modal" style="display:none;">
+    <div class="tx-modal" style="max-width: 420px; text-align: center;">
+      <div class="tx-modal-header" style="border-bottom: none; justify-content: center; padding-bottom: 8px;">
+        <span class="tx-modal-title" style="font-size: 20px;">Deposit Request Submitted</span>
+      </div>
+
+      <div style="padding: 10px 0 20px;">
+        <div style="font-size: 42px; margin-bottom: 12px;">⏳</div>
+        
+        <?php if (!empty($show_deposit_pending_modal) && $show_deposit_pending_modal && $pending_deposit_amount > 0): ?>
+          <p style="font-size: 15px; font-weight: 600; color: #1A1A1A; margin-bottom: 8px;">
+            Your deposit of <strong>₱<?= number_format($pending_deposit_amount, 2); ?></strong> has been submitted successfully.
+          </p>
+        <?php else: ?>
+          <p style="font-size: 15px; font-weight: 600; color: #1A1A1A; margin-bottom: 8px;">
+            Your deposit request has been submitted successfully.
+          </p>
+        <?php endif; ?>
+        
+        <p style="font-size: 14px; color: #6B6560; line-height: 1.5;">
+          Please wait for an admin to review and approve your request.<br>
+          The funds will be added to your wallet balance once approved.<br>
+          You can monitor the status in the Transaction Approvals section (if admin) or by refreshing your Dashboard.
+        </p>
+      </div>
+
+      <div class="tx-modal-actions" style="border-top: 1px solid #E4DDD4; padding-top: 16px; justify-content: center;">
+        <button type="button" class="tx-btn tx-btn-submit" onclick="closeDepositPendingModal()" style="flex: none; min-width: 140px;">
+          OK, I Understand
+        </button>
+      </div>
+    </div>
+  </div>
   
   <script>
   // ==================== + NEW GROUP BUTTON → OPENS CHOICE MODAL ====================
@@ -354,7 +494,86 @@
       setTimeout(toggleInviteCode, 0);
       privacySel.addEventListener('change', toggleInviteCode);
     }
+
+    // ==================== WALLET DEPOSIT / WITHDRAW MODALS ====================
+    const btnDeposit = document.getElementById('btn-deposit');
+    const btnWithdraw = document.getElementById('btn-withdraw');
+    const depositModal = document.getElementById('deposit-modal');
+    const withdrawModal = document.getElementById('withdraw-modal');
+
+    function showModal(modal) {
+      if (modal) modal.style.display = 'flex';
+    }
+    function hideModal(modal) {
+      if (modal) modal.style.display = 'none';
+    }
+
+    if (btnDeposit && depositModal) {
+      btnDeposit.addEventListener('click', () => showModal(depositModal));
+    }
+    if (btnWithdraw && withdrawModal) {
+      btnWithdraw.addEventListener('click', () => showModal(withdrawModal));
+    }
+
+    // Close buttons
+    const closeDep = document.getElementById('close-deposit');
+    const cancelDep = document.getElementById('cancel-deposit');
+    if (closeDep) closeDep.addEventListener('click', () => hideModal(depositModal));
+    if (cancelDep) cancelDep.addEventListener('click', () => hideModal(depositModal));
+
+    const closeW = document.getElementById('close-withdraw');
+    const cancelW = document.getElementById('cancel-withdraw');
+    if (closeW) closeW.addEventListener('click', () => hideModal(withdrawModal));
+    if (cancelW) cancelW.addEventListener('click', () => hideModal(withdrawModal));
+
+    // Click outside to close
+    if (depositModal) {
+      depositModal.addEventListener('click', function(e) {
+        if (e.target === depositModal) hideModal(depositModal);
+      });
+    }
+    if (withdrawModal) {
+      withdrawModal.addEventListener('click', function(e) {
+        if (e.target === withdrawModal) hideModal(withdrawModal);
+      });
+    }
+
+    // Optional: reset form on close (simple)
+    if (depositModal) {
+      const depForm = depositModal.querySelector('form');
+      if (depForm) {
+        depositModal.addEventListener('click', function(e){
+          if (e.target === depositModal) depForm.reset();
+        });
+      }
+    }
+
+    // Show "wait for admin approval" modal after a regular user deposit
+    <?php if (!empty($show_deposit_pending_modal) && $show_deposit_pending_modal): ?>
+    (function() {
+      const pendingModal = document.getElementById('deposit-pending-modal');
+      if (pendingModal) {
+        pendingModal.style.display = 'flex';
+      }
+    })();
+    <?php endif; ?>
   });
+
+  // Close handler for the deposit pending approval modal
+  function closeDepositPendingModal() {
+    const m = document.getElementById('deposit-pending-modal');
+    if (m) m.style.display = 'none';
+  }
+
+  // Also allow closing by clicking the overlay background
+  const pendingOverlay = document.getElementById('deposit-pending-modal');
+  if (pendingOverlay) {
+    pendingOverlay.addEventListener('click', function(e) {
+      if (e.target === pendingOverlay) {
+        pendingOverlay.style.display = 'none';
+      }
+    });
+  }
 </script>
   <script src="../js/notifications.js"></script>
 </body>

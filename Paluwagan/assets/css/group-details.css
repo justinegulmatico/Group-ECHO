@@ -844,3 +844,194 @@ tbody tr:last-child td { border-bottom: none; }
   font-size: 12px;
   color: #8A837A;
 }
+
+/* ================================================
+   ACTIVE CYCLE HIGHLIGHT CARD (new prominent section)
+   ================================================ */
+.active-cycle-card {
+  background: #fff;
+  border: 1.5px solid #E4DDD4;
+  border-radius: 16px;
+  padding: 18px 22px;
+  margin-bottom: 22px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.035);
+  display: grid;
+  grid-template-columns: 1.15fr 1.6fr 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+.ach-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8A837A;
+  margin-bottom: 8px;
+}
+
+/* Receiver Spotlight */
+.ach-receiver-block {
+  padding-right: 8px;
+}
+
+.ach-receiver-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.ach-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.ach-receiver-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1F1C19;
+  line-height: 1.15;
+}
+
+.ach-receiver-pos {
+  font-size: 12px;
+  color: #8A837A;
+}
+
+.ach-status-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-top: 2px;
+}
+
+.ach-status-badge.awaiting {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.ach-status-badge.ready {
+  background: #DCFCE7;
+  color: #166534;
+}
+
+/* Progress Center */
+.ach-progress-block {
+  padding: 0 6px;
+}
+
+.ach-progress-container {
+  margin-top: 2px;
+}
+
+.ach-progress-track {
+  height: 9px;
+  background: #F0EBE3;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.ach-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #E15225, #f07a52);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.ach-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+}
+
+.ach-count {
+  color: #4A4540;
+  font-weight: 600;
+}
+
+.ach-pct-pill {
+  background: #F5F0E8;
+  color: #E15225;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid #E4DDD4;
+}
+
+/* Right: Pot + Action */
+.ach-pot-block {
+  text-align: right;
+}
+
+.ach-pot-mini {
+  margin-bottom: 10px;
+}
+
+.ach-pot-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #8A837A;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ach-pot-value {
+  font-size: 19px;
+  font-weight: 700;
+  color: #1F1C19;
+  line-height: 1.1;
+  margin-top: 1px;
+}
+
+.ach-contrib-btn {
+  background: #E15225;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s;
+  white-space: nowrap;
+}
+
+.ach-contrib-btn:hover {
+  background: #c93d12;
+}
+
+.ach-contrib-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #E8F5EE;
+  color: #166534;
+  font-weight: 600;
+  font-size: 12.5px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #a7f3d0;
+}
+
+.ach-contrib-done .check {
+  font-weight: 800;
+}
+
+/* Polish: make the 4 overview cards values pop a bit more */
+.overview-stat-card .ov-value {
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}

@@ -64,12 +64,19 @@ $js_version = file_exists($js_file) ? filemtime($js_file) : time();
 
     <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
       <div class="sidebar-section-label" style="margin-top: 20px;">Admin</div>
-      <a href="<?= $prefix ?>admin/index.php" class="sidebar-nav-item <?= (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? 'active' : '' ?>">
+      <a href="<?= $prefix ?>admin/index.php" class="sidebar-nav-item <?= (strpos($_SERVER['PHP_SELF'], '/admin/') !== false && strpos($_SERVER['PHP_SELF'], 'transactions') === false) ? 'active' : '' ?>">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           <polyline points="9 12 11 14 15 10"/>
         </svg>
         <span class="nav-text">Admin Panel</span>
+      </a>
+      <a href="<?= $prefix ?>admin/transactions.php" class="sidebar-nav-item <?= (strpos($_SERVER['PHP_SELF'], 'transactions') !== false) ? 'active' : '' ?>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+          <path d="M6 15h.01M10 15h4"/>
+        </svg>
+        <span class="nav-text">Transaction Approvals</span>
       </a>
     <?php endif; ?>
   </nav>

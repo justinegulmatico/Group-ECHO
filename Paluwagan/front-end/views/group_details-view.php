@@ -7,6 +7,34 @@
   
   <link rel="stylesheet" href="../../assets/css/global.css?v=<?= filemtime(__DIR__ . '/../../assets/css/global.css') ?>" />
   <link rel="stylesheet" href="../../assets/css/group-details.css?v=<?= filemtime(__DIR__ . '/../../assets/css/group-details.css') ?>" />
+  <style>
+    .wallet-balance-box {
+      background: #F9F6F1;
+      border: 1.5px solid #E4DDD4;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+    .wb-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6B6560;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .wb-amount {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1A1A1A;
+      line-height: 1.1;
+      margin-top: 2px;
+    }
+    .wb-warning {
+      font-size: 11.5px;
+      color: #C0392B;
+      margin-top: 4px;
+    }
+  </style>
 </head>
 <body>
   <div class="app-layout">
@@ -31,6 +59,18 @@
       </header>
 
       <div class="page-content" id="page-content">
+
+        <?php if (isset($_GET['success'])): ?>
+          <div style="background:#E8F5EE; border:1px solid #a7f3d0; color:#166534; padding:12px 16px; border-radius:10px; margin-bottom:16px; font-size:14px;">
+            <?= htmlspecialchars($_GET['success']) ?>
+          </div>
+        <?php endif; ?>
+
+        <?php if (isset($_GET['error'])): ?>
+          <div style="background:#FDE8E2; border:1px solid #FCA5A5; color:#C0392B; padding:12px 16px; border-radius:10px; margin-bottom:16px; font-size:14px;">
+            <?= htmlspecialchars($_GET['error']) ?>
+          </div>
+        <?php endif; ?>
 
         <div class="group-hero">
           <div class="hero-left">
@@ -69,7 +109,6 @@
             <?php if (!empty($is_member)): ?>
               <button class="hero-btn primary" onclick="openRecordPaymentModal()">+ Payment</button>
             <?php endif; ?>
-            <button class="hero-btn secondary">+ Payout</button>
 
             <?php if ($current_group['status'] === 'pending' && (int)$current_group['created_by'] === $current_user_id): ?>
               <form method="POST" style="display:inline;">
@@ -123,6 +162,76 @@
               </div>
             </div>
 
+            <?php if (!empty($active_cycle) && !empty($active_cycle['receiver'])): 
+              $ac = $active_cycle;
+              $rec = $ac['receiver'];
+              $rec_name = htmlspecialchars($rec['first_name'] . ' ' . $rec['last_name']);
+              $rec_initials = strtoupper(substr($rec['first_name'],0,1) . substr($rec['last_name'] ?: '', 0, 1));
+              $ac_cycle_num = (int)$ac['cycle_number'];
+              $ac_collected = (float)($ac['collected'] ?? 0);
+              $ac_full = (float)($ac['full_pot'] ?? ($current_group['contribution_amount'] * count($group_members)));
+              $ac_paid_cnt = (int)($ac['paid_count'] ?? 0);
+              $ac_expected = max(1, count($group_members));
+              $ac_progress = min(100, (int)round( ($ac_paid_cnt / $ac_expected) * 100 ));
+              $ac_status = ($ac_collected + 0.5 >= $ac_full) ? 'Ready to Collect' : 'Awaiting Pool Completion';
+              $ac_status_class = ($ac_collected + 0.5 >= $ac_full) ? 'ready' : 'awaiting';
+
+              // Has the logged-in user paid for this active cycle?
+              $user_paid_active = false;
+              if (!empty($my_member_id)) {
+                // We compute this in controller and expose as $user_paid_for_active_cycle
+                $user_paid_active = !empty($user_paid_for_active_cycle);
+              }
+            ?>
+            <!-- Active Cycle Highlight Card -->
+            <div class="active-cycle-card">
+              <!-- Left: Receiver Spotlight -->
+              <div class="ach-receiver-block">
+                <div class="ach-section-label">Current Receiver</div>
+                <div class="ach-receiver-main">
+                  <div class="ach-avatar" style="background:#FDE8E2; color:#E15225; border:2px solid #FAD2C0;"><?= $rec_initials ?></div>
+                  <div class="ach-receiver-info">
+                    <div class="ach-receiver-name"><?= $rec_name ?></div>
+                    <div class="ach-receiver-pos">Position #<?= $ac_cycle_num ?></div>
+                  </div>
+                </div>
+                <span class="ach-status-badge <?= $ac_status_class ?>"><?= $ac_status ?></span>
+              </div>
+
+              <!-- Center: Progress -->
+              <div class="ach-progress-block">
+                <div class="ach-section-label">Collection Progress</div>
+                <div class="ach-progress-container">
+                  <div class="ach-progress-track">
+                    <div class="ach-progress-fill" style="width: <?= $ac_progress ?>%;"></div>
+                  </div>
+                  <div class="ach-progress-meta">
+                    <span class="ach-count"><?= $ac_paid_cnt ?> / <?= $ac_expected ?> Paid</span>
+                    <span class="ach-pct-pill"><?= $ac_progress ?>%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Pot + Action -->
+              <div class="ach-pot-block">
+                <div class="ach-pot-mini">
+                  <div class="ach-pot-label">Pot to be Distributed</div>
+                  <div class="ach-pot-value">₱<?= number_format($ac_full, 0) ?></div>
+                </div>
+
+                <?php if ($user_paid_active): ?>
+                  <div class="ach-contrib-done">
+                    <span class="check">✓</span> Your Contribution Submitted
+                  </div>
+                <?php else: ?>
+                  <button type="button" class="ach-contrib-btn" onclick="openRecordPaymentModal()">
+                    Contribute ₱<?= number_format($current_group['contribution_amount'], 0) ?>
+                  </button>
+                <?php endif; ?>
+              </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Members & Positions (kept in Overview) -->
             <div style="margin-top: 24px;">
               <div style="font-size:14px; font-weight:700; color:#1F1C19; margin-bottom:10px;">Members &amp; Positions</div>
@@ -136,15 +245,22 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <?php foreach ($group_members as $mem): 
-                      $is_current_user = (int)$mem['user_id'] === $current_user_id;
+                    <?php 
+                      $active_receiver_pos = (!empty($active_cycle) && !empty($active_cycle['cycle_number'])) ? (int)$active_cycle['cycle_number'] : 0;
+                      foreach ($group_members as $mem): 
+                        $is_current_user = (int)$mem['user_id'] === $current_user_id;
+                        $is_active_receiver = ((int)$mem['position'] === $active_receiver_pos);
+                        $row_style = $is_active_receiver ? 'background:#FDF6F0; border-left: 3px solid #E15225;' : '';
                     ?>
-                      <tr>
+                      <tr style="<?= $row_style ?>">
                         <td><strong>#<?= $mem['position'] ?></strong></td>
                         <td>
                           <?= htmlspecialchars($mem['first_name'] . ' ' . $mem['last_name']) ?>
                           <?php if ($is_current_user): ?>
                             <span style="color:#E15225; font-size:11px; font-weight:600;"> (You)</span>
+                          <?php endif; ?>
+                          <?php if ($is_active_receiver): ?>
+                            <span style="margin-left:6px; font-size:10px; background:#FAD2C0; color:#C7461D; padding:1px 6px; border-radius:999px; font-weight:700;">RECEIVING</span>
                           <?php endif; ?>
                         </td>
                         <td style="text-align:right;"><span class="status-released">Active</span></td>
@@ -266,29 +382,55 @@
         <?php if ($active_tab === 'history'): ?>
           <div class="tab-panel active">
             <div class="history-ledger">
-              <h4>Payment Ledger - Current Cycle</h4>
-              <div class="ledger-timeline">
-                <div class="ledger-entry">
-                  <div class="entry-date">2026-06-01</div>
-                  <div class="entry-body">
-                    <div class="entry-main">
-                      Jose Rizal paid <strong>₱500</strong> 
-                      <span class="entry-status completed">Completed</span>
+              <h4>Group Activity History</h4>
+              <?php if (!empty($group_history)): ?>
+                <div class="ledger-timeline">
+                  <?php foreach ($group_history as $h): 
+                    $date = !empty($h['created_at']) ? date('Y-m-d H:i', strtotime($h['created_at'])) : 'N/A';
+                    $actor = !empty($h['actor_first']) ? htmlspecialchars($h['actor_first'] . ' ' . $h['actor_last']) : '';
+                    $target = !empty($h['target_first']) ? htmlspecialchars($h['target_first'] . ' ' . $h['target_last']) : '';
+                    $evt = $h['event_type'] ?? 'event';
+                    $desc = !empty($h['description']) ? htmlspecialchars($h['description']) : ucfirst(str_replace('_', ' ', $evt));
+                    $amt = isset($h['amount']) && $h['amount'] > 0 ? '₱' . number_format($h['amount'], 0) : '';
+                    $cycle = !empty($h['cycle_number']) ? 'Cycle #' . $h['cycle_number'] : '';
+                  ?>
+                    <div class="ledger-entry">
+                      <div class="entry-date"><?= $date ?></div>
+                      <div class="entry-body">
+                        <div class="entry-main">
+                          <?php if ($evt === 'payment'): ?>
+                            <?= $target ? $target : 'Member' ?> paid <strong><?= $amt ?></strong>
+                            <span class="entry-status completed">Completed</span>
+                          <?php elseif ($evt === 'payout'): ?>
+                            Payout <?= $amt ?> released to <?= $target ?: 'receiver' ?>
+                            <span class="entry-status completed">Completed</span>
+                          <?php elseif ($evt === 'member_joined'): ?>
+                            <?= $target ?: 'New member' ?> joined the group
+                            <span class="entry-status completed">Joined</span>
+                          <?php elseif ($evt === 'group_created'): ?>
+                            Group created
+                            <span class="entry-status completed">System</span>
+                          <?php elseif ($evt === 'group_activated' || $evt === 'group_closed'): ?>
+                            <?= ucfirst(str_replace('_', ' ', $evt)) ?>
+                            <span class="entry-status completed">System</span>
+                          <?php else: ?>
+                            <?= $desc ?>
+                          <?php endif; ?>
+                        </div>
+                        <div class="entry-details">
+                          <?= $cycle ? $cycle . ' • ' : '' ?><?= $desc ?>
+                          <?php if ($actor): ?> • by <?= $actor ?><?php endif; ?>
+                        </div>
+                      </div>
                     </div>
-                    <div class="entry-details">Cycle #1 • For Payout • Status: Paid</div>
-                  </div>
+                  <?php endforeach; ?>
                 </div>
-                <div class="ledger-entry">
-                  <div class="entry-date">2026-05-25</div>
-                  <div class="entry-body">
-                    <div class="entry-main">
-                      Maria Clara paid <strong>₱500</strong> 
-                      <span class="entry-status completed">Completed</span>
-                    </div>
-                    <div class="entry-details">Cycle #1 • For Payout</div>
-                  </div>
+              <?php else: ?>
+                <div class="history-ledger" style="padding: 20px; text-align: center; color: #8A837A;">
+                  No history recorded yet for this group.<br>
+                  Payments, payouts, member joins, and group status changes will appear here.
                 </div>
-              </div>
+              <?php endif; ?>
             </div>
           </div>
         <?php endif; ?>
@@ -300,7 +442,7 @@
         <button class="modal-close-btn" onclick="closeRecordPaymentModal()">✕</button>
       </div>
       <div class="modal-body">
-        <form action="../process/process_record_payment.php" method="POST">
+        <form action="../process/process_record_payment.php" method="POST" id="recordPaymentForm">
           <input type="hidden" name="group_id" value="<?= $group_id; ?>">
           <input type="hidden" name="member_id" value="<?= $my_member_id; ?>">
           
@@ -309,10 +451,19 @@
             <input class="input-field" type="text" value="<?= htmlspecialchars($full_name); ?>" readonly style="background-color: #f3f4f6; cursor: not-allowed;" />
           </div>
 
+          <!-- Wallet Balance (replaces Payment Method) -->
+          <div class="wallet-balance-box">
+            <div class="wb-label">Paying from your Wallet Balance</div>
+            <div class="wb-amount">₱<?= number_format($wallet_balance, 2); ?></div>
+            <?php if ($wallet_balance <= 0): ?>
+              <div class="wb-warning">No balance yet. Deposit funds from the Dashboard first.</div>
+            <?php endif; ?>
+          </div>
+
           <div class="form-row">
             <div class="form-group" style="flex: 1;">
               <label class="input-label">Amount (₱)</label>
-              <input class="input-field" type="number" name="amount" value="<?= (int)$current_group['contribution_amount']; ?>" step="0.01" required />
+              <input class="input-field" type="number" name="amount" id="pay-amount" value="<?= number_format($current_group['contribution_amount'], 2, '.', ''); ?>" step="0.01" min="1" required />
             </div>
             <div class="form-group" style="flex: 1;">
               <label class="input-label">Cycle #</label>
@@ -324,18 +475,14 @@
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="input-label">Payment Method</label>
-            <select name="payment_method" class="input-field" style="appearance: auto;">
-              <option value="cash">Cash</option>
-              <option value="gcash">GCash</option>
-              <option value="bank_transfer">Bank Transfer</option>
-            </select>
-          </div>
-
-          <button class="btn-primary" type="submit" style="margin-top: 16px; width: 100%;">Record Payment</button>
+          <button class="btn-primary" type="submit" style="margin-top: 16px; width: 100%;" id="record-pay-btn">Record Payment from Wallet</button>
         </form>
-        <p style="font-size:12px; color:#666; margin-top:10px;">Tip: You can also use the "Pay" buttons directly in the cycle schedule above.</p>
+
+        <div id="insufficient-warning" style="display:none; margin-top:8px; font-size:12.5px; color:#C0392B; background:#FDE8E2; padding:8px 10px; border-radius:6px;">
+          Insufficient wallet balance for this amount.
+        </div>
+
+        <p style="font-size:12px; color:#666; margin-top:10px;">This will deduct the amount directly from your TrustFund wallet balance.</p>
       </div>
     </div>
   </div>
@@ -351,6 +498,33 @@
       document.getElementById('paymentRecordModal').addEventListener('click', function(e) {
           if (e.target === this) this.classList.remove('open');
       });
+
+      // Live insufficient balance warning (client-side convenience)
+      (function() {
+        const amountInput = document.getElementById('pay-amount');
+        const warning = document.getElementById('insufficient-warning');
+        const submitBtn = document.getElementById('record-pay-btn');
+        const currentBalance = <?= (float)$wallet_balance; ?>;
+
+        function checkBalance() {
+          if (!amountInput || !warning) return;
+          const val = parseFloat(amountInput.value) || 0;
+          if (val > currentBalance && currentBalance >= 0) {
+            warning.style.display = 'block';
+            if (submitBtn) submitBtn.style.opacity = '0.6';
+          } else {
+            warning.style.display = 'none';
+            if (submitBtn) submitBtn.style.opacity = '1';
+          }
+        }
+
+        if (amountInput) {
+          amountInput.addEventListener('input', checkBalance);
+          amountInput.addEventListener('change', checkBalance);
+          // initial
+          setTimeout(checkBalance, 50);
+        }
+      })();
   </script>
 </body>
 </html>

@@ -12,6 +12,10 @@ $current_user_id = (int)$_SESSION['user_id'];
 $toast_message = "";
 $toast_type = "";
 
+// Flags for post-deposit "awaiting admin approval" modal (only for regular users)
+$show_deposit_pending_modal = false;
+$pending_deposit_amount = 0;
+
 // ─── LOGIC: CREATE GROUP (prepared, full fields, seed cycle, consistent) ───
 if (isset($_POST['action_create_group'])) {
     $group_name = trim($_POST['group_name'] ?? '');
@@ -144,6 +148,192 @@ $total_received = (float)(mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['tot
 mysqli_stmt_close($stmt);
 
 $net_position = $total_received - $total_contributed;
+
+// Auto-create wallet_requests table if it doesn't exist yet (prevents errors on first use)
+$table_check = mysqli_query($conn, "SHOW TABLES LIKE 'wallet_requests'");
+if (!($table_check && mysqli_num_rows($table_check) > 0)) {
+    $create_sql = "
+    CREATE TABLE IF NOT EXISTS `wallet_requests` (
+      `request_id` int(11) NOT NULL AUTO_INCREMENT,
+      `user_id` int(11) NOT NULL,
+      `type` enum('deposit','withdraw') NOT NULL,
+      `amount` decimal(10,2) NOT NULL,
+      `payment_method` varchar(60) DEFAULT NULL,
+      `account_details` text DEFAULT NULL,
+      `attachment` varchar(255) DEFAULT NULL,
+      `status` enum('pending','approved','declined') NOT NULL DEFAULT 'pending',
+      `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+      `reviewed_by` int(11) DEFAULT NULL,
+      `reviewed_at` datetime DEFAULT NULL,
+      PRIMARY KEY (`request_id`),
+      KEY `user_id` (`user_id`),
+      KEY `status` (`status`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    ";
+    mysqli_query($conn, $create_sql);
+}
+
+// Compute current wallet balance early (for withdraw validation in this request)
+$wallet_balance = 0.00;
+$table_check = mysqli_query($conn, "SHOW TABLES LIKE 'wallet_requests'");
+if ($table_check && mysqli_num_rows($table_check) > 0) {
+  $wstmt = mysqli_prepare($conn, "
+    SELECT 
+      COALESCE(SUM(CASE WHEN type = 'deposit' AND status = 'approved' THEN amount ELSE 0 END), 0) -
+      COALESCE(SUM(CASE WHEN type = 'withdraw' AND status = 'approved' THEN amount ELSE 0 END), 0) AS balance
+    FROM wallet_requests 
+    WHERE user_id = ?
+  ");
+  if ($wstmt) {
+    mysqli_stmt_bind_param($wstmt, "i", $current_user_id);
+    mysqli_stmt_execute($wstmt);
+    $wres = mysqli_stmt_get_result($wstmt);
+    if ($wrow = mysqli_fetch_assoc($wres)) {
+      $wallet_balance = (float)($wrow['balance'] ?? 0);
+    }
+    mysqli_stmt_close($wstmt);
+  }
+}
+
+// ─── HANDLE DEPOSIT / WITHDRAW REQUESTS (before balance calc so UI reflects immediately on same render) ───
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+  // Ensure organized upload folders exist under assets
+  $assets_uploads_base = __DIR__ . '/../../assets/uploads';
+  $documents_dir = $assets_uploads_base . '/documents';
+  $payments_dir = $assets_uploads_base . '/payments';
+  if (!is_dir($documents_dir)) @mkdir($documents_dir, 0755, true);
+  if (!is_dir($payments_dir)) @mkdir($payments_dir, 0755, true);
+
+  // Table is auto-created earlier in the script if missing; this check is now mostly for legacy/guard
+  $wallet_table_exists = false;
+  $table_check = mysqli_query($conn, "SHOW TABLES LIKE 'wallet_requests'");
+  if ($table_check && mysqli_num_rows($table_check) > 0) {
+    $wallet_table_exists = true;
+  }
+
+  if (isset($_POST['action_wallet_deposit'])) {
+    $amount = isset($_POST['amount']) ? (float)$_POST['amount'] : 0;
+    $method = trim($_POST['payment_method'] ?? 'GCash');
+
+    if ($amount > 0) {
+      $attachment = null;
+      if (!empty($_FILES['receipt']['name']) && $_FILES['receipt']['error'] === UPLOAD_ERR_OK) {
+        $ext = strtolower(pathinfo($_FILES['receipt']['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg','jpeg','png','pdf','gif'];
+        if (in_array($ext, $allowed)) {
+          $fname = 'wallet_deposit_' . $current_user_id . '_' . time() . '.' . $ext;
+          $dest = $documents_dir . '/' . $fname;   // organized under uploads/documents
+          if (move_uploaded_file($_FILES['receipt']['tmp_name'], $dest)) {
+            $attachment = 'assets/uploads/documents/' . $fname;
+          }
+        }
+      }
+
+      if ($wallet_table_exists) {
+        // Admins depositing (including to their own account) are auto-approved, no validation needed.
+        // Regular users always go through pending review.
+        $is_admin = (isset($_SESSION['role']) && $_SESSION['role'] === 'admin');
+        $dep_status = $is_admin ? 'approved' : 'pending';
+        $dep_reviewed_by = $is_admin ? $current_user_id : null;
+        $dep_reviewed_at = $is_admin ? 'NOW()' : null;
+
+        if ($is_admin) {
+          $stmt = mysqli_prepare($conn, "
+            INSERT INTO wallet_requests 
+            (user_id, type, amount, payment_method, attachment, status, created_at, reviewed_by, reviewed_at) 
+            VALUES (?, 'deposit', ?, ?, ?, 'approved', NOW(), ?, NOW())
+          ");
+          if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "idssi", $current_user_id, $amount, $method, $attachment, $dep_reviewed_by);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+            $toast_message = "Deposit credited to your wallet immediately (admin direct).";
+            $toast_type = "success";
+          } else {
+            $toast_message = "Failed to submit deposit (database error).";
+            $toast_type = "error";
+          }
+        } else {
+          $stmt = mysqli_prepare($conn, "INSERT INTO wallet_requests (user_id, type, amount, payment_method, attachment, status, created_at) VALUES (?, 'deposit', ?, ?, ?, 'pending', NOW())");
+          if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "idss", $current_user_id, $amount, $method, $attachment);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+            $toast_message = "Deposit request submitted. Awaiting admin review.";
+            $toast_type = "success";
+
+            // Trigger a dedicated modal window telling the user to wait for admin approval
+            $show_deposit_pending_modal = true;
+            $pending_deposit_amount = $amount;
+          } else {
+            $toast_message = "Failed to submit deposit (database error).";
+            $toast_type = "error";
+          }
+        }
+      } else {
+        $toast_message = "Wallet system not initialized yet. Please create the 'wallet_requests' table first (see admin/transactions.php for SQL).";
+        $toast_type = "error";
+      }
+    } else {
+      $toast_message = "Please enter a valid deposit amount.";
+      $toast_type = "error";
+    }
+  }
+
+  if (isset($_POST['action_wallet_withdraw'])) {
+    $amount = isset($_POST['amount']) ? (float)$_POST['amount'] : 0;
+    $method = trim($_POST['payment_method'] ?? 'GCash');
+    $details = trim($_POST['account_details'] ?? '');
+
+    if ($amount > 0 && $amount <= $wallet_balance) {
+      if ($wallet_table_exists) {
+        $stmt = mysqli_prepare($conn, "INSERT INTO wallet_requests (user_id, type, amount, payment_method, account_details, status, created_at) VALUES (?, 'withdraw', ?, ?, ?, 'pending', NOW())");
+        if ($stmt) {
+          mysqli_stmt_bind_param($stmt, "idss", $current_user_id, $amount, $method, $details);
+          mysqli_stmt_execute($stmt);
+          mysqli_stmt_close($stmt);
+          $toast_message = "Withdrawal request submitted. Awaiting admin review.";
+          $toast_type = "success";
+        } else {
+          $toast_message = "Failed to submit withdrawal (database error).";
+          $toast_type = "error";
+        }
+      } else {
+        $toast_message = "Wallet system not initialized yet. Please create the 'wallet_requests' table first.";
+        $toast_type = "error";
+      }
+    } else if ($amount > $wallet_balance) {
+      $toast_message = "Insufficient wallet balance for this withdrawal.";
+      $toast_type = "error";
+    } else {
+      $toast_message = "Please enter a valid withdrawal amount.";
+      $toast_type = "error";
+    }
+  }
+}
+
+// ─── WALLET BALANCE (computed from approved wallet_requests — safe if table missing) ───
+$wallet_balance = 0.00;
+$table_check = mysqli_query($conn, "SHOW TABLES LIKE 'wallet_requests'");
+if ($table_check && mysqli_num_rows($table_check) > 0) {
+  $stmt = mysqli_prepare($conn, "
+    SELECT 
+      COALESCE(SUM(CASE WHEN type = 'deposit' AND status = 'approved' THEN amount ELSE 0 END), 0) -
+      COALESCE(SUM(CASE WHEN type = 'withdraw' AND status = 'approved' THEN amount ELSE 0 END), 0) AS balance
+    FROM wallet_requests 
+    WHERE user_id = ?
+  ");
+  if ($stmt) {
+    mysqli_stmt_bind_param($stmt, "i", $current_user_id);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
+    if ($row = mysqli_fetch_assoc($res)) {
+      $wallet_balance = (float)($row['balance'] ?? 0);
+    }
+    mysqli_stmt_close($stmt);
+  }
+}
 
 // Simple extra paluwagan info for dashboard (next upcoming payout indicator)
 $next_payout_info = "Join or create groups to see your rotation schedule.";
