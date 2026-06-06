@@ -231,3 +231,119 @@
   max-width: 300px;
 }
 
+/* ================================================
+   MODAL OVERLAY & Z-INDEX FIX
+   ================================================ */
+
+.modal-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(0, 0, 0, 0.6) !important;
+        z-index: 999999 !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+.modal {
+        background: var(--color-surface) !important; /* Uses your global surface color */
+        width: 90% !important;
+        max-width: 500px !important;
+        max-height: 85vh !important;
+        overflow-y: auto !important;
+        border-radius: 12px !important;
+        padding: 24px !important;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
+        position: relative !important;
+        z-index: 1000000 !important;
+    }
+
+/* Ensure the close button stays positioned correctly */
+.modal-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        color: var(--color-text-secondary);
+    }
+
+/* =========================================
+       MODAL INTERNAL LININGS & FORM STYLES
+       ========================================= */
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e3e3e3; /* The dividing line under the title */
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
+
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #e3e3e3; /* The dividing line above the button */
+        padding-top: 20px;
+        margin-top: 10px;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 15px; /* Adds space between columns */
+        margin-bottom: 15px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 15px;
+        width: 100%;
+    }
+
+    .input-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 6px;
+    }
+
+    .input-field {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1.5px solid #ccc; /* The lining of the input boxes */
+        border-radius: 8px;
+        font-size: 0.95rem;
+        box-sizing: border-box; /* Ensures padding doesn't break width */
+        transition: border-color 0.2s ease;
+    }
+
+    .input-field:focus {
+        border-color: #f47321; /* Brand orange when clicked */
+        outline: none;
+    }
+
+    /* Fix the button inside the dashboard */
+.modal .btn-primary {
+        background-color: var(--color-primary) !important;
+        color: white !important;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    #cg-invitecode {
+        background: #fdf6f2 !important; /* A light tint of your primary color */
+        color: var(--color-primary) !important;
+        border: 1px dashed var(--color-primary) !important;
+    }

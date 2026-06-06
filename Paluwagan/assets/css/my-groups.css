@@ -336,4 +336,185 @@
   gap: 6px;
 }
 
+/* ============================================
+   FIX: Make Tables Full Width (My Groups Page)
+   ============================================ */
+
+/* Make the main page content use full available width */
+.page-content {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding: 32px 40px;
+}
+
+/* Force table container to be full width */
+.table-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-bottom: 32px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Make the actual table full width */
+.table-wrap table {
+  width: 100% !important;
+  min-width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+/* Better column spacing */
+.table-wrap th,
+.table-wrap td {
+  padding: 16px 20px;
+  white-space: nowrap;
+}
+
+/* Make Action column align properly */
+.table-wrap td:last-child,
+.table-wrap th:last-child {
+  text-align: right;
+  padding-right: 24px;
+}
+
+/* Improve row hover */
+.table-wrap tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Make sure section headers have proper spacing */
+.section-header {
+  margin-bottom: 12px;
+}
+
+/* === List View Styles (matching Admin Panel) === */
+.table-wrap {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 14px 20px;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+  font-size: 13px;
+}
+
+tr:hover {
+  background: #f8fafc;
+}
+
+.btn-row-view {
+  background: #f1f5f9;
+  color: #334155;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-row-view:hover {
+  background: #e2e8f0;
+}
+
+.table-empty {
+  text-align: center;
+  color: #64748b;
+  padding: 40px !important;
+}
+
+
+/* === Warm Global Color Theme === */
+body, .page-content {
+  background-color: #F5F0E8;
+}
+
+.table-wrap {
+  background: #fff;
+  border: 1px solid #E4DDD4;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* Longer Search Bar */
+.search-wrap {
+  max-width: 520px;
+  width: 100%;
+}
+
+/* Better table row spacing */
+.table-wrap th, .table-wrap td {
+  padding: 16px 20px;
+}
+
+/* === Proper Tab Design (Matching Admin Panel) === */
+.detail-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid #E4DDD4;
+  margin-bottom: 24px;
+  padding-bottom: 4px;
+}
+
+.detail-tab {
+  background: transparent;
+  border: none;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #6B6560;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.detail-tab:hover {
+  color: #E8481A;
+}
+
+.detail-tab.active {
+  color: #E8481A;
+  font-weight: 700;
+}
+
+.detail-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #E8481A;
+  border-radius: 3px;
+}
+
+/* Long search bar inside each section */
+.search-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.search-input {
+  width: 100%;
+}
+
 /* ── Join preview box ── */

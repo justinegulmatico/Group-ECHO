@@ -1,208 +1,331 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TrustFund — My Groups</title>
-  <link rel="stylesheet" href="../../assets/css/global.css" />
-  <link rel="stylesheet" href="../../assets/css/my-groups.css" />
+  <link rel="stylesheet" href="../../assets/css/global.css">
+  <link rel="stylesheet" href="../../assets/css/my-groups.css?v=<?= filemtime('../../assets/css/my-groups.css'); ?>" />
 </head>
 <body>
   <div class="app-layout">
-
     <?php include "components/sidebar-view.php"; ?>
 
     <div class="main-content">
-
       <header class="topbar">
         <div class="topbar-left">
           <span class="topbar-title">My Groups</span>
         </div>
         <div class="topbar-right">
-          <button class="notif-btn" id="notif-btn" aria-label="Notifications">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button class="notif-btn" id="notif-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
-            <span class="notif-badge" id="notif-badge" style="display:none;"></span>
           </button>
         </div>
       </header>
 
       <div class="page-content">
 
-        <?php if (isset($error_message)): ?>
-            <div style="background-color: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 14px;">
-                <?= $error_message; ?>
-            </div>
-        <?php endif; ?>
+        <!-- Success / Error Messages -->
         <?php if (isset($_GET['success'])): ?>
-            <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 14px;">
-                <?= htmlspecialchars($_GET['success']); ?>
-            </div>
+          <div style="background:#E8F5EE; border:1px solid #a7f3d0; color:#166534; padding:12px 16px; border-radius:12px; margin-bottom:20px;">
+            <?= htmlspecialchars($_GET['success']) ?>
+          </div>
+        <?php endif; ?>
+        <?php if (!empty($error_message)): ?>
+          <div style="background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; padding:12px 16px; border-radius:12px; margin-bottom:20px;">
+            <?= htmlspecialchars($error_message) ?>
+          </div>
         <?php endif; ?>
 
-        <div class="page-toolbar">
-          <div class="toolbar-left">
-            <div class="search-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="M21 21l-4.35-4.35"/>
+        <!-- TOP BAR: Search + Buttons -->
+        <div class="page-toolbar" style="margin-bottom: 24px;">
+          <div class="toolbar-left" style="flex: 1;">
+            <!-- Long Search Bar -->
+            <div class="search-wrap" style="max-width: 100%; width: 100%;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
               </svg>
-              <input class="search-input" type="text" placeholder="Search groups…" />
+              <input type="text" id="search-input" class="search-input" placeholder="Search groups..." onkeyup="filterCurrentTable()">
             </div>
           </div>
+
           <div class="toolbar-right">
             <button class="btn-outline" onclick="toggleJoinModal(true)">Join with Code</button>
-            <button class="btn-create" onclick="toggleCreateModal(true)">+ Create Group</button>
+            <button class="btn-create" onclick="toggleCreateModal(true)">+ Create New</button>
           </div>
         </div>
 
-        <?php if (mysqli_num_rows($groups_res) > 0): ?>
-          <div class="group-cards-grid">
-            <?php while ($group = mysqli_fetch_assoc($groups_res)):
-                $progress = 0; 
-                $status_label = ($group['is_active'] == 1) ? 'active' : 'closed';
-                $status_badge_class = ($group['is_active'] == 1) ? 'badge-active' : 'badge-closed';
-            ?>
-              <div onclick="window.location.href='group_details.php?id=<?= $group['group_id']; ?>'" class="group-card" style="cursor: pointer;">
-                <div class="group-card-top">
-                  <div>
-                    <div class="group-card-name"><?= htmlspecialchars($group['group_name']); ?></div>
-                    <div class="group-card-meta" style="text-transform: capitalize;"><?= htmlspecialchars($group['frequency'] ?? 'monthly'); ?> · ₱<?= number_format($group['contribution_amount'], 0); ?>/cycle</div>
-                  </div>
-                  <span class="badge <?= $status_badge_class; ?>"><?= $status_label; ?></span>
-                </div>
-                
-                <div class="group-card-meta" style="font-family: monospace; font-size: 11px; margin-bottom: 4px; color: #9ca3af;">
-                  Invite Code: <?= htmlspecialchars($group['invite_code'] ?? '—'); ?>
-                </div>
+        <!-- TABS -->
+        <div class="detail-tabs" style="margin-bottom: 20px;">
+          <button class="detail-tab active" id="tab-my" onclick="switchTab('my')">Your Groups</button>
+          <button class="detail-tab" id="tab-public" onclick="switchTab('public')">Public Groups</button>
+        </div>
 
-                <div class="group-card-collected">₱0 collected</div>
-                <div class="progress-bar-wrap">
-                  <div class="progress-bar-fill" style="width: <?= $progress; ?>%"></div>
-                </div>
-                
-                <div class="group-card-bottom">
-                  <div class="member-chips">
-                    <div class="member-chip" style="background-color: #f1f5f9; color: #475569; font-size: 10px; font-weight: bold; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">TF</div>
-                  </div>
-                  <span class="group-card-members"><?= $group['members_count']; ?> / <?= intval($group['cycle_length']); ?> members</span>
-                </div>
-              </div>
-            <?php endwhile; ?>
+        <!-- YOUR GROUPS -->
+        <div id="section-my">
+          <div class="table-wrap">
+            <table id="my-table">
+              <thead>
+                <tr>
+                  <th>Group Name</th>
+                  <th>Frequency & Amount</th>
+                  <th>Members</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="my-tbody">
+                <?php while ($group = mysqli_fetch_assoc($my_groups)): ?>
+                  <tr onclick="window.location.href='group_details.php?id=<?= $group['group_id'] ?>'">
+                    <td><strong><?= htmlspecialchars($group['group_name']) ?></strong></td>
+                    <td><?= ucfirst($group['frequency']) ?> · ₱<?= number_format($group['contribution_amount']) ?></td>
+                    <td><?= $group['member_count'] ?> / <?= $group['max_members'] ?> (positions)</td>
+                    <td>
+                      <span class="badge <?= $group['status'] == 'active' ? 'badge-active' : ($group['status'] == 'pending' ? 'badge-pending' : 'badge-closed') ?>">
+                        <?= ucfirst($group['status']) ?>
+                      </span>
+                    </td>
+                    <td style="text-align:right;">
+                      <button class="btn-row-view" onclick="event.stopImmediatePropagation(); window.location.href='group_details.php?id=<?= $group['group_id'] ?>'">View Details</button>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              </tbody>
+            </table>
           </div>
-        <?php else: ?>
-          <div class="empty-state">
-            <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            <div class="empty-state-title">No Groups Found</div>
-            <div class="empty-state-desc">Create a new group or join one with an invite code to get started.</div>
-          </div>
-        <?php endif; ?>
+        </div>
 
-      </div></div></div><div class="modal-overlay" id="createGroupModal" style="display:none;">
-    <div class="modal">
-      <div class="modal-header">
-        <span class="modal-title">Create New Group</span>
-        <button class="modal-close" onclick="toggleCreateModal(false)">✕</button>
-      </div>
-      <div class="modal-body">
-        <form method="POST" action="my_groups.php">
-          <div class="form-group">
-            <label class="input-label" for="cg-name">Group Name</label>
-            <input class="input-field" id="cg-name" type="text" name="group_name" required placeholder="e.g. Office Savings Pool" />
+        <!-- PUBLIC GROUPS -->
+        <div id="section-public" style="display: none;">
+          <div class="table-wrap">
+            <table id="public-table">
+              <thead>
+                <tr>
+                  <th>Group Name</th>
+                  <th>Frequency & Amount</th>
+                  <th>Members</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="public-tbody">
+                <?php 
+                  mysqli_data_seek($public_groups, 0);
+                  while ($group = mysqli_fetch_assoc($public_groups)): 
+                ?>
+                  <tr onclick="window.location.href='group_details.php?id=<?= $group['group_id'] ?>'">
+                    <td><strong><?= htmlspecialchars($group['group_name']) ?></strong></td>
+                    <td><?= ucfirst($group['frequency']) ?> · ₱<?= number_format($group['contribution_amount']) ?></td>
+                    <td><?= $group['member_count'] ?> / <?= $group['max_members'] ?> (positions)</td>
+                    <td>
+                      <span class="badge <?= $group['status'] == 'active' ? 'badge-active' : ($group['status'] == 'pending' ? 'badge-pending' : 'badge-closed') ?>">
+                        <?= ucfirst($group['status']) ?>
+                      </span>
+                    </td>
+                    <td style="text-align:right;">
+                      <form method="POST" action="my_groups.php" style="display:inline;" onclick="event.stopImmediatePropagation();">
+                        <input type="hidden" name="action_join_public" value="1">
+                        <input type="hidden" name="group_id" value="<?= $group['group_id'] ?>">
+                        <button type="submit" class="btn-row-view" style="padding: 4px 10px; font-size: 12px;">Join</button>
+                      </form>
+                      <button class="btn-row-view" onclick="event.stopImmediatePropagation(); window.location.href='group_details.php?id=<?= $group['group_id'] ?>'" style="margin-left:4px;">View</button>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              </tbody>
+            </table>
           </div>
+        </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label class="input-label" for="cg-amount">Contribution Amount (₱)</label>
-              <input class="input-field" id="cg-amount" type="number" name="contribution" required placeholder="1000" min="50" />
-            </div>
-            <div class="form-group">
-              <label class="input-label" for="cg-slots">Total Slots</label>
-              <input class="input-field" id="cg-slots" type="number" name="cycle_length" required placeholder="10" min="2" max="20" />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="input-label" for="cg-frequency">Payment Frequency</label>
-            <select class="input-field select-field" id="cg-frequency" name="frequency" style="appearance: auto;">
-              <option value="monthly">Monthly</option>
-              <option value="weekly">Weekly</option>
-            </select>
-          </div>
-
-          <div class="modal-footer" style="padding: 16px 0 0 0; border: none;">
-            <button class="btn-outline" type="button" onclick="toggleCreateModal(false)">Cancel</button>
-            <button class="btn-create" type="submit" name="action_create_group">Create Group</button>
-          </div>
-        </form>
       </div>
     </div>
   </div>
 
+  <!-- Modals -->
+  <!-- (Keep your Create and Join modals here) -->
 
+  <script>
+    function switchTab(tab) {
+      const publicSection = document.getElementById('section-public');
+      const mySection = document.getElementById('section-my');
+      const tabPublic = document.getElementById('tab-public');
+      const tabMy = document.getElementById('tab-my');
+
+      if (tab === 'my') {
+        mySection.style.display = 'block';
+        publicSection.style.display = 'none';
+        tabMy.classList.add('active');
+        tabPublic.classList.remove('active');
+      } else {
+        publicSection.style.display = 'block';
+        mySection.style.display = 'none';
+        tabPublic.classList.add('active');
+        tabMy.classList.remove('active');
+      }
+    }
+
+    function filterCurrentTable() {
+      const search = document.getElementById('search-input').value.toLowerCase();
+      const mySection = document.getElementById('section-my');
+      const publicSection = document.getElementById('section-public');
+
+      if (mySection.style.display !== 'none') {
+        document.querySelectorAll('#my-tbody tr').forEach(row => {
+          row.style.display = row.textContent.toLowerCase().includes(search) ? '' : 'none';
+        });
+      } else {
+        document.querySelectorAll('#public-tbody tr').forEach(row => {
+          row.style.display = row.textContent.toLowerCase().includes(search) ? '' : 'none';
+        });
+      }
+    }
+
+    function toggleCreateModal(show) {
+      document.getElementById('createGroupModal').style.display = show ? 'flex' : 'none';
+    }
+    function toggleJoinModal(show) {
+      document.getElementById('joinGroupModal').style.display = show ? 'flex' : 'none';
+    }
+
+    // Default show Your Groups
+    window.onload = function() {
+      document.getElementById('section-public').style.display = 'none';
+      document.getElementById('section-my').style.display = 'block';
+    }
+  </script>
+
+  <!-- ==================== CREATE GROUP MODAL (exact visual match to system) ==================== -->
+  <div class="modal-overlay" id="createGroupModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Create New Group</span>
+        <button class="modal-close" type="button" onclick="toggleCreateModal(false)">✕</button>
+      </div>
+      <form method="POST" action="my_groups.php">
+        <input type="hidden" name="action_create_group" value="1">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="input-label" for="cg-name">Group Name</label>
+            <input class="input-field" id="cg-name" name="group_name" type="text" placeholder="e.g. Barkada Savings 2026" required />
+          </div>
+          
+          <div class="form-group">
+            <label class="input-label" for="cg-desc">Description <span style="font-weight:400;color:#7c7c7c;">(optional)</span></label>
+            <input class="input-field" id="cg-desc" name="group_desc" type="text" placeholder="What is this group for?" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex:1;">
+              <label class="input-label" for="cg-privacy">Privacy</label>
+              <select class="input-field" id="cg-privacy" name="privacy" onchange="toggleInviteCodeMy()">
+                <option value="public">Public (Anyone can join)</option>
+                <option value="private">Private (Invite Code Required)</option>
+              </select>
+            </div>
+            <div class="form-group" id="invite-code-container-my" style="flex:1; display:none;">
+              <label class="input-label" for="cg-invitecode-my">Generated Invite Code</label>
+              <input class="input-field" id="cg-invitecode-my" name="invite_code" type="text" readonly style="background:#eef2f5; font-family:monospace; letter-spacing:1px; font-weight:bold; color:#f47321; text-align:center;" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex:1;">
+              <label class="input-label" for="cg-amount">Contribution Amount (₱)</label>
+              <input class="input-field" id="cg-amount" name="contribution" type="number" placeholder="1000" min="1" required />
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label class="input-label" for="cg-slots">Total Slots / Members</label>
+              <input class="input-field" id="cg-slots" name="max_members" type="number" placeholder="5" min="2" max="50" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex:1;">
+              <label class="input-label" for="cg-frequency">Payment Frequency</label>
+              <select class="input-field" id="cg-frequency" name="frequency">
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Bi-weekly</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-primary" type="submit" name="action_create_group">Create Group</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== JOIN GROUP MODAL (exact visual match) ==================== -->
   <div class="modal-overlay" id="joinGroupModal" style="display:none;">
     <div class="modal">
       <div class="modal-header">
         <span class="modal-title">Join a Group</span>
         <button class="modal-close" onclick="toggleJoinModal(false)">✕</button>
       </div>
+
       <div class="modal-body">
         <form method="POST" action="my_groups.php">
+          <input type="hidden" name="action_join_group" value="1">
+          
           <div class="form-group">
-            <label class="input-label" for="join-code">Invite Code</label>
-            <input class="input-field" id="join-code" type="text" name="target_invite_code" required placeholder="Enter 6-character code" maxlength="8" style="text-transform: uppercase; font-family: monospace; tracking-content: 0.1em;" />
+            <label class="input-label">Invite Code</label>
+            <input class="input-field" 
+                   type="text" 
+                   name="invite_code" 
+                   required 
+                   placeholder="ENTER INVITE CODE"
+                   style="text-transform: uppercase; font-family: monospace; letter-spacing: 2px; text-align: center;">
           </div>
 
-          <div class="modal-footer" style="padding: 16px 0 0 0; border: none;">
-            <button class="btn-outline" type="button" onclick="toggleJoinModal(false)">Cancel</button>
-            <button class="btn-create" type="submit" name="action_join_group">Join Group</button>
+          <?php if (!empty($error_message)): ?>
+            <div style="color: #b91c1c; font-size: 13px; text-align: center; margin-top: 8px;">
+              <?= htmlspecialchars($error_message) ?>
+            </div>
+          <?php endif; ?>
+
+          <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+            <button type="button" class="btn-outline" onclick="toggleJoinModal(false)">Cancel</button>
+            <button type="submit" class="btn-create">Join Group</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 
-
-  <div class="notif-overlay" id="notif-overlay"></div>
-  <div class="notif-panel" id="notif-panel">
-    <div class="notif-panel-header">
-      <span class="notif-panel-title">Notifications</span>
-      <button class="mark-all-btn" id="mark-all-btn">Mark all read</button>
-    </div>
-    <div class="notif-list" id="notif-list">
-      <div class="notif-empty">
-        <p>No notifications</p>
-        <span>You're all caught up!</span>
-      </div>
-    </div>
-  </div>
-  <div class="toast-container" id="toast-container"></div>
-
   <script>
-  function toggleCreateModal(show) {
-      const modal = document.getElementById('createGroupModal');
-      modal.style.display = show ? 'flex' : 'none';
-  }
-  function toggleJoinModal(show) {
-      const modal = document.getElementById('joinGroupModal');
-      modal.style.display = show ? 'flex' : 'none';
-  }
+    function toggleInviteCodeMy() {
+      const sel = document.getElementById('cg-privacy');
+      const cont = document.getElementById('invite-code-container-my');
+      const inp = document.getElementById('cg-invitecode-my');
+      if (!sel || !cont) return;
+      if (sel.value === 'private') {
+        cont.style.display = 'block';
+        if (inp && !inp.value) {
+          const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+          let c = ''; for (let i=0; i<6; i++) c += chars.charAt(Math.floor(Math.random()*chars.length));
+          inp.value = c;
+        }
+      } else {
+        cont.style.display = 'none';
+        if (inp) inp.value = '';
+      }
+    }
 
-  // Close modals on backdrop selection click logic array
-  window.addEventListener('click', function(e) {
-      const createModal = document.getElementById('createGroupModal');
-      const joinModal = document.getElementById('joinGroupModal');
-      if (e.target === createModal) toggleCreateModal(false);
-      if (e.target === joinModal) toggleJoinModal(false);
-  });
+    // Close create/join modals on outside click (extend existing)
+    (function(){
+      const cm = document.getElementById('createGroupModal');
+      if (cm) cm.addEventListener('click', function(e){ if (e.target === cm) cm.style.display='none'; });
+      const jm = document.getElementById('joinGroupModal');
+      if (jm) jm.addEventListener('click', function(e){ if (e.target === jm) jm.style.display='none'; });
+      // init privacy toggle if present
+      const p = document.getElementById('cg-privacy');
+      if (p) p.addEventListener('change', toggleInviteCodeMy);
+    })();
   </script>
-  <script src="../../front-end/js/notifications.js"></script>
 </body>
 </html>

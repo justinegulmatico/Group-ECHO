@@ -31,7 +31,7 @@ $prefix = $is_nested_process ? '../' : '';
       Dashboard
     </a>
 
-    <a href="<?= $prefix ?>my_groups.php" class="sidebar-nav-item <?= ($current_page == 'my_groups.php' || $current_page == 'group_details.php' || $current_page == 'process_create_group.php' || $current_page == 'process_join_group.php') ? 'active' : '' ?>">
+    <a href="<?= $prefix ?>my_groups.php" class="sidebar-nav-item <?= ($current_page == 'my_groups.php' || $current_page == 'group_details.php') ? 'active' : '' ?>">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
       </svg>
@@ -54,7 +54,7 @@ $prefix = $is_nested_process ? '../' : '';
 
     <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
       <div class="sidebar-section-label" style="margin-top: 20px;">Admin</div>
-      <a href="<?= $prefix ?>admin.php" class="sidebar-nav-item <?= ($current_page == 'admin.php' || $current_page == 'admin_process.php') ? 'active' : '' ?>">
+      <a href="<?= $prefix ?>admin.php" class="sidebar-nav-item <?= ($current_page == 'admin.php') ? 'active' : '' ?>">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           <polyline points="9 12 11 14 15 10"/>

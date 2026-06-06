@@ -1,67 +1,77 @@
 <?php
 session_start();
-// Corrected path: move up 2 steps (process/ -> php/ -> back-end/) to reach db.php
-include "../../db.php";
+// process/ is sibling to php/ under back-end/
+include "../db.php";
 
 // 1. Force safety checkpoint redirect if no logged-in user session exists
 if (!isset($_SESSION['user_id'])) {
-    // Corrected path: move up 4 steps (process/ -> php/ -> back-end/ -> Paluwagan/ -> Group-ECHO/) to reach root index.php
-    header("Location: ../../../../index.php");
+    header("Location: ../../index.php");
     exit();
 }
 
-// 2. Form submission intercept
+// 2. Form submission intercept - FIXED to match actual schema & invite generation (6 char UPPER from md5)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_id = $_SESSION['user_id'];
-    $raw_code = strtoupper(trim($_POST['invite_code']));
+    $invite_code = strtoupper(trim($_POST['invite_code'] ?? ''));
 
-    // Extract numerical sequence value map based on system invite structure
-    // Matches the pattern 70303{ID}L generated on your details dashboard view
-    $clean_id = str_replace(["70303", "L"], "", $raw_code);
-    $target_group_id = intval($clean_id);
+    if (empty($invite_code)) {
+        header("Location: ../my_groups.php?error=" . urlencode("Invite code is required."));
+        exit();
+    }
 
-    // Verify if target group actually exists
-    $verify_group = "SELECT * FROM groups WHERE group_id = '$target_group_id' LIMIT 1";
-    $verify_res = mysqli_query($conn, $verify_group);
+    // Use prepared statement
+    $stmt = mysqli_prepare($conn, "SELECT * FROM groups WHERE invite_code = ? AND (status = 'active' OR status = 'pending') LIMIT 1");
+    mysqli_stmt_bind_param($stmt, "s", $invite_code);
+    mysqli_stmt_execute($stmt);
+    $verify_res = mysqli_stmt_get_result($stmt);
     $group_data = mysqli_fetch_assoc($verify_res);
+    mysqli_stmt_close($stmt);
 
     if (!$group_data) {
-        // Corrected path: move up 1 step out of process/ to reach my_groups.php
-        header("Location: ../my_groups.php?error=" . urlencode("Invalid code. Matching savings group row context wasn't found."));
+        header("Location: ../my_groups.php?error=" . urlencode("Invalid or inactive invite code."));
         exit();
     }
 
-    // Check if user is already a member of this group
-    $membership_check = "SELECT member_id FROM group_members WHERE user_id = '$user_id' AND group_id = '$target_group_id' AND status = 'active' LIMIT 1";
-    $membership_res = mysqli_query($conn, $membership_check);
+    $target_group_id = (int)$group_data['group_id'];
 
-    if (mysqli_num_rows($membership_res) > 0) {
-        // Corrected path: move up 1 step out of process/ to reach my_groups.php
-        header("Location: ../my_groups.php?error=" . urlencode("You are already an active participant inside this savings group circle."));
-        exit();
-    }
-
-    // Check if group has available slots
-    $slots_check = "SELECT COUNT(*) as current_slots FROM group_members WHERE group_id = '$target_group_id' AND status = 'active'";
-    $slots_res = mysqli_query($conn, $slots_check);
+    // Multi-slot support: Check total filled slots instead of per-user (one user can own multiple slots/positions)
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as current_slots FROM group_members WHERE group_id = ? AND status = 'active'");
+    mysqli_stmt_bind_param($stmt, "i", $target_group_id);
+    mysqli_stmt_execute($stmt);
+    $slots_res = mysqli_stmt_get_result($stmt);
     $slots_data = mysqli_fetch_assoc($slots_res);
-    
-    if (($slots_data['current_slots'] ?? 0) >= $group_data['cycle_length']) {
-        // Corrected path: move up 1 step out of process/ to reach my_groups.php
-        header("Location: ../my_groups.php?error=" . urlencode("This savings circle is already full. No open slots remain."));
+    mysqli_stmt_close($stmt);
+
+    $max_slots = (int)($group_data['cycle_length'] ?: $group_data['max_members'] ?: 5);
+
+    if ((int)($slots_data['current_slots'] ?? 0) >= $max_slots) {
+        header("Location: ../my_groups.php?error=" . urlencode("This savings group is already full. No open slots remain."));
         exit();
     }
 
-    // Safe execution window passed: Insert membership mapping safely
-    $join_query = "INSERT INTO group_members (user_id, group_id, status) VALUES ('$user_id', '$target_group_id', 'active')";
-    if (mysqli_query($conn, $join_query)) {
-        // Corrected path: move up 1 step out of process/ to reach group_details.php in php/
-        header("Location: ../group_details.php?id=" . $target_group_id . "&success=" . urlencode("Successfully joined the savings group circle!"));
+    // Assign next position (simple paluwagan: position decides who gets paid in which cycle)
+    $stmtPos = mysqli_prepare($conn, "SELECT COALESCE(MAX(position), 0) + 1 as next_pos FROM group_members WHERE group_id = ?");
+    mysqli_stmt_bind_param($stmtPos, "i", $target_group_id);
+    mysqli_stmt_execute($stmtPos);
+    $posRow = mysqli_fetch_assoc(mysqli_stmt_get_result($stmtPos));
+    $nextPosition = (int)$posRow['next_pos'];
+    mysqli_stmt_close($stmtPos);
+
+    $stmt = mysqli_prepare($conn, "INSERT INTO group_members (user_id, group_id, status, position) VALUES (?, ?, 'active', ?)");
+    mysqli_stmt_bind_param($stmt, "iii", $user_id, $target_group_id, $nextPosition);
+    $ok = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    if ($ok) {
+        header("Location: ../group_details.php?id=" . $target_group_id . "&success=" . urlencode("Successfully joined! You are position #$nextPosition."));
         exit();
     } else {
-        // Corrected path: move up 1 step out of process/ to reach my_groups.php
-        header("Location: ../my_groups.php?error=" . urlencode("Database mapping exception encountered during insertion routines."));
+        header("Location: ../my_groups.php?error=" . urlencode("Failed to join the group. Please try again."));
         exit();
     }
 }
+
+// Fallback
+header("Location: ../my_groups.php");
+exit();
 ?>

@@ -33,7 +33,7 @@
 
         <div class="section-title">Payment History</div>
 
-        <?php if (mysqli_num_rows($payments_log_res) > 0): ?>
+        <?php if ($payments_log_res && mysqli_num_rows($payments_log_res) > 0): ?>
           <div class="table-card">
             <table class="payments-table">
               <thead>
@@ -48,29 +48,29 @@
               </thead>
               <tbody>
                 <?php while ($pay_row = mysqli_fetch_assoc($payments_log_res)): 
-                    $is_payout = (isset($pay_row['tx_type']) && $pay_row['tx_type'] === 'payout');
-                    $status_cleaned = lowercase(htmlspecialchars($pay_row['status']));
-                    
-                    // Assigns proper badge configuration styles out of your custom design system layers
-                    $badge_class = ($status_cleaned === 'paid' || $status_cleaned === 'success' || $status_cleaned === 'approved') ? 'badge-paid' : 'badge-pending';
+                    $is_payout = false; // payouts table separate; contributions here are inbound
+                    $status_raw = strtolower($pay_row['status'] ?? 'pending');
+                    $badge_class = (in_array($status_raw, ['paid','success','approved','released'])) ? 'badge-paid' : 'badge-pending';
+                    $method = 'N/A'; // schema note: record handler accepts it; display defaults until extended
+                    $dateStr = !empty($pay_row['paid_at']) ? date('M d, Y', strtotime($pay_row['paid_at'])) : (!empty($pay_row['due_date']) ? date('M d, Y', strtotime($pay_row['due_date'])) : date('M d, Y'));
                 ?>
                   <tr>
                     <td class="cell-group"><?= htmlspecialchars($pay_row['group_name']); ?></td>
                     <td>#<?= isset($pay_row['cycle_number']) ? htmlspecialchars($pay_row['cycle_number']) : '1'; ?></td>
                     
                     <td class="cell-amount <?= $is_payout ? 'received' : ''; ?>">
-                      ₱<?= number_format($pay_row['amount'], 2); ?>
+                      ₱<?= number_format((float)$pay_row['amount'], 2); ?>
                     </td>
                     
                     <td class="cell-method" style="text-transform: capitalize; font-family: monospace;">
-                      <?= htmlspecialchars($pay_row['payment_method']); ?>
+                      <?= htmlspecialchars($method); ?>
                     </td>
                     <td class="cell-date">
-                      <?= isset($pay_row['created_at']) ? date('M d, Y', strtotime($pay_row['created_at'])) : date('M d, Y'); ?>
+                      <?= $dateStr; ?>
                     </td>
                     <td>
                       <span class="badge <?= $badge_class; ?>" style="text-transform: capitalize;">
-                        <?= htmlspecialchars($pay_row['status']); ?>
+                        <?= htmlspecialchars($pay_row['status'] ?? 'pending'); ?>
                       </span>
                     </td>
                   </tr>

@@ -71,6 +71,7 @@
           <button class="detail-tab active" id="btn-verifications-section" onclick="openSection('verifications-section')">Pending Approvals</button>
           <button class="detail-tab" id="btn-users-section" onclick="openSection('users-section')">User Management</button>
           <button class="detail-tab" id="btn-groups-section" onclick="openSection('groups-section')">Group Monitoring</button>
+          <button class="detail-tab" id="btn-controls-section" onclick="openSection('controls-section')">Admin Controls</button>
         </div>
 
 <div class="admin-panel-section" id="verifications-section">
@@ -276,6 +277,80 @@
           </div>
         </div>
 
+        <!-- NEW ADMIN CONTROLS SECTION -->
+        <div class="admin-panel-section" id="controls-section" style="display:none;">
+          <div class="section-title">Cycle, Date &amp; Group Controls</div>
+          <p style="margin-bottom:16px; color:#6b5a4a;">Use these tools to manage cycles, dates, and force simulation-like actions for all groups (no dummy accounts needed).</p>
+
+          <div class="table-wrap" style="margin-bottom:24px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Group</th>
+                  <th>Current Cycle</th>
+                  <th>Start Date</th>
+                  <th>Members</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php while ($cg = mysqli_fetch_assoc($controls_groups_res)): ?>
+                  <tr>
+                    <td><strong><?= htmlspecialchars($cg['group_name']) ?></strong></td>
+                    <td>#<?= $cg['current_cycle'] ?></td>
+                    <td><?= $cg['current_start'] ? htmlspecialchars($cg['current_start']) : 'N/A' ?></td>
+                    <td><?= $cg['members'] ?></td>
+                    <td><span class="badge badge-active"><?= ucfirst($cg['status']) ?></span></td>
+                    <td>
+                      <form method="POST" action="admin.php" style="display:inline;">
+                        <input type="hidden" name="group_id" value="<?= $cg['group_id'] ?>">
+                        <button type="submit" name="admin_advance_cycle" class="btn-row-view" style="font-size:11px; padding:3px 8px;">Advance Cycle</button>
+                      </form>
+
+                      <form method="POST" action="admin.php" style="display:inline; margin-left:4px;">
+                        <input type="hidden" name="group_id" value="<?= $cg['group_id'] ?>">
+                        <input type="hidden" name="cycle_number" value="<?= $cg['current_cycle'] ?>">
+                        <button type="submit" name="admin_force_paid" class="btn-row-view" style="font-size:11px; padding:3px 8px; background:#1e40af; color:white;">Force Paid</button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="display:flex; gap:24px; flex-wrap:wrap;">
+            <!-- Set Cycle Date -->
+            <div style="flex:1; min-width:280px;">
+              <div class="section-title" style="font-size:15px;">Set Cycle Start Date</div>
+              <form method="POST" action="admin.php">
+                <div class="form-group">
+                  <label class="input-label">Cycle ID</label>
+                  <input type="number" name="cycle_id" class="input-field" required>
+                </div>
+                <div class="form-group">
+                  <label class="input-label">New Start Date</label>
+                  <input type="date" name="start_date" class="input-field" value="<?= date('Y-m-d') ?>" required>
+                </div>
+                <button type="submit" name="admin_set_cycle_date" class="btn-primary" style="width:100%;">Update Date</button>
+              </form>
+            </div>
+
+            <!-- Release Payout -->
+            <div style="flex:1; min-width:280px;">
+              <div class="section-title" style="font-size:15px;">Release Payout for Cycle</div>
+              <form method="POST" action="admin.php">
+                <div class="form-group">
+                  <label class="input-label">Cycle ID</label>
+                  <input type="number" name="cycle_id" class="input-field" required>
+                </div>
+                <button type="submit" name="admin_release_payout" class="btn-primary" style="width:100%; background:#166534;">Release Payout</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -423,7 +498,8 @@ function openReviewModal(btn) {
     document.getElementById('modal-address').textContent = data.address || 'Not Provided';
 
     // Document and hidden inputs
-    document.getElementById('modal-doc').href = '/Group-ECHO/Paluwagan/assets/uploads/' + data.doc;
+    // Fixed path relative to app root (from admin.php served at back-end/php/)
+    document.getElementById('modal-doc').href = '../../assets/uploads/' + data.doc;
     document.getElementById('modal-vid').value = data.vid;
     document.getElementById('modal-uid').value = data.uid;
 

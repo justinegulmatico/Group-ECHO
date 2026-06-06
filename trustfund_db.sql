@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 23, 2026 at 09:55 PM
+-- Generation Time: May 30, 2026 at 02:49 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -62,23 +62,17 @@ CREATE TABLE `groups` (
   `group_id` int(11) NOT NULL,
   `group_name` varchar(50) DEFAULT NULL,
   `description` text DEFAULT NULL,
+  `privacy` enum('public','private') DEFAULT 'public',
   `contribution_amount` decimal(10,2) DEFAULT NULL,
+  `max_members` int(11) NOT NULL DEFAULT 5,
   `frequency` enum('weekly','monthly') DEFAULT 'monthly',
   `cycle_length` int(11) DEFAULT NULL,
   `invite_code` varchar(10) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
   `created_by` int(11) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `status` enum('active','finished','closed') NOT NULL DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `groups`
---
-
-INSERT INTO `groups` (`group_id`, `group_name`, `description`, `contribution_amount`, `frequency`, `cycle_length`, `invite_code`, `is_active`, `created_by`, `created_at`) VALUES
-(1, 'damnation', 'for cellphone', 1000.00, 'monthly', 10, NULL, 1, 5, '2026-05-20 17:13:22'),
-(2, 'exel', 'TrustFund Paluwagan Savings Pool Group Circle.', 500.00, 'weekly', 0, 'AE6AC1', 1, 5, '2026-05-23 16:47:44'),
-(3, 'fool', 'TrustFund Paluwagan Savings Pool Group Circle.', 500.00, 'weekly', 5, '7F8CB4', 1, 5, '2026-05-23 16:48:21');
 
 -- --------------------------------------------------------
 
@@ -93,15 +87,6 @@ CREATE TABLE `group_members` (
   `status` enum('active','inactive') DEFAULT 'active',
   `joined_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `group_members`
---
-
-INSERT INTO `group_members` (`member_id`, `user_id`, `group_id`, `status`, `joined_at`) VALUES
-(1, 5, 1, 'active', '2026-05-20 17:13:22'),
-(2, 5, 2, 'active', '2026-05-23 16:47:44'),
-(3, 5, 3, 'active', '2026-05-23 16:48:21');
 
 -- --------------------------------------------------------
 
@@ -131,20 +116,34 @@ CREATE TABLE `users` (
   `last_name` varchar(50) DEFAULT NULL,
   `email` varchar(50) DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
+  `occupation` varchar(100) DEFAULT NULL,
+  `address` varchar(255) DEFAULT NULL,
   `password_hash` varchar(255) NOT NULL,
   `role` enum('admin','member') DEFAULT 'member',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `status` enum('pending','activated','suspended','denied') NOT NULL DEFAULT 'pending'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `users`
+-- Table structure for table `user_creation_history`
 --
 
-INSERT INTO `users` (`user_id`, `username`, `first_name`, `last_name`, `email`, `phone`, `password_hash`, `role`, `created_at`) VALUES
-(3, 'mell', 'MELISSA', 'TORRENTE ACANTILADO', 'melissaacantilado69@ggmail.com', '09943536404', '$2y$10$bseVfLPasjYiaAWso8mLXux6BC9RIMT9Q2agciKf/iF', 'member', '2026-05-19 03:30:06'),
-(4, 'Ace ', 'aceneil', 'melo', 'aceneilmelo69@gmail.com', '09943536404', '$2y$10$49wy27lqFvuFWbyU5H8Nq.2UhTatidlDaYJMtrXdwgRuzjemDTCO2', 'member', '2026-05-19 03:36:32'),
-(5, 'arvin', 'arvin', 'melo', 'arvinmelo27@gmail.com', '09943536404', '$2y$10$fhRoPmAMDpDJ78RwyZf/NOKoUUoLup0G7QUrLTnQnis.JpHMgxc.O', 'admin', '2026-05-20 16:44:56'),
-(9, 'admin', 'System', 'Admin', 'admin@trustfund.com', '09123456789', '$2y$10$mR3MKBgZJm2g6Y2E5C9AeuK/7w1pGfKxX1Y.e37yK7gq6O2X8zW6i', 'admin', '2026-05-23 17:02:06');
+CREATE TABLE `user_creation_history` (
+  `history_id` int(11) NOT NULL,
+  `original_user_id` int(11) DEFAULT NULL,
+  `username` varchar(255) DEFAULT NULL,
+  `first_name` varchar(255) DEFAULT NULL,
+  `last_name` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `occupation` varchar(255) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `role` varchar(50) DEFAULT NULL,
+  `verification_status` varchar(50) DEFAULT NULL,
+  `archived_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -156,8 +155,8 @@ CREATE TABLE `user_verifications` (
   `verification_id` int(11) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
   `document` varchar(100) DEFAULT NULL,
-  `status` enum('pending','verified','rejected') DEFAULT 'pending',
-  `verified_at` date DEFAULT NULL
+  `verified_at` datetime DEFAULT NULL,
+  `status` enum('pending','approved','denied') NOT NULL DEFAULT 'pending'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -212,6 +211,12 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `email` (`email`);
 
 --
+-- Indexes for table `user_creation_history`
+--
+ALTER TABLE `user_creation_history`
+  ADD PRIMARY KEY (`history_id`);
+
+--
 -- Indexes for table `user_verifications`
 --
 ALTER TABLE `user_verifications`
@@ -238,13 +243,13 @@ ALTER TABLE `cycles`
 -- AUTO_INCREMENT for table `groups`
 --
 ALTER TABLE `groups`
-  MODIFY `group_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `group_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `group_members`
 --
 ALTER TABLE `group_members`
-  MODIFY `member_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `member_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `payouts`
@@ -256,7 +261,13 @@ ALTER TABLE `payouts`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `user_creation_history`
+--
+ALTER TABLE `user_creation_history`
+  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `user_verifications`
@@ -306,6 +317,31 @@ ALTER TABLE `payouts`
 --
 ALTER TABLE `user_verifications`
   ADD CONSTRAINT `user_verifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
+
+--
+-- Minimal additions for full Paluwagan rotation system (positions + payout scheduling)
+-- Run these ALTERs on your existing DB if tables are already created.
+-- These support: member positions and who receives payout per cycle.
+--
+
+ALTER TABLE `group_members` 
+  ADD COLUMN `position` INT(11) DEFAULT NULL AFTER `status`;
+
+ALTER TABLE `cycles` 
+  ADD COLUMN `payout_member_id` INT(11) DEFAULT NULL AFTER `status`,
+  ADD COLUMN `payout_status` ENUM('pending','released') NOT NULL DEFAULT 'pending' AFTER `payout_member_id`;
+
+-- For Simulation Engine (Academic Prototype)
+ALTER TABLE `groups` 
+  ADD COLUMN `current_cycle` INT(11) NOT NULL DEFAULT 1 AFTER `cycle_length`,
+  MODIFY COLUMN `status` ENUM('pending','active','completed','cancelled') NOT NULL DEFAULT 'pending';
+
+-- Ensure we can have multiple slots per user (one row in group_members = one slot)
+-- No structural change needed if logic allows multiple rows per user_id + group_id with different positions.
+
+-- Note: For a student project we keep it simple. You can add FK later if wanted:
+-- ALTER TABLE `cycles` ADD CONSTRAINT `cycles_payout_member_fk` FOREIGN KEY (`payout_member_id`) REFERENCES `group_members` (`member_id`);
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

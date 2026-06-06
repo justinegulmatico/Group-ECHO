@@ -23,8 +23,8 @@ if (!$user) {
     exit();
 }
 
-// Route users away instantly if an admin verified them mid-session
-if ($user['status'] === 'verified') {
+// Route users away instantly if an admin verified/activated them mid-session
+if ($user['status'] === 'activated') {
     header("Location: dashboard.php");
     exit();
 }

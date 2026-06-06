@@ -34,8 +34,20 @@
 
         <div class="group-hero">
           <div class="hero-action-btns">
-            <button class="hero-btn" onclick="openRecordPaymentModal()">+Payment</button>
+            <?php if (!empty($is_member)): ?>
+              <button class="hero-btn" onclick="openRecordPaymentModal()">+Payment</button>
+            <?php endif; ?>
             <button class="hero-btn">+Payout</button>
+
+            <?php if ($current_group['status'] === 'pending' && (int)$current_group['created_by'] === $current_user_id): ?>
+              <form method="POST" style="display:inline;">
+                <button type="submit" name="activate_paluwagan" class="hero-btn" 
+                        style="background:#166534; color:white;"
+                        onclick="return confirm('Activate only when all slots are full. This will freeze the roster and start cycle 1.');">
+                  Activate Paluwagan
+                </button>
+              </form>
+            <?php endif; ?>
           </div>
           <div class="hero-name"><?= htmlspecialchars($current_group['group_name']); ?></div>
           <div class="hero-desc"><?= htmlspecialchars($current_group['description'] ?: 'No description configured.'); ?></div>
@@ -59,7 +71,12 @@
             </div>
             <div class="hero-stat">
               <div class="hero-stat-label">Status</div>
-              <div class="hero-stat-value"><?= $current_group['is_active'] == 1 ? 'Active' : 'Closed'; ?></div>
+              <div class="hero-stat-value">
+                <?php 
+                  $gstatus = $current_group['status'] ?? ($current_group['is_active'] == 1 ? 'active' : 'closed');
+                  echo ucfirst($gstatus);
+                ?>
+              </div>
             </div>
           </div>
           
@@ -70,7 +87,18 @@
           </div>
         </div>
 
-        
+        <?php if (isset($is_member) && !$is_member && $current_group['privacy'] === 'public'): ?>
+          <div style="background:#fef3c7; border:1px solid #f59e0b; padding:14px 18px; border-radius:10px; margin: 12px 0; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong>This is a public group.</strong> Join now to participate in the rotation.
+            </div>
+            <form method="POST" action="my_groups.php">
+              <input type="hidden" name="action_join_group" value="1">
+              <input type="hidden" name="invite_code" value="<?= htmlspecialchars($current_group['invite_code']) ?>">
+              <button type="submit" class="btn-create" style="margin:0; padding: 8px 16px;">Join this Group</button>
+            </form>
+          </div>
+        <?php endif; ?>
 
         <div class="detail-tabs">
           <a href="group_details.php?id=<?= $group_id; ?>&tab=overview" class="detail-tab <?= $active_tab === 'overview' ? 'active' : '' ?>" style="text-decoration: none;">Overview</a>
@@ -101,17 +129,99 @@
               </div>
             </div>
             
-            <div class="upcoming-section">
-              <div class="upcoming-title">Upcoming Payouts</div>
-              <div class="upcoming-row is-mine">
-                <div class="upcoming-row-left">
-                  <div class="upcoming-slot-num">1</div>
-                  <div>
-                    <div class="upcoming-name"><?= htmlspecialchars($full_name); ?> <span style="font-size: 12px; opacity: 0.6;">(You)</span></div>
-                  </div>
-                </div>
-                <div class="upcoming-amount">₱<?= number_format($current_group['contribution_amount'] * $current_group['cycle_length'], 0); ?></div>
+            <!-- === REAL PALUWAGAN CYCLE + POSITION SYSTEM (simple rotation) === -->
+            <div style="margin-top: 24px;">
+              <div class="upcoming-title">Payout Schedule (Cycle Rotation)</div>
+              <div class="table-wrap" style="margin-top:12px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Cycle</th>
+                      <th>Receiver (Position)</th>
+                      <th>Collected</th>
+                      <th>Pot</th>
+                      <th>Status</th>
+                      <th style="text-align:right;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($cycles as $cy): 
+                      $rec = $cy['receiver'];
+                      $recName = $rec ? htmlspecialchars($rec['first_name'] . ' ' . $rec['last_name']) : 'Position ' . $cy['cycle_number'];
+                      $isMine = $rec && (int)$rec['user_id'] === $current_user_id;
+                      $pot = (float)$current_group['contribution_amount'] * max(1, count($group_members));
+                    ?>
+                      <tr>
+                        <td><strong>#<?= $cy['cycle_number'] ?></strong></td>
+                        <td>
+                          <?= $recName ?>
+                          <?php if ($isMine): ?><span style="color:#e8481a; font-size:12px;"> (You)</span><?php endif; ?>
+                        </td>
+                        <td>₱<?= number_format($cy['collected'], 0) ?></td>
+                        <td>₱<?= number_format($pot, 0) ?></td>
+                        <td>
+                          <?php if ($cy['payout_status'] === 'released'): ?>
+                            <span class="badge badge-active">Released</span>
+                          <?php else: ?>
+                            <span class="badge badge-pending">Pending</span>
+                          <?php endif; ?>
+                        </td>
+                        <td style="text-align:right;">
+                          <?php if ($cy['payout_status'] === 'pending'): ?>
+                            <?php if (!empty($is_member)): ?>
+                              <!-- Record contribution for this cycle (only for members) -->
+                              <form method="POST" style="display:inline;">
+                                <input type="hidden" name="cycle_id" value="<?= $cy['cycle_id'] ?>">
+                                <input type="hidden" name="amount" value="<?= $current_group['contribution_amount'] ?>">
+                                <button type="submit" name="record_contribution" class="btn-row-view" style="padding:4px 10px; font-size:12px;">Pay ₱<?= number_format($current_group['contribution_amount']) ?></button>
+                              </form>
+                            <?php endif; ?>
+
+                            <?php if ((int)$current_group['created_by'] === $current_user_id || $user_role === 'Admin'): ?>
+                              <!-- Release payout (simulation) -->
+                              <form method="POST" style="display:inline; margin-left:6px;">
+                                <input type="hidden" name="cycle_id" value="<?= $cy['cycle_id'] ?>">
+                                <input type="hidden" name="payout_amount" value="<?= $pot ?>">
+                                <button type="submit" name="release_payout" class="btn-row-view" style="padding:4px 10px; font-size:12px; background:#166534; color:white;">Release Pot</button>
+                              </form>
+                            <?php endif; ?>
+                          <?php else: ?>
+                            <span style="color:#16a34a; font-size:12px;">Done</span>
+                          <?php endif; ?>
+                        </td>
+                      </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
               </div>
+            </div>
+
+            <!-- Members + Positions -->
+            <div style="margin-top: 20px;">
+              <div class="upcoming-title">Members &amp; Positions</div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Position</th>
+                      <th>Member</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($group_members as $mem): 
+                      $is_dummy = $mem['user_id'] != $current_user_id; // rough check for demo
+                    ?>
+                      <tr>
+                        <td><strong>#<?= $mem['position'] ?></strong></td>
+                        <td><?= htmlspecialchars($mem['first_name'] . ' ' . $mem['last_name']) ?></td>
+                        <td><span class="badge badge-active">Active</span></td>
+                      </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              </div>
+              <p style="font-size:12px; color:#666; margin-top:8px;">Lower position number = receives the pot earlier in the rotation. Use Simulation Tools for risk scenarios.</p>
             </div>
           </div>
         <?php endif; ?>
@@ -122,41 +232,45 @@
               <table>
                 <thead>
                   <tr>
-                    <th>Member</th>
-                    <th>Slot</th>
-                    <th>Total Paid</th>
-                    <th>Owed</th>
-                    <th>Balance</th>
-                    <th>Payout</th>
+                    <th>Cycle</th>
+                    <th>Receiver</th>
+                    <th>Your Payment</th>
+                    <th>Cycle Total</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>
-                      <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 36px; height: 36px; border-radius: 50%; background-color: #ffedd5; color: #c2410c; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;">
-                          <?= substr($full_name, 0, 2); ?>
-                        </div>
-                        <div style="font-weight: 600; color: #111827;"><?= htmlspecialchars($full_name); ?></div>
-                      </div>
-                    </td>
-                    <td>1</td>
-                    <td style="color: #16a34a; font-weight: 600;">₱<?= number_format($total_collected, 0); ?></td>
-                    <td>₱<?= number_format($current_group['contribution_amount'], 0); ?></td>
-                    <td>
-                      <?php if($my_balance_due > 0): ?>
-                        <span class="text-red" style="font-weight: 600;">₱<?= number_format($my_balance_due, 0); ?> owed</span>
-                      <?php else: ?>
-                        <span style="color: #16a34a; font-weight: 600;">Settled</span>
-                      <?php endif; ?>
-                    </td>
-                    <td>
-                      <span class="badge badge-pending">Pending</span>
-                    </td>
-                  </tr>
+                  <?php foreach ($cycles as $cy): 
+                    $rec = $cy['receiver'];
+                    $recName = $rec ? htmlspecialchars($rec['first_name']) : 'Pos ' . $cy['cycle_number'];
+                    // Check if current user paid this cycle
+                    $myPaid = 0;
+                    // Simple: we can query but for student code we show collected
+                  ?>
+                    <tr>
+                      <td><strong>#<?= $cy['cycle_number'] ?></strong></td>
+                      <td><?= $recName ?></td>
+                      <td>
+                        <?php if ($cy['collected'] > 0): ?>
+                          ₱<?= number_format($current_group['contribution_amount'], 0) ?>
+                        <?php else: ?>
+                          —
+                        <?php endif; ?>
+                      </td>
+                      <td>₱<?= number_format($cy['collected'], 0) ?> / ₱<?= number_format($current_group['contribution_amount'] * count($group_members), 0) ?></td>
+                      <td>
+                        <?php if ($cy['payout_status'] === 'released'): ?>
+                          <span class="badge badge-active">Payout Done</span>
+                        <?php else: ?>
+                          <span class="badge badge-pending">Collecting</span>
+                        <?php endif; ?>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
                 </tbody>
               </table>
             </div>
+            <p style="margin-top:12px; font-size:13px; color:#555;">Use the buttons in the Overview tab to record your hulugan (contribution) for each cycle.</p>
           </div>
         <?php endif; ?>
 
@@ -167,7 +281,7 @@
         <button class="modal-close-btn" onclick="closeRecordPaymentModal()">✕</button>
       </div>
       <div class="modal-body">
-        <form action="process/process_record_payment.php" method="POST">
+        <form action="../process/process_record_payment.php" method="POST">
           <input type="hidden" name="group_id" value="<?= $group_id; ?>">
           <input type="hidden" name="member_id" value="<?= $my_member_id; ?>">
           
@@ -183,7 +297,11 @@
             </div>
             <div class="form-group" style="flex: 1;">
               <label class="input-label">Cycle #</label>
-              <input class="input-field" type="number" name="cycle_number" value="1" required />
+              <select name="cycle_number" class="input-field">
+                <?php foreach ($cycles as $cyc): ?>
+                  <option value="<?= $cyc['cycle_number'] ?>">Cycle #<?= $cyc['cycle_number'] ?></option>
+                <?php endforeach; ?>
+              </select>
             </div>
           </div>
 
@@ -198,6 +316,7 @@
 
           <button class="btn-primary" type="submit" style="margin-top: 16px; width: 100%;">Record Payment</button>
         </form>
+        <p style="font-size:12px; color:#666; margin-top:10px;">Tip: You can also use the "Pay" buttons directly in the cycle schedule above.</p>
       </div>
     </div>
   </div>

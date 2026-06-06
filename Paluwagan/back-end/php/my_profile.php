@@ -12,13 +12,15 @@ $update_success = false;
 
 // Dynamic Form updates handling engine
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
-    $occupation = mysqli_real_escape_string($conn, $_POST['occupation']);
-    $address = mysqli_real_escape_string($conn, $_POST['address']);
+    $phone = mysqli_real_escape_string($conn, $_POST['phone'] ?? '');
+    $occupation = mysqli_real_escape_string($conn, $_POST['occupation'] ?? '');
+    $address = mysqli_real_escape_string($conn, $_POST['address'] ?? '');
     
-    $update_query = "UPDATE users SET phone='$phone', occupation='$occupation', address='$address' WHERE user_id='$current_user_id'";
-    if(mysqli_query($conn, $update_query)) {
-        // Redirect cleanly back to the page with a success message to prevent resubmission pops
+    $stmt = mysqli_prepare($conn, "UPDATE users SET phone=?, occupation=?, address=? WHERE user_id=?");
+    mysqli_stmt_bind_param($stmt, "sssi", $phone, $occupation, $address, $current_user_id);
+    $ok = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+    if ($ok) {
         header("Location: my_profile.php?success=Profile updated successfully");
         exit();
     }
