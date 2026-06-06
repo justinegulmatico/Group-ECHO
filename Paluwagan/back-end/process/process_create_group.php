@@ -1,0 +1,1 @@
+<?php header('Location: ../php/my_groups.php'); exit(); ?>
