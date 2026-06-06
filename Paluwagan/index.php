@@ -56,7 +56,7 @@ if (isset($_POST['login'])) {
             $_SESSION['last_name'] = $row['last_name'] ?? '';
 
             if ($_SESSION['role'] === 'admin') {
-                header("Location: back-end/php/admin.php");
+                header("Location: back-end/php/admin/index.php");
             } else {
                 header("Location: back-end/php/dashboard.php");
             }

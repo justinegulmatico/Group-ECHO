@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TrustFund — My Profile</title>
-  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <link rel="stylesheet" href="../../assets/css/global.css?v=<?= filemtime(__DIR__ . '/../../assets/css/global.css') ?>" />
   <link rel="stylesheet" href="../../assets/css/my-profile.css" />
 </head>
 <body>
@@ -31,68 +31,138 @@
 
       <div class="page-content">
 
+        <!-- Success message -->
+        <?php if (isset($_GET['success'])): ?>
+          <div style="background:#E8F5EE; border:1px solid #a7f3d0; color:#166534; padding:12px 16px; border-radius:10px; margin-bottom:18px; font-size:14px;">
+            <?= htmlspecialchars($_GET['success']) ?>
+          </div>
+        <?php endif; ?>
+
+        <!-- HERO -->
         <div class="profile-hero">
-          <div class="profile-hero-avatar" id="profile-avatar" onclick="document.getElementById('avatar-file').click()" title="Click to change photo" role="button" tabindex="0">
+          <div class="profile-hero-avatar" id="profile-avatar" onclick="document.getElementById('avatar-file').click()" title="Click to change photo">
             <span class="avatar-initials"><?= htmlspecialchars($initials); ?></span>
             <input type="file" id="avatar-file" accept="image/*" class="file-input-hidden" onchange="previewAvatar(event)" />
           </div>
           <div class="profile-hero-info">
-            <h1 class="profile-hero-name"><?= htmlspecialchars($full_name); ?></h1>
-            <p class="profile-hero-meta">@<?= htmlspecialchars($_SESSION['username'] ?? 'username'); ?> · <?= htmlspecialchars($_SESSION['email'] ?? 'user@email.com'); ?></p>
+            <div class="profile-hero-name"><?= htmlspecialchars($full_name); ?></div>
+            <div class="profile-hero-meta">
+              @<?= htmlspecialchars($_SESSION['username'] ?? 'username'); ?> · <?= htmlspecialchars($_SESSION['email'] ?? ''); ?>
+            </div>
             <div class="profile-badges">
-              <span class="badge badge-verified" style="text-transform: capitalize;"><?= htmlspecialchars($user_role); ?></span>
+              <span class="badge badge-role"><?= htmlspecialchars($user_role); ?></span>
+              <?php if ($created_at): ?>
+                <span class="badge badge-muted">Member since <?= date('M Y', strtotime($created_at)); ?></span>
+              <?php endif; ?>
             </div>
           </div>
         </div>
 
-        <div class="profile-card">
-          <h2 class="profile-card-title">Personal Information</h2>
-          
-          <form id="profile-form" class="profile-form" method="POST" action="">
-            <div class="form-row">
-              <div class="form-group">
-                <label class="input-label" for="profile-firstname">First Name</label>
-                <input type="text" id="profile-firstname" name="first_name" class="input-field" value="<?= htmlspecialchars($first_name); ?>" readonly style="background-color: #f9f9f9; cursor: not-allowed;" />
-              </div>
-              <div class="form-group">
-                <label class="input-label" for="profile-lastname">Last Name</label>
-                <input type="text" id="profile-lastname" name="last_name" class="input-field" value="<?= htmlspecialchars($last_name ?: '—'); ?>" readonly style="background-color: #f9f9f9; cursor: not-allowed;" />
+        <!-- STATS ROW -->
+        <div class="stat-cards profile-stats">
+          <div class="stat-card">
+            <div class="stat-card-label">Active Groups</div>
+            <div class="stat-card-value"><?= $active_groups; ?></div>
+            <div class="stat-card-sub">groups you're part of</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Total Contributed</div>
+            <div class="stat-card-value">₱<?= number_format($total_contributed, 0); ?></div>
+            <div class="stat-card-sub">across all cycles</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Total Received</div>
+            <div class="stat-card-value green">₱<?= number_format($total_received, 0); ?></div>
+            <div class="stat-card-sub">payouts received</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Net Position</div>
+            <div class="stat-card-value <?= $net_position >= 0 ? 'green' : 'red'; ?>">₱<?= number_format($net_position, 0); ?></div>
+            <div class="stat-card-sub">received minus contributed</div>
+          </div>
+        </div>
+
+        <div class="profile-grid">
+
+          <!-- PERSONAL INFORMATION -->
+          <div class="profile-card">
+            <div class="profile-card-header">
+              <div>
+                <h2 class="profile-card-title">Personal Information</h2>
+                <p class="profile-card-subtitle">Update your contact &amp; work details</p>
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label class="input-label" for="profile-occupation">Occupation</label>
-                <input type="text" id="profile-occupation" name="occupation" class="input-field" value="<?= htmlspecialchars($_SESSION['occupation'] ?? '—'); ?>" />
+            <form method="POST" action="my_profile.php" class="profile-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="input-label">First Name</label>
+                  <input type="text" class="input-field" value="<?= htmlspecialchars($first_name); ?>" readonly style="background:#f8f6f3; cursor:not-allowed;" />
+                </div>
+                <div class="form-group">
+                  <label class="input-label">Last Name</label>
+                  <input type="text" class="input-field" value="<?= htmlspecialchars($last_name ?: '—'); ?>" readonly style="background:#f8f6f3; cursor:not-allowed;" />
+                </div>
               </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="input-label" for="profile-phone">Phone Number</label>
+                  <input type="tel" id="profile-phone" name="phone" class="input-field" value="<?= htmlspecialchars($_SESSION['phone'] ?? ''); ?>" placeholder="0917 123 4567" />
+                </div>
+                <div class="form-group">
+                  <label class="input-label" for="profile-occupation">Occupation</label>
+                  <input type="text" id="profile-occupation" name="occupation" class="input-field" value="<?= htmlspecialchars($_SESSION['occupation'] ?? ''); ?>" placeholder="Student / Teacher / etc." />
+                </div>
+              </div>
+
               <div class="form-group">
                 <label class="input-label" for="profile-address">Address</label>
-                <input type="text" id="profile-address" name="address" class="input-field" value="<?= htmlspecialchars($_SESSION['address'] ?? '—'); ?>" />
+                <input type="text" id="profile-address" name="address" class="input-field" value="<?= htmlspecialchars($_SESSION['address'] ?? ''); ?>" placeholder="City, Province" />
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary">Save Changes</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- PROFILE COMPLETENESS + QUICK TIPS -->
+          <div class="profile-card">
+            <div class="profile-card-header">
+              <h2 class="profile-card-title">Profile Strength</h2>
+            </div>
+
+            <div class="completeness-wrap">
+              <div class="completeness-header">
+                <span class="completeness-label">Account completeness</span>
+                <span class="completeness-pct"><?= $completeness; ?>%</span>
+              </div>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" style="width: <?= $completeness; ?>%;"></div>
+              </div>
+              <div class="completeness-hint">
+                <?php if ($completeness < 70): ?>
+                  Add your phone, occupation and address to reach 100%.
+                <?php else: ?>
+                  Great job! Your profile is looking complete.
+                <?php endif; ?>
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label class="input-label" for="profile-phone">Phone</label>
-                <input type="tel" id="profile-phone" name="phone" class="input-field" value="<?= htmlspecialchars($_SESSION['phone'] ?? '—'); ?>" />
-              </div>
-              <div class="form-group">
-                <label class="input-label">Account Role Group</label>
-                <input type="text" class="input-field" value="<?= htmlspecialchars($user_role); ?>" readonly style="background-color: #f9f9f9; color: #e8481a; font-weight: 600; text-transform: capitalize; cursor: not-allowed;" />
-              </div>
+            <div style="margin-top:18px; font-size:13px; color:#6B6560;">
+              <strong>Tip:</strong> Keeping your profile updated helps group leaders contact you easily for contributions and payouts.
             </div>
+          </div>
 
-            <button type="submit" class="btn-primary btn-save">Save Changes</button>
-          </form>
         </div>
 
-        <div class="profile-card">
-          <h2 class="profile-card-title">Groups Summary</h2>
-          <p class="profile-summary-text">Active member dashboard configuration system parameters tracking online.</p>
-        </div>
+      </div>
+    </div>
+  </div>
 
-      </div></div></div><script>
-    // Preview Uploaded Image Avatar File Script
+  <script>
+    // Avatar preview (client only)
     function previewAvatar(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -102,19 +172,14 @@
         avatar.style.backgroundImage = `url(${e.target.result})`;
         avatar.style.backgroundSize = 'cover';
         avatar.style.backgroundPosition = 'center';
-        avatar.querySelector('.avatar-initials').style.display = 'none';
+        const initialsEl = avatar.querySelector('.avatar-initials');
+        if (initialsEl) initialsEl.style.display = 'none';
       };
       reader.readAsDataURL(file);
     }
-
-    // Console Logging Submission Validation Sandbox
-    document.getElementById('profile-form').addEventListener('submit', function(e) {
-      // Un-comment e.preventDefault() if performing AJAX asynchronous processing calls
-      // e.preventDefault();
-      console.log('Profile submission controller active.');
-    });
   </script>
 
+  <!-- Notification panel (required by notifications.js) -->
   <div class="notif-overlay" id="notif-overlay"></div>
   <div class="notif-panel" id="notif-panel">
     <div class="notif-panel-header">
@@ -129,7 +194,6 @@
     </div>
   </div>
   <div class="toast-container" id="toast-container"></div>
-  
   <script src="../../front-end/js/notifications.js"></script>
 </body>
 </html>

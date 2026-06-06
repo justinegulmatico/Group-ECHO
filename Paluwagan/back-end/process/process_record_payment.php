@@ -53,6 +53,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     mysqli_stmt_close($stmt);
 
     if ($success) {
+        // Also record in transactions fact table for OLAP
+        $trans_stmt = mysqli_prepare($conn, "INSERT INTO transactions (group_id, cycle_id, member_id, user_id, transaction_type, amount, transaction_date, status, recorded_by) 
+                                            VALUES (?, ?, ?, ?, 'contribution', ?, CURDATE(), 'completed', ?)");
+        mysqli_stmt_bind_param($trans_stmt, "iiidii", $group_id, $cycle_id, $member_id, $user_id, $amount, $user_id);
+        mysqli_stmt_execute($trans_stmt);
+        mysqli_stmt_close($trans_stmt);
+
         header("Location: ../group_details.php?id=" . $group_id . "&tab=payments&success=" . urlencode("Payment recorded for cycle #$cycle_number."));
         exit();
     } else {

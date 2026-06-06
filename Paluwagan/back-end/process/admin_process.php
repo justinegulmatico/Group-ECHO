@@ -4,11 +4,12 @@ include "../db.php";
 
 // Security
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
-    header("Location: ../admin.php");
+    header("Location: ../admin/index.php");
     exit();
 }
 
-// Legacy shim: real actions now live in admin.php POST/GET handlers. This just safely redirects.
-header("Location: ../admin.php");
+// Legacy shim: Admin actions are now in the admin/ folder (index.php, users.php, etc.).
+// Redirect to the new admin dashboard.
+header("Location: ../admin/index.php");
 exit();
 ?>

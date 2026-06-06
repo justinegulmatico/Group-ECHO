@@ -16,10 +16,20 @@ if (empty($initials)) {
 }
 
 $is_nested_process = (strpos($_SERVER['PHP_SELF'], '/process/') !== false);
-$prefix = $is_nested_process ? '../' : '';
+$is_admin_sub = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false);
+$prefix = $is_nested_process ? '../' : ($is_admin_sub ? '../' : '');
+
+$js_path = $is_admin_sub ? '../../../front-end/js/' : '../../front-end/js/';
+$js_file = __DIR__ . '/../../js/sidebar.js';
+$js_version = file_exists($js_file) ? filemtime($js_file) : time();
 ?>
 <aside class="sidebar">
-  <div class="sidebar-logo">TrustFund</div>
+  <div class="sidebar-logo">
+    <span class="sidebar-logo-text">TrustFund</span>
+    <button id="sidebar-toggle" class="sidebar-collapse-btn" title="Toggle sidebar">
+      &laquo;
+    </button>
+  </div>
 
   <nav class="sidebar-nav">
     <div class="sidebar-section-label">Main</div>
@@ -28,38 +38,38 @@ $prefix = $is_nested_process ? '../' : '';
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/>
       </svg>
-      Dashboard
+      <span class="nav-text">Dashboard</span>
     </a>
 
     <a href="<?= $prefix ?>my_groups.php" class="sidebar-nav-item <?= ($current_page == 'my_groups.php' || $current_page == 'group_details.php') ? 'active' : '' ?>">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
       </svg>
-      My Groups
+      <span class="nav-text">My Groups</span>
     </a>
 
     <a href="<?= $prefix ?>payments.php" class="sidebar-nav-item <?= ($current_page == 'payments.php') ? 'active' : '' ?>">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
       </svg>
-      Payments
+      <span class="nav-text">Payments</span>
     </a>
 
     <a href="<?= $prefix ?>my_profile.php" class="sidebar-nav-item <?= ($current_page == 'my_profile.php') ? 'active' : '' ?>">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
       </svg>
-      My Profile
+      <span class="nav-text">My Profile</span>
     </a>
 
     <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
       <div class="sidebar-section-label" style="margin-top: 20px;">Admin</div>
-      <a href="<?= $prefix ?>admin.php" class="sidebar-nav-item <?= ($current_page == 'admin.php') ? 'active' : '' ?>">
+      <a href="<?= $prefix ?>admin/index.php" class="sidebar-nav-item <?= (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? 'active' : '' ?>">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           <polyline points="9 12 11 14 15 10"/>
         </svg>
-        Admin Panel
+        <span class="nav-text">Admin Panel</span>
       </a>
     <?php endif; ?>
   </nav>
@@ -79,3 +89,5 @@ $prefix = $is_nested_process ? '../' : '';
     </a>
   </div>
 </aside>
+
+<script src="<?= $js_path ?>sidebar.js?v=<?= $js_version ?>"></script>

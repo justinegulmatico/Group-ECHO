@@ -224,6 +224,37 @@ ALTER TABLE `user_verifications`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Table structure for table `transactions` (for OLAP / analytics - fact table with dimensions)
+--
+
+CREATE TABLE `transactions` (
+  `transaction_id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) NOT NULL,
+  `cycle_id` int(11) NOT NULL,
+  `member_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `transaction_type` enum('contribution','payout') NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `transaction_date` date NOT NULL,
+  `status` varchar(20) DEFAULT 'completed',
+  `recorded_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`transaction_id`),
+  KEY `group_id` (`group_id`),
+  KEY `cycle_id` (`cycle_id`),
+  KEY `member_id` (`member_id`),
+  KEY `user_id` (`user_id`),
+  KEY `recorded_by` (`recorded_by`),
+  KEY `transaction_date` (`transaction_date`),
+  KEY `transaction_type` (`transaction_type`),
+  CONSTRAINT `transactions_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`group_id`),
+  CONSTRAINT `transactions_ibfk_2` FOREIGN KEY (`cycle_id`) REFERENCES `cycles` (`cycle_id`),
+  CONSTRAINT `transactions_ibfk_3` FOREIGN KEY (`member_id`) REFERENCES `group_members` (`member_id`),
+  CONSTRAINT `transactions_ibfk_4` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `transactions_ibfk_5` FOREIGN KEY (`recorded_by`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 

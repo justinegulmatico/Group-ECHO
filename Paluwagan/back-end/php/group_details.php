@@ -264,6 +264,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_execute($pstmt);
                 mysqli_stmt_close($pstmt);
 
+                // Also record in transactions fact table for OLAP
+                $trans_stmt = mysqli_prepare($conn, "INSERT INTO transactions (group_id, cycle_id, member_id, user_id, transaction_type, amount, transaction_date, status, recorded_by) 
+                                                    VALUES (?, ?, ?, ?, 'payout', ?, CURDATE(), 'completed', ?)");
+                mysqli_stmt_bind_param($trans_stmt, "iiidii", $group_id, $cycle_id, $receiver_id, $current_user_id, $payout_amount, $current_user_id);
+                mysqli_stmt_execute($trans_stmt);
+                mysqli_stmt_close($trans_stmt);
+
                 // Mark cycle as released
                 $up = mysqli_prepare($conn, "UPDATE cycles SET payout_member_id=?, payout_status='released' WHERE cycle_id=?");
                 mysqli_stmt_bind_param($up, "ii", $receiver_id, $cycle_id);
