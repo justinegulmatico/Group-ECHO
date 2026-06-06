@@ -1,0 +1,258 @@
+/* ================================================
+   TrustFund — My Profile (Redesigned)
+   ================================================ */
+
+/* Page layout */
+.page-content {
+  padding: 24px 32px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Topbar ── */
+.topbar {
+  height: 73px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* ── Hero (dark banner like group details) ── */
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 22px 26px;
+  background: var(--color-dark);
+  color: #fff;
+  border-radius: var(--radius-lg);
+  margin-bottom: 22px;
+}
+
+.profile-hero-avatar {
+  width: 72px;
+  height: 72px;
+  min-width: 72px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 3px solid #3a2f2a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: box-shadow 0.15s;
+  flex-shrink: 0;
+}
+
+.profile-hero-avatar:hover {
+  box-shadow: 0 0 0 4px rgba(232, 72, 26, 0.2);
+}
+
+.avatar-initials {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.file-input-hidden { display: none; }
+
+.profile-hero-info { min-width: 0; }
+
+.profile-hero-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 2px;
+}
+
+.profile-hero-meta {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 8px;
+}
+
+.profile-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.badge-role {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-muted {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* ── Stat Cards (reuse dashboard style) ── */
+.profile-stats {
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+}
+
+.stat-card-value {
+  font-size: 24px;
+}
+
+/* ── Two column grid for main cards ── */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 900px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Profile Card ── */
+.profile-card {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
+}
+
+.profile-card-header {
+  margin-bottom: 16px;
+}
+
+.profile-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 4px 0;
+}
+
+.profile-card-subtitle {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* ── Form ── */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.profile-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.profile-form .input-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.profile-form .input-field {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: var(--color-text-primary);
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.profile-form .input-field:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(232, 72, 26, 0.09);
+  outline: none;
+}
+
+.form-actions {
+  margin-top: 6px;
+}
+
+/* ── Profile Completeness + Progress ── */
+.completeness-wrap {
+  background: #f9f6f1;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+}
+
+.completeness-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.completeness-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.completeness-pct {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.progress-bar-wrap {
+  height: 6px;
+  background: var(--color-border-light);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #E8481A, #f06b3f);
+  border-radius: 999px;
+  transition: width .4s ease;
+}
+
+.completeness-hint {
+  font-size: 12px;
+  color: #7a7167;
+  margin-top: 8px;
+  line-height: 1.35;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .profile-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .profile-form .form-row {
+    grid-template-columns: 1fr;
+  }
+}

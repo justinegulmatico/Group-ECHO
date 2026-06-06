@@ -1,0 +1,520 @@
+/* ================================================
+   TrustFund — My Groups Page Styles
+   ================================================ */
+
+/* ── Topbar height — matches sidebar logo ── */
+.topbar {
+  height: 73px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* ── Page Toolbar (search + buttons) ── */
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Search Bar ── */
+.search-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+}
+
+.search-wrap svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 14px 10px 36px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  color: var(--color-text-primary);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search-input::placeholder { color: var(--color-text-muted); }
+
+.search-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(232,72,26,0.10);
+  outline: none;
+}
+
+/* ── Toolbar Buttons ── */
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 13.5px;
+  font-weight: 500;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-outline:hover {
+  background: var(--color-surface-muted);
+  border-color: #ccc;
+}
+
+.btn-create {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.btn-create:hover { background: var(--color-primary-hover); }
+
+/* ── Group Cards Grid ── */
+.group-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* ── Group Card ── */
+.group-card {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.group-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #ccc;
+}
+
+.group-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.group-card-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.group-card-meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+/* ── Badge ── */
+.badge {
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badge-active  { background: var(--color-success-bg); color: var(--color-success); }
+.badge-closed  { background: #F0ECE8; color: var(--color-text-muted); }
+.badge-pending { background: #FFF4E0; color: var(--color-warning); }
+
+/* ── Progress Bar ── */
+.progress-bar-wrap {
+  height: 5px;
+  background: var(--color-border-light);
+  border-radius: var(--radius-full);
+  margin: 12px 0 8px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+}
+
+/* ── Group Card Bottom ── */
+.group-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.group-card-collected {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.group-card-members {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.member-chips {
+  display: flex;
+}
+
+.member-chip {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-surface);
+  margin-left: -6px;
+}
+
+.member-chip:first-child { margin-left: 0; }
+
+/* ── Empty State ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+  gap: 12px;
+}
+
+.empty-state-icon {
+  width: 56px;
+  height: 56px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.empty-state-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.empty-state-desc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  max-width: 300px;
+}
+
+/* ── Modal Overlay ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* ── Modal Box ── */
+.modal {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 24px 18px;
+  border-bottom: 1.5px solid var(--color-border);
+}
+
+.modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  border: 1.5px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.modal-close:hover { background: var(--color-border); }
+
+.modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1.5px solid var(--color-border);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* ── Form Row (two columns) ── */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ============================================
+   FIX: Make Tables Full Width (My Groups Page)
+   ============================================ */
+
+/* Make the main page content use full available width */
+.page-content {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding: 32px 40px;
+}
+
+/* Force table container to be full width */
+.table-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-bottom: 32px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Make the actual table full width */
+.table-wrap table {
+  width: 100% !important;
+  min-width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+/* Better column spacing */
+.table-wrap th,
+.table-wrap td {
+  padding: 16px 20px;
+  white-space: nowrap;
+}
+
+/* Make Action column align properly */
+.table-wrap td:last-child,
+.table-wrap th:last-child {
+  text-align: right;
+  padding-right: 24px;
+}
+
+/* Improve row hover */
+.table-wrap tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Make sure section headers have proper spacing */
+.section-header {
+  margin-bottom: 12px;
+}
+
+/* === List View Styles (matching Admin Panel) === */
+.table-wrap {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 14px 20px;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+  font-size: 13px;
+}
+
+tr:hover {
+  background: #f8fafc;
+}
+
+.btn-row-view {
+  background: #f1f5f9;
+  color: #334155;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-row-view:hover {
+  background: #e2e8f0;
+}
+
+.table-empty {
+  text-align: center;
+  color: #64748b;
+  padding: 40px !important;
+}
+
+
+/* === Warm Global Color Theme === */
+body, .page-content {
+  background-color: #F5F0E8;
+}
+
+.table-wrap {
+  background: #fff;
+  border: 1px solid #E4DDD4;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* Longer Search Bar */
+.search-wrap {
+  max-width: 520px;
+  width: 100%;
+}
+
+/* Better table row spacing */
+.table-wrap th, .table-wrap td {
+  padding: 16px 20px;
+}
+
+/* === Proper Tab Design (Matching Admin Panel) === */
+.detail-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid #E4DDD4;
+  margin-bottom: 24px;
+  padding-bottom: 4px;
+}
+
+.detail-tab {
+  background: transparent;
+  border: none;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #6B6560;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.detail-tab:hover {
+  color: #E8481A;
+}
+
+.detail-tab.active {
+  color: #E8481A;
+  font-weight: 700;
+}
+
+.detail-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #E8481A;
+  border-radius: 3px;
+}
+
+/* Long search bar inside each section */
+.search-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.search-input {
+  width: 100%;
+}
+
+/* ── Join preview box ── */

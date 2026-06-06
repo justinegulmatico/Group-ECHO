@@ -1,0 +1,966 @@
+/* ================================================
+   TrustFund — Dashboard Page Styles
+   ================================================ */
+
+/* ── Topbar height — matches sidebar logo section exactly ── */
+.topbar {
+  height: 73px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* ── Stat Cards ── */
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-cards.stat-cards-5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.stat-card {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  padding: 18px 18px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.035);
+}
+
+.stat-card-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.stat-card-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.stat-card-value.green { color: var(--color-success); }
+.stat-card-value.red   { color: var(--color-danger);  }
+
+.stat-card-sub {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+/* ── Section Header ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* ── New Group Button ── */
+.new-group-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.new-group-btn:hover { background: var(--color-primary-hover); }
+
+/* ── Group Cards Grid ── */
+.group-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* ── Group Card ── */
+.group-card {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.group-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #ccc;
+}
+
+.group-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.group-card-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.group-card-meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+/* ── Badge ── */
+.badge {
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-active {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.badge-closed {
+  background: #F0ECE8;
+  color: var(--color-text-muted);
+}
+
+.badge-pending {
+  background: #FFF4E0;
+  color: var(--color-warning);
+}
+
+/* ── Progress Bar ── */
+.progress-bar-wrap {
+  height: 5px;
+  background: var(--color-border-light);
+  border-radius: var(--radius-full);
+  margin: 10px 0 6px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+/* ── Group Card Bottom Row ── */
+.group-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.group-card-collected {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.group-card-members {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+/* ── Member Chips ── */
+.member-chips {
+  display: flex;
+}
+
+.member-chip {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-surface);
+  margin-left: -6px;
+}
+
+.member-chip:first-child { margin-left: 0; }
+
+/* ── Empty State ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+  gap: 12px;
+}
+
+.empty-state-icon {
+  width: 56px;
+  height: 56px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.empty-state-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.empty-state-desc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  max-width: 300px;
+}
+
+/* ================================================
+   MODAL OVERLAY & Z-INDEX FIX
+   ================================================ */
+
+.modal-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(0, 0, 0, 0.6) !important;
+        z-index: 999999 !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+.modal {
+        background: var(--color-surface) !important; /* Uses your global surface color */
+        width: 90% !important;
+        max-width: 500px !important;
+        max-height: 85vh !important;
+        overflow-y: auto !important;
+        border-radius: 12px !important;
+        padding: 24px !important;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
+        position: relative !important;
+        z-index: 1000000 !important;
+    }
+
+/* Ensure the close button stays positioned correctly */
+.modal-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        color: var(--color-text-secondary);
+    }
+
+/* =========================================
+       MODAL INTERNAL LININGS & FORM STYLES
+       ========================================= */
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e3e3e3; /* The dividing line under the title */
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
+
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #e3e3e3; /* The dividing line above the button */
+        padding-top: 20px;
+        margin-top: 10px;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 15px; /* Adds space between columns */
+        margin-bottom: 15px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 15px;
+        width: 100%;
+    }
+
+    .input-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 6px;
+    }
+
+    .input-field {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1.5px solid #ccc; /* The lining of the input boxes */
+        border-radius: 8px;
+        font-size: 0.95rem;
+        box-sizing: border-box; /* Ensures padding doesn't break width */
+        transition: border-color 0.2s ease;
+    }
+
+    .input-field:focus {
+        border-color: #f47321; /* Brand orange when clicked */
+        outline: none;
+    }
+
+    /* Fix the button inside the dashboard */
+.modal .btn-primary {
+        background-color: var(--color-primary) !important;
+        color: white !important;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    #cg-invitecode {
+        background: #fdf6f2 !important; /* A light tint of your primary color */
+        color: var(--color-primary) !important;
+        border: 1px dashed var(--color-primary) !important;
+    }
+
+/* ================================================
+   WALLET BALANCE CARD (5th metric card)
+   ================================================ */
+.wallet-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 118px;
+}
+
+.wallet-balance-amount {
+  font-size: 23px;
+  font-weight: 700;
+  color: #1A1A1A;
+  line-height: 1.1;
+  margin: 2px 0 6px;
+  letter-spacing: -0.2px;
+}
+
+.wallet-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.wallet-btn {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.wallet-btn-deposit {
+  background: #E15225;
+  color: #fff;
+  border: none;
+}
+.wallet-btn-deposit:hover {
+  background: #c7461d;
+}
+
+.wallet-btn-withdraw {
+  background: #fff;
+  color: #444;
+  border: 1.5px solid #E4DDD4;
+}
+.wallet-btn-withdraw:hover {
+  background: #F9F6F1;
+  border-color: #d4ccc2;
+}
+
+/* ================================================
+   POLISHED SINGLE DASHBOARD ALERT PANEL
+   ================================================ */
+.dashboard-alert {
+  background: #fff;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 22px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.dashboard-alert-icon {
+  font-size: 20px;
+  line-height: 1;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.dashboard-alert-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-alert-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3a3632;
+  line-height: 1.35;
+}
+
+.dashboard-alert-sub {
+  font-size: 13px;
+  color: #6B6560;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.dashboard-alert-link {
+  display: inline-block;
+  margin-top: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #E15225;
+  text-decoration: none;
+}
+.dashboard-alert-link:hover {
+  text-decoration: underline;
+}
+
+/* ================================================
+   DEPOSIT / WITHDRAW ACTION MODALS (ultra-clean)
+   ================================================ */
+.tx-modal {
+  background: #ffffff;
+  width: 92%;
+  max-width: 420px;
+  border-radius: 16px;
+  padding: 26px 28px 22px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+  position: relative;
+}
+
+.tx-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.tx-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1A1A1A;
+}
+
+.tx-modal-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  color: #9E9790;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+.tx-modal-close:hover { color: #666; }
+
+.tx-form-group {
+  margin-bottom: 16px;
+}
+
+.tx-input-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.tx-amount-wrap {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1.5px solid #E4DDD4;
+  border-radius: 10px;
+  padding: 0 14px;
+  transition: border-color .15s;
+}
+.tx-amount-wrap:focus-within {
+  border-color: #E15225;
+  box-shadow: 0 0 0 3px rgba(225, 82, 37, 0.08);
+}
+
+.tx-currency {
+  font-size: 21px;
+  font-weight: 700;
+  color: #1A1A1A;
+  margin-right: 6px;
+  user-select: none;
+}
+
+.tx-amount-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1A1A1A;
+  padding: 12px 0;
+  background: transparent;
+}
+.tx-amount-input::placeholder {
+  color: #C9C2BA;
+  font-weight: 400;
+}
+
+.tx-input-field {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1.5px solid #E4DDD4;
+  border-radius: 10px;
+  font-size: 14px;
+  background: #fff;
+  color: #222;
+  transition: border .15s;
+}
+.tx-input-field:focus {
+  border-color: #E15225;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(225, 82, 37, 0.08);
+}
+
+.tx-textarea {
+  resize: vertical;
+  min-height: 54px;
+  font-family: inherit;
+}
+
+.tx-file-input {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1.5px dashed #D8D0C6;
+  border-radius: 10px;
+  font-size: 13px;
+  background: #FAF7F2;
+  cursor: pointer;
+}
+.tx-file-input:focus {
+  border-style: solid;
+  border-color: #E15225;
+}
+
+.tx-hint {
+  font-size: 11px;
+  color: #9E9790;
+  margin-top: 4px;
+}
+
+.tx-notice {
+  font-size: 12.5px;
+  color: #7C756E;
+  background: #F9F6F1;
+  border: 1px solid #F0EBE3;
+  padding: 10px 13px;
+  border-radius: 9px;
+  margin: 18px 0 6px;
+  line-height: 1.45;
+}
+
+.tx-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.tx-btn {
+  flex: 1;
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .12s, border-color .12s, color .12s;
+}
+
+.tx-btn-cancel {
+  background: #F5F0E8;
+  color: #555;
+  border: 1px solid #E4DDD4;
+}
+.tx-btn-cancel:hover {
+  background: #EDE6DC;
+}
+
+.tx-btn-submit {
+  background: #E15225;
+  color: #fff;
+  border: none;
+}
+.tx-btn-submit:hover {
+  background: #c7461d;
+}
+
+/* ================================================
+   PENDING PAYMENTS & CYCLES TRACKER (Dashboard Redesign)
+   ================================================ */
+
+.pending-payments-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+/* Elongated horizontal alert card for action-required cycles */
+.payment-alert-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #E4DDD4;
+  border-left: 5px solid #E15225;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  min-height: 78px;
+}
+
+/* Left block: icon + group title + meta */
+.pac-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.pac-icon {
+  width: 34px;
+  height: 34px;
+  background: #FDF0EB;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pac-group-meta {
+  min-width: 0;
+}
+
+.pac-group-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A1A;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pac-meta-tag {
+  font-size: 12px;
+  color: #6B6560;
+  font-weight: 500;
+  letter-spacing: -.1px;
+}
+
+/* Middle: Receiver spotlight */
+.pac-receiver {
+  flex: 1 1 auto;
+  min-width: 160px;
+  max-width: 240px;
+}
+
+.pac-receiver-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9E9790;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 4px;
+}
+
+.pac-receiver-pill {
+  display: inline-block;
+  background: #F5F0E8;
+  color: #1A1A1A;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* Middle-Right: status + thin progress */
+.pac-status {
+  flex: 0 0 148px;
+  min-width: 130px;
+}
+
+.pac-progress-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3a3632;
+  margin-bottom: 5px;
+}
+
+.pac-progress-track {
+  height: 6px;
+  background: #F0EBE3;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.pac-progress-fill {
+  height: 100%;
+  background: #E15225;
+  border-radius: 999px;
+  transition: width .35s ease;
+}
+
+/* Far Right: prominent pay button */
+.pac-action {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.pay-now-btn {
+  background: #E15225;
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(225, 82, 37, 0.25);
+  transition: background .12s ease, transform .06s ease;
+}
+
+.pay-now-btn:hover {
+  background: #c7461d;
+}
+
+.pay-now-btn:active {
+  transform: translateY(1px);
+}
+
+/* ================================================
+   ALL CAUGHT UP (Paid-up healthy state)
+   ================================================ */
+
+.all-caught-up-card {
+  background: #FFFFFF;
+  border: 1px solid #E4DDD4;
+  border-radius: 12px;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  margin-bottom: 4px;
+}
+
+.acu-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.acu-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.acu-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3a3632;
+  line-height: 1.35;
+}
+
+.acu-link {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: #8A837A;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.acu-link:hover {
+  color: #6B6560;
+  text-decoration: underline;
+}
+
+/* ================================================
+   IMPROVED JOIN CODE EXPERIENCE
+   - Post-create share code card
+   - Enhanced join modal styles (used in dashboard)
+   ================================================ */
+
+.invite-share-card {
+  background: #fff;
+  border: 1.5px solid #E4DDD4;
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-top: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.invite-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.invite-icon {
+  font-size: 22px;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.invite-header strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A1A;
+}
+
+.invite-code-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.invite-code-box {
+  flex: 1;
+  background: #FDF6F2;
+  border: 2px dashed #E15225;
+  color: #E15225;
+  font-family: monospace;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  text-align: center;
+  user-select: all;
+  cursor: pointer;
+}
+
+.invite-copy-btn {
+  background: #E15225;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .12s;
+}
+
+.invite-copy-btn:hover {
+  background: #c7461d;
+}
+
+.invite-hint {
+  font-size: 12px;
+  color: #8A837A;
+}
+
+/* Join code modal polish (dashboard join flow) */
+#joinGroupModal .modal {
+  max-width: 420px;
+}
+
+#joinGroupModal .code-input-wrap {
+  position: relative;
+  margin: 16px 0 8px;
+}
+
+#joinGroupModal .code-input-wrap svg {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9E9790;
+  pointer-events: none;
+}
+
+#joinGroupModal .code-input-wrap input {
+  width: 100%;
+  padding: 16px 16px 16px 48px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  text-align: center;
+  font-family: monospace;
+  text-transform: uppercase;
+  background: #fff;
+  border: 2px solid #E4DDD4;
+  border-radius: 12px;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+#joinGroupModal .code-input-wrap input:focus {
+  border-color: #E15225;
+  box-shadow: 0 0 0 4px rgba(225, 82, 37, 0.1);
+  outline: none;
+}
+
+#joinGroupModal .join-instructions {
+  font-size: 13px;
+  color: #6B6560;
+  text-align: center;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}

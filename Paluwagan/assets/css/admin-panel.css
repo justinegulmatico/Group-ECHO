@@ -1,0 +1,536 @@
+/* ================================================
+   TrustFund — Admin Panel Page Styles
+   ================================================ */
+
+/* ── Topbar ── */
+.topbar {
+  height: 72px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* ── Admin Avatar override (uses initials, not icon) ── */
+
+/* ── Admin Banner ── */
+.admin-banner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--color-dark);
+  border-radius: var(--radius-lg);
+  padding: 22px 28px;
+  margin-bottom: 24px;
+}
+
+.admin-banner-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: rgba(232, 72, 26, 0.18);
+  border: 1px solid rgba(232, 72, 26, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.admin-banner-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.admin-banner-sub {
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── Stat Cards ── */
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+}
+
+.stat-card-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+
+.stat-card-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.stat-card-value.amber { color: var(--color-warning); }
+.stat-card-value.green { color: var(--color-success); }
+.stat-card-value.red   { color: var(--color-danger);  }
+
+/* ── Section Titles ── */
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 14px;
+}
+
+/* ── Create Group Button ── */
+
+/* ── Tables ── */
+.table-wrap {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead tr {
+  background: var(--color-surface-muted);
+  border-bottom: 1.5px solid var(--color-border);
+}
+
+th {
+  padding: 11px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+  text-align: left;
+  white-space: nowrap;
+}
+
+td {
+  padding: 14px 16px;
+  font-size: 13.5px;
+  color: var(--color-text-primary);
+  border-bottom: 1.5px solid var(--color-border-light);
+  vertical-align: middle;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover td {
+  background: var(--color-surface-muted);
+}
+
+/* ── User Cell ── */
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-cell-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.user-cell-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.user-cell-sub {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* ── Group Cell (name + code) ── */
+.group-cell-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.group-cell-code {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-active {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.badge-closed {
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+  border: 1.5px solid var(--color-border);
+}
+
+.badge-pending {
+  background: #FFF4E0;
+  color: var(--color-warning);
+}
+
+.badge-verified {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+/* ── Row Action Buttons ── */
+
+.btn-row-view {
+  padding: 7px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1.5px solid var(--color-border);
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.btn-row-view:hover { background: var(--color-surface-muted); }
+
+/* Change Status dropdown */
+
+/* ── Table Empty State ── */
+.table-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  gap: 10px;
+  text-align: center;
+}
+
+.table-empty svg {
+  width: 40px;
+  height: 40px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.table-empty p {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.modal-overlay {
+    display: none !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    z-index: 999999 !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.modal-overlay[style*="flex"] {
+    display: flex !important;
+}
+
+.tf-modal-overlay { 
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); 
+    z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(4px); 
+}
+.tf-modal-box { 
+    background: var(--color-surface, #ffffff); border-radius: 20px; padding: 32px; 
+    width: 100%; max-width: 580px; border: 1.5px solid var(--color-border, #E4DDD4); 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; 
+}
+.tf-modal-header { 
+    display: flex; justify-content: space-between; align-items: center; 
+    border-bottom: 1.5px solid var(--color-border-light, #F0EBE3); padding-bottom: 16px; margin-bottom: 24px; 
+}
+.tf-modal-title { 
+    font-family: var(--font-display, 'Playfair Display', serif); font-size: 22px; font-weight: 700; 
+    color: var(--color-text-primary, #1a1a1a); margin: 0; 
+}
+.tf-modal-close { 
+    background: none; border: none; font-size: 28px; cursor: pointer; color: var(--color-text-muted, #999); 
+}
+.tf-hero { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+.tf-avatar { 
+    width: 56px; height: 56px; border-radius: 50%; background: var(--color-primary-light, #FDE8E2); 
+    color: var(--color-primary, #E8481A); display: flex; align-items: center; justify-content: center; 
+    font-size: 22px; font-weight: 700; flex-shrink: 0;
+}
+.tf-hero-name { font-size: 18px; font-weight: 700; color: var(--color-text-primary, #1a1a1a); }
+.tf-hero-user { font-size: 14px; color: var(--color-text-secondary, #666); }
+
+.tf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.tf-grid-full { grid-column: span 2; }
+
+.tf-data-card { 
+    background: var(--color-surface-muted, #F9F6F1); padding: 14px 16px; 
+    border-radius: 12px; border: 1.5px solid var(--color-border-light, #F0EBE3); 
+}
+.tf-label { 
+    font-size: 11px; font-weight: 700; text-transform: uppercase; 
+    color: var(--color-text-muted, #999); margin-bottom: 4px; 
+}
+.tf-value { font-size: 14px; font-weight: 600; color: var(--color-text-primary, #1a1a1a); word-break: break-word; }
+
+.tf-doc-btn { 
+    display: inline-flex; align-items: center; gap: 8px; background: var(--color-primary-light, #FDE8E2); 
+    color: var(--color-primary, #E8481A); padding: 8px 16px; border-radius: 8px; font-size: 13px; 
+    font-weight: 600; text-decoration: none; 
+}
+.tf-doc-btn:hover { opacity: 0.8; }
+
+.tf-actions { display: flex; gap: 12px; border-top: 1.5px solid var(--color-border-light, #F0EBE3); padding-top: 24px; }
+.tf-btn-reject { 
+    flex: 1; background: #FEF2F2; color: #C0392B; border: 1.5px solid #FCA5A5; 
+    padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s;
+}
+.tf-btn-reject:hover { background: #FEE2E2; }
+
+.tf-btn-approve { 
+    flex: 1.5; background: #2D7A45; color: #fff; border: none; 
+    padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s;
+}
+.tf-btn-approve:hover { background: #236336; }
+
+    /* --- USER MANAGEMENT: SEARCH, FILTER & BADGES --- */
+.tf-action-bar { 
+    display: flex; gap: 12px; margin-bottom: 16px; align-items: center; 
+}
+.tf-search-input { 
+    flex: 1; padding: 10px 16px; border-radius: 10px; 
+    border: 1.5px solid var(--color-border, #E4DDD4); 
+    background: var(--color-surface, #fff); font-family: inherit; font-size: 14px;
+}
+.tf-search-input:focus { border-color: var(--color-primary, #E8481A); outline: none; }
+.tf-filter-select { 
+    padding: 10px 16px; border-radius: 10px; font-size: 14px;
+    border: 1.5px solid var(--color-border, #E4DDD4); 
+    background: var(--color-surface, #fff); font-family: inherit; cursor: pointer; min-width: 160px;
+}
+.tf-filter-select:focus { border-color: var(--color-primary, #E8481A); outline: none; }
+
+/* Status Badges */
+.badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-block; }
+.badge-active { background: #E8F5EE; color: #2D7A45; }    /* Green */
+.badge-suspended { background: #FDE8E2; color: #C0392B; } /* Red */
+.badge-pending { background: #F0EBE3; color: #6B6560; }   /* Gray */
+.badge-finished { background: #E0E7FF; color: #3730A3; } /* Blue for Finished */
+
+/* ================================================
+   NEW ADMIN DASHBOARD + CLEAN PAGES
+   ================================================ */
+
+.admin-hero {
+  background: var(--color-dark);
+  color: #fff;
+  border-radius: var(--radius-lg);
+  padding: 26px 30px;
+  margin-bottom: 24px;
+}
+
+.admin-hero-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.admin-hero-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.55);
+}
+
+.admin-stat {
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.admin-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.admin-card {
+  display: flex;
+  gap: 16px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.admin-card:hover {
+  border-color: #d4ccc2;
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-card-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.admin-card-content {
+  min-width: 0;
+}
+
+.admin-card-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.admin-card-desc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+}
+
+.admin-card-count {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.admin-tool-card {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+/* Make sure sub admin pages have good spacing */
+.page-content {
+  padding: 24px 32px;
+}
+
+/* ================================================
+   TRANSACTION APPROVALS — LEDGER TABLE + ACTIONS
+   ================================================ */
+
+/* Attachment badge (clickable) */
+.tx-attachment-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #F5F0E8;
+  color: #E15225;
+  border: 1px solid #E4DDD4;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: all 0.12s ease;
+}
+.tx-attachment-badge:hover {
+  background: #FDE8E2;
+  border-color: #E15225;
+  color: #c7461d;
+}
+
+/* Compact modern action buttons in the ledger */
+.tx-action-btn {
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 7px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform .08s ease, box-shadow .12s ease, background .12s;
+  white-space: nowrap;
+  min-width: 78px;
+  text-align: center;
+}
+
+.tx-action-btn:active {
+  transform: translateY(1px);
+}
+
+.tx-approve {
+  background: #2D7A45;
+  color: #fff;
+  border: none;
+  box-shadow: 0 1px 2px rgba(45, 122, 69, 0.25);
+}
+.tx-approve:hover {
+  background: #236336;
+}
+
+.tx-decline {
+  background: #fff;
+  color: #9F2A1F;
+  border: 1.5px solid #E8C9C5;
+}
+.tx-decline:hover {
+  background: #FEF2F2;
+  border-color: #E57373;
+  color: #C0392B;
+}
+
+/* Slightly tighter table cells for this ledger */
+.tx-ledger td,
+.tx-ledger th {
+  padding-top: 11px;
+  padding-bottom: 11px;
+}
+
+.tx-ledger .user-cell-avatar {
+  background: #FDE8E2;
+  color: #E15225;
+}
