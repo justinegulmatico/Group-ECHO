@@ -634,3 +634,333 @@
 .tx-btn-submit:hover {
   background: #c7461d;
 }
+
+/* ================================================
+   PENDING PAYMENTS & CYCLES TRACKER (Dashboard Redesign)
+   ================================================ */
+
+.pending-payments-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+/* Elongated horizontal alert card for action-required cycles */
+.payment-alert-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #E4DDD4;
+  border-left: 5px solid #E15225;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  min-height: 78px;
+}
+
+/* Left block: icon + group title + meta */
+.pac-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.pac-icon {
+  width: 34px;
+  height: 34px;
+  background: #FDF0EB;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pac-group-meta {
+  min-width: 0;
+}
+
+.pac-group-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A1A;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pac-meta-tag {
+  font-size: 12px;
+  color: #6B6560;
+  font-weight: 500;
+  letter-spacing: -.1px;
+}
+
+/* Middle: Receiver spotlight */
+.pac-receiver {
+  flex: 1 1 auto;
+  min-width: 160px;
+  max-width: 240px;
+}
+
+.pac-receiver-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9E9790;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 4px;
+}
+
+.pac-receiver-pill {
+  display: inline-block;
+  background: #F5F0E8;
+  color: #1A1A1A;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* Middle-Right: status + thin progress */
+.pac-status {
+  flex: 0 0 148px;
+  min-width: 130px;
+}
+
+.pac-progress-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3a3632;
+  margin-bottom: 5px;
+}
+
+.pac-progress-track {
+  height: 6px;
+  background: #F0EBE3;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.pac-progress-fill {
+  height: 100%;
+  background: #E15225;
+  border-radius: 999px;
+  transition: width .35s ease;
+}
+
+/* Far Right: prominent pay button */
+.pac-action {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.pay-now-btn {
+  background: #E15225;
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(225, 82, 37, 0.25);
+  transition: background .12s ease, transform .06s ease;
+}
+
+.pay-now-btn:hover {
+  background: #c7461d;
+}
+
+.pay-now-btn:active {
+  transform: translateY(1px);
+}
+
+/* ================================================
+   ALL CAUGHT UP (Paid-up healthy state)
+   ================================================ */
+
+.all-caught-up-card {
+  background: #FFFFFF;
+  border: 1px solid #E4DDD4;
+  border-radius: 12px;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  margin-bottom: 4px;
+}
+
+.acu-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.acu-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.acu-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3a3632;
+  line-height: 1.35;
+}
+
+.acu-link {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: #8A837A;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.acu-link:hover {
+  color: #6B6560;
+  text-decoration: underline;
+}
+
+/* ================================================
+   IMPROVED JOIN CODE EXPERIENCE
+   - Post-create share code card
+   - Enhanced join modal styles (used in dashboard)
+   ================================================ */
+
+.invite-share-card {
+  background: #fff;
+  border: 1.5px solid #E4DDD4;
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-top: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.invite-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.invite-icon {
+  font-size: 22px;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.invite-header strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A1A;
+}
+
+.invite-code-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.invite-code-box {
+  flex: 1;
+  background: #FDF6F2;
+  border: 2px dashed #E15225;
+  color: #E15225;
+  font-family: monospace;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  text-align: center;
+  user-select: all;
+  cursor: pointer;
+}
+
+.invite-copy-btn {
+  background: #E15225;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .12s;
+}
+
+.invite-copy-btn:hover {
+  background: #c7461d;
+}
+
+.invite-hint {
+  font-size: 12px;
+  color: #8A837A;
+}
+
+/* Join code modal polish (dashboard join flow) */
+#joinGroupModal .modal {
+  max-width: 420px;
+}
+
+#joinGroupModal .code-input-wrap {
+  position: relative;
+  margin: 16px 0 8px;
+}
+
+#joinGroupModal .code-input-wrap svg {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9E9790;
+  pointer-events: none;
+}
+
+#joinGroupModal .code-input-wrap input {
+  width: 100%;
+  padding: 16px 16px 16px 48px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  text-align: center;
+  font-family: monospace;
+  text-transform: uppercase;
+  background: #fff;
+  border: 2px solid #E4DDD4;
+  border-radius: 12px;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+#joinGroupModal .code-input-wrap input:focus {
+  border-color: #E15225;
+  box-shadow: 0 0 0 4px rgba(225, 82, 37, 0.1);
+  outline: none;
+}
+
+#joinGroupModal .join-instructions {
+  font-size: 13px;
+  color: #6B6560;
+  text-align: center;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}

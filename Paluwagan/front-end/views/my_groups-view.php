@@ -113,8 +113,9 @@
               </thead>
               <tbody id="public-tbody">
                 <?php 
-                  mysqli_data_seek($public_groups, 0);
-                  while ($group = mysqli_fetch_assoc($public_groups)): 
+                  if ($public_groups && mysqli_num_rows($public_groups) > 0) {
+                      mysqli_data_seek($public_groups, 0);
+                      while ($group = mysqli_fetch_assoc($public_groups)): 
                 ?>
                   <tr onclick="window.location.href='group_details.php?id=<?= $group['group_id'] ?>'">
                     <td><strong><?= htmlspecialchars($group['group_name']) ?></strong></td>
@@ -134,7 +135,11 @@
                       <button class="btn-row-view" onclick="event.stopImmediatePropagation(); window.location.href='group_details.php?id=<?= $group['group_id'] ?>'" style="margin-left:4px;">View</button>
                     </td>
                   </tr>
-                <?php endwhile; ?>
+                <?php endwhile; 
+                  } else {
+                      echo '<tr><td colspan="5" style="text-align:center; padding:20px; color:#8A837A;">No public groups available to join right now.</td></tr>';
+                  }
+                ?>
               </tbody>
             </table>
           </div>

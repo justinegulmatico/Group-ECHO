@@ -145,13 +145,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['action_join_group']) 
     }
 }
 
-// ==================== PUBLIC GROUPS (visible for pending too so others can discover & join) ====================
-$public_query = "SELECT g.*, 
-    (SELECT COUNT(*) FROM group_members WHERE group_id = g.group_id AND status = 'active') AS member_count
+// ==================== PUBLIC GROUPS (only show public groups the current user has NOT yet joined) ====================
+// This prevents groups the user has already joined from appearing in the "Public Groups" discovery tab.
+$public_stmt = mysqli_prepare($conn, "
+    SELECT g.*, 
+        (SELECT COUNT(*) FROM group_members WHERE group_id = g.group_id AND status = 'active') AS member_count
     FROM groups g 
-    WHERE g.privacy = 'public' AND g.status IN ('pending', 'active')
-    ORDER BY g.created_at DESC";
-$public_groups = mysqli_query($conn, $public_query);
+    WHERE g.privacy = 'public' 
+      AND g.status IN ('pending', 'active')
+      AND NOT EXISTS (
+          SELECT 1 FROM group_members gm 
+          WHERE gm.group_id = g.group_id 
+            AND gm.user_id = ? 
+            AND gm.status = 'active'
+      )
+    ORDER BY g.created_at DESC
+");
+
+if ($public_stmt) {
+    mysqli_stmt_bind_param($public_stmt, "i", $current_user_id);
+    mysqli_stmt_execute($public_stmt);
+    $public_groups = mysqli_stmt_get_result($public_stmt);
+    mysqli_stmt_close($public_stmt);
+} else {
+    $public_groups = false;
+}
 
 // ==================== MY GROUPS ====================
 $my_query = "SELECT g.*, 

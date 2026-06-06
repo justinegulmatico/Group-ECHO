@@ -12,9 +12,27 @@ $current_user_id = (int)$_SESSION['user_id'];
 $toast_message = "";
 $toast_type = "";
 
+// Handle quick payment success redirect (PRG pattern for clean re-render of tracker)
+// We also support rich "Record Payment" style confirmation banner + toast
+if (isset($_GET['payment_success'])) {
+    $paid_amt = isset($_GET['amount']) ? (float)$_GET['amount'] : 0;
+    if ($paid_amt > 0) {
+        $toast_message = "Payment successful. ₱" . number_format($paid_amt, 2) . " deducted from your wallet.";
+        $toast_type = "success";
+    }
+}
+if (isset($_GET['payment_error'])) {
+    $toast_message = htmlspecialchars($_GET['payment_error']);
+    $toast_type = "error";
+}
+
 // Flags for post-deposit "awaiting admin approval" modal (only for regular users)
 $show_deposit_pending_modal = false;
 $pending_deposit_amount = 0;
+
+// Post-create invite code sharing (improved join code UX)
+$newly_created_invite_code = null;
+$newly_created_group_name = null;
 
 // ─── LOGIC: CREATE GROUP (prepared, full fields, seed cycle, consistent) ───
 if (isset($_POST['action_create_group'])) {
@@ -68,6 +86,12 @@ if (isset($_POST['action_create_group'])) {
 
             $toast_message = "Group created successfully! Cycles and positions ready.";
             $toast_type = "success";
+
+            // Expose private invite code for improved "share the join code" UX right on dashboard
+            if ($privacy === 'private' && !empty($invite_code)) {
+                $newly_created_group_name = $group_name;
+                $newly_created_invite_code = $invite_code;
+            }
         } else {
             mysqli_stmt_close($stmt);
             $toast_message = "Failed to create group.";
@@ -311,6 +335,171 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $toast_type = "error";
     }
   }
+
+  // ─── QUICK PAY FROM DASHBOARD: "Pay Now" in Pending Payments tracker ───
+  if (isset($_POST['action_pay_dashboard'])) {
+    $gid = isset($_POST['group_id']) ? (int)$_POST['group_id'] : 0;
+    $cyc_num = isset($_POST['cycle_number']) ? max(1, (int)$_POST['cycle_number']) : 1;
+    $amt = isset($_POST['amount']) ? (float)$_POST['amount'] : 0;
+    $mid = isset($_POST['member_id']) ? (int)$_POST['member_id'] : 0;
+
+    if ($gid <= 0 || $mid <= 0 || $amt <= 0) {
+      header("Location: dashboard.php?payment_error=" . urlencode("Invalid payment data."));
+      exit();
+    }
+
+    // Recompute fresh wallet for safety
+    $fresh_wallet = 0.00;
+    $tchk = mysqli_query($conn, "SHOW TABLES LIKE 'wallet_requests'");
+    if ($tchk && mysqli_num_rows($tchk) > 0) {
+      $wst = mysqli_prepare($conn, "
+        SELECT 
+          COALESCE(SUM(CASE WHEN type = 'deposit' AND status = 'approved' THEN amount ELSE 0 END), 0) -
+          COALESCE(SUM(CASE WHEN type = 'withdraw' AND status = 'approved' THEN amount ELSE 0 END), 0) AS balance
+        FROM wallet_requests 
+        WHERE user_id = ?
+      ");
+      if ($wst) {
+        mysqli_stmt_bind_param($wst, "i", $current_user_id);
+        mysqli_stmt_execute($wst);
+        if ($wr = mysqli_fetch_assoc(mysqli_stmt_get_result($wst))) {
+          $fresh_wallet = (float)($wr['balance'] ?? 0);
+        }
+        mysqli_stmt_close($wst);
+      }
+    }
+
+    if ($amt > $fresh_wallet + 0.001) {
+      header("Location: dashboard.php?payment_error=" . urlencode("Insufficient wallet balance. Please deposit funds first."));
+      exit();
+    }
+
+    // Verify membership
+    $vstmt = mysqli_prepare($conn, "SELECT 1 FROM group_members WHERE member_id = ? AND user_id = ? AND group_id = ? AND status='active' LIMIT 1");
+    mysqli_stmt_bind_param($vstmt, "iii", $mid, $current_user_id, $gid);
+    mysqli_stmt_execute($vstmt);
+    $is_valid_member = mysqli_num_rows(mysqli_stmt_get_result($vstmt)) > 0;
+    mysqli_stmt_close($vstmt);
+    if (!$is_valid_member) {
+      header("Location: dashboard.php?payment_error=" . urlencode("Not authorized for this group."));
+      exit();
+    }
+
+    // Extra guard: receivers should not pay into their own receiving cycle
+    $pos_stmt = mysqli_prepare($conn, "SELECT position FROM group_members WHERE member_id = ? LIMIT 1");
+    mysqli_stmt_bind_param($pos_stmt, "i", $mid);
+    mysqli_stmt_execute($pos_stmt);
+    $pos_row = mysqli_fetch_assoc(mysqli_stmt_get_result($pos_stmt));
+    mysqli_stmt_close($pos_stmt);
+    $payer_pos = (int)($pos_row['position'] ?? 0);
+
+    if ($payer_pos > 0 && $payer_pos === $cyc_num) {
+      header("Location: dashboard.php?payment_error=" . urlencode("As the receiver for this cycle you do not need to contribute."));
+      exit();
+    }
+
+    // Fallback receiver check (if position not set on the member row)
+    $recg = mysqli_prepare($conn, "SELECT user_id FROM group_members WHERE group_id = ? AND position = ? AND status='active' LIMIT 1");
+    mysqli_stmt_bind_param($recg, "ii", $gid, $cyc_num);
+    mysqli_stmt_execute($recg);
+    $recu = mysqli_fetch_assoc(mysqli_stmt_get_result($recg));
+    mysqli_stmt_close($recg);
+    if ($recu && (int)$recu['user_id'] === $current_user_id) {
+      header("Location: dashboard.php?payment_error=" . urlencode("As the receiver for this cycle you do not need to contribute."));
+      exit();
+    }
+
+    // Find cycle
+    $cstmt = mysqli_prepare($conn, "SELECT cycle_id FROM cycles WHERE group_id = ? AND cycle_number = ? LIMIT 1");
+    mysqli_stmt_bind_param($cstmt, "ii", $gid, $cyc_num);
+    mysqli_stmt_execute($cstmt);
+    $cres = mysqli_stmt_get_result($cstmt);
+    $cyc = mysqli_fetch_assoc($cres);
+    mysqli_stmt_close($cstmt);
+    if (!$cyc) {
+      header("Location: dashboard.php?payment_error=" . urlencode("Cycle not found."));
+      exit();
+    }
+    $cycle_id = (int)$cyc['cycle_id'];
+
+    // Prevent double payment
+    $chk = mysqli_prepare($conn, "SELECT 1 FROM contributions WHERE cycle_id = ? AND member_id = ? AND status = 'paid' LIMIT 1");
+    mysqli_stmt_bind_param($chk, "ii", $cycle_id, $mid);
+    mysqli_stmt_execute($chk);
+    if (mysqli_num_rows(mysqli_stmt_get_result($chk)) > 0) {
+      mysqli_stmt_close($chk);
+      header("Location: dashboard.php?payment_error=" . urlencode("You have already paid for this cycle."));
+      exit();
+    }
+    mysqli_stmt_close($chk);
+
+    // Record contribution
+    $ins = mysqli_prepare($conn, "INSERT INTO contributions (cycle_id, member_id, amount, due_date, paid_at, status) VALUES (?, ?, ?, CURDATE(), CURDATE(), 'paid')");
+    mysqli_stmt_bind_param($ins, "iid", $cycle_id, $mid, $amt);
+    $ok = mysqli_stmt_execute($ins);
+    mysqli_stmt_close($ins);
+
+    if ($ok) {
+      // Optional transaction log (best effort)
+      $trans_table = mysqli_query($conn, "SHOW TABLES LIKE 'transactions'");
+      if ($trans_table && mysqli_num_rows($trans_table) > 0) {
+        $tins = mysqli_prepare($conn, "INSERT INTO transactions (group_id, cycle_id, member_id, user_id, transaction_type, amount, transaction_date, status, recorded_by) VALUES (?, ?, ?, ?, 'contribution', ?, CURDATE(), 'completed', ?)");
+        if ($tins) {
+          mysqli_stmt_bind_param($tins, "iiidii", $gid, $cycle_id, $mid, $current_user_id, $amt, $current_user_id);
+          mysqli_stmt_execute($tins);
+          mysqli_stmt_close($tins);
+        }
+      }
+
+      // Wallet internal deduct (approved withdraw)
+      $wt_exists = false;
+      $wtc = mysqli_query($conn, "SHOW TABLES LIKE 'wallet_requests'");
+      if ($wtc && mysqli_num_rows($wtc) > 0) $wt_exists = true;
+
+      if ($wt_exists) {
+        $note = "Group contribution - Group #{$gid} Cycle #{$cyc_num}";
+        $wd = mysqli_prepare($conn, "
+          INSERT INTO wallet_requests (user_id, type, amount, payment_method, account_details, status, created_at, reviewed_at, reviewed_by)
+          VALUES (?, 'withdraw', ?, 'Internal Wallet', ?, 'approved', NOW(), NOW(), ?)
+        ");
+        if ($wd) {
+          mysqli_stmt_bind_param($wd, "idsi", $current_user_id, $amt, $note, $current_user_id);
+          mysqli_stmt_execute($wd);
+          mysqli_stmt_close($wd);
+        }
+      }
+
+      // Log history if table exists
+      $hchk = mysqli_query($conn, "SHOW TABLES LIKE 'group_history'");
+      if ($hchk && mysqli_num_rows($hchk) > 0) {
+        $hnote = "Paid ₱" . number_format($amt, 2) . " for cycle #{$cyc_num} (from Dashboard)";
+        $hist = mysqli_prepare($conn, "INSERT INTO group_history (group_id, event_type, actor_user_id, target_user_id, cycle_number, amount, description) VALUES (?, 'payment', ?, ?, ?, ?, ?)");
+        if ($hist) {
+          mysqli_stmt_bind_param($hist, "iiiids", $gid, $current_user_id, $current_user_id, $cyc_num, $amt, $hnote);
+          mysqli_stmt_execute($hist);
+          mysqli_stmt_close($hist);
+        }
+      }
+
+      // Fetch group name for a rich "Record Payment" style confirmation on the dashboard
+      $paid_group_name = 'Group';
+      $gstmt = mysqli_prepare($conn, "SELECT group_name FROM groups WHERE group_id = ? LIMIT 1");
+      if ($gstmt) {
+        mysqli_stmt_bind_param($gstmt, "i", $gid);
+        mysqli_stmt_execute($gstmt);
+        if ($g = mysqli_fetch_assoc(mysqli_stmt_get_result($gstmt))) {
+          $paid_group_name = $g['group_name'];
+        }
+        mysqli_stmt_close($gstmt);
+      }
+
+      header("Location: dashboard.php?payment_success=1&amount=" . urlencode($amt) . "&cycle=" . urlencode($cyc_num) . "&group=" . urlencode($paid_group_name));
+      exit();
+    } else {
+      header("Location: dashboard.php?payment_error=" . urlencode("Failed to record payment."));
+      exit();
+    }
+  }
 }
 
 // ─── WALLET BALANCE (computed from approved wallet_requests — safe if table missing) ───
@@ -351,6 +540,157 @@ $nextRow = mysqli_fetch_assoc(mysqli_stmt_get_result($stmtNext));
 mysqli_stmt_close($stmtNext);
 if ($nextRow) {
     $next_payout_info = "In \"" . htmlspecialchars($nextRow['group_name']) . "\" you are position #" . $nextRow['position'] . " (Cycle " . $nextRow['cycle_number'] . ")";
+}
+
+// ─── BUILD PENDING PAYMENTS & CYCLES TRACKER DATA ───
+// Collects only groups where the current user still owes a contribution for the active (collecting) cycle.
+$pending_payments = [];
+$user_full_name = "You";
+$user_first = "";
+$user_last = "";
+
+// Current user name (for "(You)" receiver spotlight)
+$ustmt = mysqli_prepare($conn, "SELECT first_name, last_name FROM users WHERE user_id = ? LIMIT 1");
+if ($ustmt) {
+  mysqli_stmt_bind_param($ustmt, "i", $current_user_id);
+  mysqli_stmt_execute($ustmt);
+  if ($urow = mysqli_fetch_assoc(mysqli_stmt_get_result($ustmt))) {
+    $user_first = trim($urow['first_name'] ?? '');
+    $user_last  = trim($urow['last_name'] ?? '');
+    $user_full_name = trim($user_first . ' ' . $user_last) ?: 'You';
+  }
+  mysqli_stmt_close($ustmt);
+}
+
+// Active group memberships (with basics needed for cards)
+$gm_stmt = mysqli_prepare($conn, "
+  SELECT gm.member_id, gm.position, g.group_id, g.group_name, g.contribution_amount,
+         g.max_members, g.cycle_length
+  FROM group_members gm
+  JOIN groups g ON gm.group_id = g.group_id
+  WHERE gm.user_id = ? AND gm.status = 'active' AND g.is_active = 1
+  ORDER BY g.group_name ASC
+");
+$active_memberships = [];
+if ($gm_stmt) {
+  mysqli_stmt_bind_param($gm_stmt, "i", $current_user_id);
+  mysqli_stmt_execute($gm_stmt);
+  $gres = mysqli_stmt_get_result($gm_stmt);
+  while ($row = mysqli_fetch_assoc($gres)) {
+    $active_memberships[] = $row;
+  }
+  mysqli_stmt_close($gm_stmt);
+}
+
+foreach ($active_memberships as $mem) {
+  $gid = (int)$mem['group_id'];
+  $mid = (int)$mem['member_id'];
+  $contrib_amt = (float)$mem['contribution_amount'];
+  $cycle_len = (int)($mem['cycle_length'] ?: $mem['max_members'] ?: 5);
+  $my_pos = (int)($mem['position'] ?: 0);
+
+  // Find first non-released cycle as the "active" collecting cycle
+  $cstmt = mysqli_prepare($conn, "
+    SELECT cycle_id, cycle_number, payout_status
+    FROM cycles
+    WHERE group_id = ?
+    ORDER BY cycle_number ASC
+  ");
+  mysqli_stmt_bind_param($cstmt, "i", $gid);
+  mysqli_stmt_execute($cstmt);
+  $cres = mysqli_stmt_get_result($cstmt);
+  $active_cyc = null;
+  while ($c = mysqli_fetch_assoc($cres)) {
+    if (($c['payout_status'] ?? 'pending') !== 'released') {
+      $active_cyc = $c;
+      break;
+    }
+  }
+  mysqli_stmt_close($cstmt);
+
+  if (!$active_cyc) continue;
+
+  $cyc_id  = (int)$active_cyc['cycle_id'];
+  $cyc_num = (int)$active_cyc['cycle_number'];
+
+  // === FIX: Receivers never "pay" into their own receiving cycle ===
+  // Check via position (fast path for creator) + fallback query (for members whose position was assigned later)
+  $my_position = (int)($mem['position'] ?: 0);
+  $is_receiver_for_cycle = false;
+
+  if ($my_position > 0 && $my_position === $cyc_num) {
+    $is_receiver_for_cycle = true;
+  } else {
+    // Fallback query (handles cases where position column was not populated on join)
+    $rec_chk = mysqli_prepare($conn, "
+      SELECT user_id FROM group_members 
+      WHERE group_id = ? AND status = 'active' AND position = ? 
+      LIMIT 1
+    ");
+    mysqli_stmt_bind_param($rec_chk, "ii", $gid, $cyc_num);
+    mysqli_stmt_execute($rec_chk);
+    $rec_row = mysqli_fetch_assoc(mysqli_stmt_get_result($rec_chk));
+    mysqli_stmt_close($rec_chk);
+    if ($rec_row && (int)$rec_row['user_id'] === $current_user_id) {
+      $is_receiver_for_cycle = true;
+    }
+  }
+
+  if ($is_receiver_for_cycle) {
+    continue; // You are receiving this cycle — no contribution required from you this round
+  }
+
+  // Did THIS user already pay their share for the active cycle?
+  $pchk = mysqli_prepare($conn, "SELECT 1 FROM contributions WHERE cycle_id = ? AND member_id = ? AND status = 'paid' LIMIT 1");
+  mysqli_stmt_bind_param($pchk, "ii", $cyc_id, $mid);
+  mysqli_stmt_execute($pchk);
+  $user_has_paid = mysqli_num_rows(mysqli_stmt_get_result($pchk)) > 0;
+  mysqli_stmt_close($pchk);
+
+  if ($user_has_paid) continue; // caught up for this rotation cycle
+
+  // Paid count for progress (how many members have contributed to this cycle)
+  $pc_stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM contributions WHERE cycle_id = ? AND status = 'paid'");
+  mysqli_stmt_bind_param($pc_stmt, "i", $cyc_id);
+  mysqli_stmt_execute($pc_stmt);
+  $pc_row = mysqli_fetch_assoc(mysqli_stmt_get_result($pc_stmt));
+  $paid_cnt = (int)($pc_row['cnt'] ?? 0);
+  mysqli_stmt_close($pc_stmt);
+
+  // Receiver for the cycle = member holding the matching position
+  $rec_name = "Position #{$cyc_num}";
+  $rec_is_you = false;
+  $rec_stmt = mysqli_prepare($conn, "
+    SELECT gm.user_id, u.first_name, u.last_name
+    FROM group_members gm
+    JOIN users u ON gm.user_id = u.user_id
+    WHERE gm.group_id = ? AND gm.status = 'active' AND gm.position = ?
+    LIMIT 1
+  ");
+  mysqli_stmt_bind_param($rec_stmt, "ii", $gid, $cyc_num);
+  mysqli_stmt_execute($rec_stmt);
+  if ($r = mysqli_fetch_assoc(mysqli_stmt_get_result($rec_stmt))) {
+    $rfull = trim(($r['first_name'] ?? '') . ' ' . ($r['last_name'] ?? ''));
+    if ($rfull) $rec_name = $rfull;
+    if ((int)$r['user_id'] === $current_user_id) {
+      $rec_is_you = true;
+      $rec_name = $rfull ? ($rfull . " (You)") : "You";
+    }
+  }
+  mysqli_stmt_close($rec_stmt);
+
+  $pending_payments[] = [
+    'group_id'       => $gid,
+    'group_name'     => $mem['group_name'],
+    'cycle_number'   => $cyc_num,
+    'cycle_length'   => $cycle_len,
+    'contribution'   => $contrib_amt,
+    'member_id'      => $mid,
+    'paid_count'     => $paid_cnt,
+    'total_members'  => (int)($mem['max_members'] ?: $cycle_len),
+    'receiver_name'  => $rec_name,
+    'receiver_is_you'=> $rec_is_you,
+  ];
 }
 
 include "../../front-end/views/dashboard-view.php";

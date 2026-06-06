@@ -98,10 +98,12 @@
                 <span class="meta-label">Status</span>
                 <span class="meta-value"><?= ucfirst($current_group['status'] ?? ($current_group['is_active'] == 1 ? 'active' : 'closed')); ?></span>
               </div>
+              <?php if ($current_group['privacy'] === 'private' && !empty($current_group['invite_code'])): ?>
               <div class="meta-item">
                 <span class="meta-label">Invite Code</span>
                 <span class="meta-value invite-code" id="invite-code"><?= htmlspecialchars($current_group['invite_code']); ?></span>
               </div>
+              <?php endif; ?>
             </div>
           </div>
 
@@ -111,12 +113,17 @@
             <?php endif; ?>
 
             <?php if ($current_group['status'] === 'pending' && (int)$current_group['created_by'] === $current_user_id): ?>
-              <form method="POST" style="display:inline;">
-                <button type="submit" name="activate_paluwagan" class="hero-btn secondary" 
-                        onclick="return confirm('Activate only when all slots are full. This will freeze the roster and start cycle 1.');">
-                  Activate
-                </button>
-              </form>
+              <?php if ($slots_filled >= 3): ?>
+                <form method="POST" style="display:inline;" id="activateForm">
+                  <input type="hidden" name="activate_paluwagan" value="1">
+                  <button type="button" class="hero-btn secondary" 
+                          onclick="openActivationModal(<?= (int)$slots_filled ?>)">
+                    Activate (<?= (int)$slots_filled ?> members)
+                  </button>
+                </form>
+              <?php else: ?>
+                <span class="hero-btn secondary" style="opacity:0.5; cursor:not-allowed; font-size:12px;" title="Need at least 3 members total to activate this group">Activate (need 3+ members)</span>
+              <?php endif; ?>
             <?php endif; ?>
           </div>
         </div>
@@ -127,8 +134,8 @@
               <strong>This is a public group.</strong> Join now to participate in the rotation.
             </div>
             <form method="POST" action="my_groups.php">
-              <input type="hidden" name="action_join_group" value="1">
-              <input type="hidden" name="invite_code" value="<?= htmlspecialchars($current_group['invite_code']) ?>">
+              <input type="hidden" name="action_join_public" value="1">
+              <input type="hidden" name="group_id" value="<?= (int)$group_id ?>">
               <button type="submit" class="btn-create" style="margin:0; padding: 8px 16px;">Join this Group</button>
             </form>
           </div>
@@ -219,14 +226,18 @@
                   <div class="ach-pot-value">₱<?= number_format($ac_full, 0) ?></div>
                 </div>
 
-                <?php if ($user_paid_active): ?>
-                  <div class="ach-contrib-done">
-                    <span class="check">✓</span> Your Contribution Submitted
-                  </div>
+                <?php if (!empty($is_member)): ?>
+                  <?php if ($user_paid_active): ?>
+                    <div class="ach-contrib-done">
+                      <span class="check">✓</span> Your Contribution Submitted
+                    </div>
+                  <?php else: ?>
+                    <button type="button" class="ach-contrib-btn" onclick="openRecordPaymentModal()">
+                      Contribute ₱<?= number_format($current_group['contribution_amount'], 0) ?>
+                    </button>
+                  <?php endif; ?>
                 <?php else: ?>
-                  <button type="button" class="ach-contrib-btn" onclick="openRecordPaymentModal()">
-                    Contribute ₱<?= number_format($current_group['contribution_amount'], 0) ?>
-                  </button>
+                  <!-- Non-members see the join banner instead of contribute action -->
                 <?php endif; ?>
               </div>
             </div>
@@ -435,7 +446,75 @@
           </div>
         <?php endif; ?>
 
-      </div></div></div><div class="modal-backdrop" id="paymentRecordModal">
+      </div></div></div>
+
+  <?php if ($current_group['status'] === 'pending' && (int)$current_group['created_by'] === $current_user_id): ?>
+  <!-- Activation Confirmation Modal -->
+  <div class="modal-backdrop" id="activationModal">
+    <div class="modal" style="max-width: 460px;">
+      <div class="modal-header">
+        <span class="modal-title">Activate Group</span>
+        <button class="modal-close-btn" onclick="closeActivationModal()">✕</button>
+      </div>
+      <div class="modal-body" style="padding-top: 8px;">
+        <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #3a3632;">
+          Activate now with the current <strong id="activationMemberCount">3</strong> members?
+          This will lock the roster (no more joins allowed) and start the rotation.
+          The pool size will be based on current members only.
+        </p>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; border-top: 1px solid #E4DDD4; padding-top: 16px; margin-top: 20px;">
+        <button type="button" onclick="closeActivationModal()" 
+                style="background: #F5F0E8; color: #555; border: 1px solid #E4DDD4; padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;"
+                onmouseover="this.style.background='#EDE6DC'" onmouseout="this.style.background='#F5F0E8'">
+          Cancel
+        </button>
+        <button type="button" onclick="confirmAndActivate()" 
+                style="background: #E15225; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer;"
+                onmouseover="this.style.background='#c7461d'" onmouseout="this.style.background='#E15225'">
+          Yes, Activate Now
+        </button>
+      </div>
+    </div>
+  </div>
+  <?php endif; ?>
+
+  <script>
+    // Activation modal functions (available when the activate button is shown)
+    function openActivationModal(memberCount) {
+      const modal = document.getElementById('activationModal');
+      const countEl = document.getElementById('activationMemberCount');
+      if (countEl) countEl.textContent = memberCount || '';
+      if (modal) modal.classList.add('open');
+    }
+
+    function closeActivationModal() {
+      const modal = document.getElementById('activationModal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function confirmAndActivate() {
+      const form = document.getElementById('activateForm');
+      if (form) {
+        // Submit the original form to trigger the activate_paluwagan POST
+        form.submit();
+      }
+      closeActivationModal();
+    }
+
+    // Close activation modal on backdrop click
+    (function() {
+      const actModal = document.getElementById('activationModal');
+      if (actModal) {
+        actModal.addEventListener('click', function(e) {
+          if (e.target === this) closeActivationModal();
+        });
+      }
+    })();
+  </script>
+
+  <?php if (!empty($is_member)): ?>
+  <div class="modal-backdrop" id="paymentRecordModal">
     <div class="modal">
       <div class="modal-header">
         <span class="modal-title">Record Payment</span>
@@ -526,5 +605,6 @@
         }
       })();
   </script>
+  <?php endif; ?>
 </body>
 </html>

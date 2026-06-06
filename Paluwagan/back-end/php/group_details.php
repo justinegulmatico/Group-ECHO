@@ -379,9 +379,9 @@ if ($active_cycle && !empty($active_cycle['receiver'])) {
 $action_msg = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // === ACTIVATE PALUWAGAN (only when all slots full and still PENDING) ===
+    // === ACTIVATE PALUWAGAN (allow partial activation once >= 3 members; freezes roster) ===
     if (isset($_POST['activate_paluwagan'])) {
-        // Only the real group creator can activate (even in simulation)
+        // Only the real group creator can activate
         if ((int)$current_group['created_by'] === $current_user_id && $current_group['status'] === 'pending') {
             // Count current members
             $cnt_stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM group_members WHERE group_id = ? AND status='active'");
@@ -390,14 +390,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $cnt = (int)(mysqli_fetch_assoc(mysqli_stmt_get_result($cnt_stmt))['cnt'] ?? 0);
             mysqli_stmt_close($cnt_stmt);
 
-            if ($cnt >= (int)$current_group['max_members']) {
-                // Freeze: set active + generate first cycle contributions
-                $act = mysqli_prepare($conn, "UPDATE groups SET status='active' WHERE group_id=?");
-                mysqli_stmt_bind_param($act, "i", $group_id);
-                mysqli_stmt_execute($act);
-                mysqli_stmt_close($act);
+            if ($cnt >= 3) {
+                $activated_size = $cnt;
 
-                // Generate contribution invoices for cycle 1 for every slot
+                // Freeze roster size (shrink if not full) so no more members can join
+                $upd = mysqli_prepare($conn, "UPDATE groups SET status='active', max_members=?, cycle_length=? WHERE group_id=?");
+                mysqli_stmt_bind_param($upd, "iii", $activated_size, $activated_size, $group_id);
+                mysqli_stmt_execute($upd);
+                mysqli_stmt_close($upd);
+
+                // Trim any pre-created extra cycles beyond the activated roster size
+                $trim_stmt = mysqli_prepare($conn, "DELETE FROM cycles WHERE group_id = ? AND cycle_number > ?");
+                mysqli_stmt_bind_param($trim_stmt, "ii", $group_id, $activated_size);
+                mysqli_stmt_execute($trim_stmt);
+                mysqli_stmt_close($trim_stmt);
+
+                // Generate contribution invoices (pending) for cycle 1 for the current members only
                 $c1_stmt = mysqli_prepare($conn, "SELECT cycle_id FROM cycles WHERE group_id=? AND cycle_number=1 LIMIT 1");
                 mysqli_stmt_bind_param($c1_stmt, "i", $group_id);
                 mysqli_stmt_execute($c1_stmt);
@@ -419,10 +427,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     mysqli_stmt_close($slots_stmt);
                 }
-                // Log activation
-                log_group_history($conn, $group_id, 'group_activated', $current_user_id, null, 1, null, "Group activated - rotation started");
 
-                header("Location: group_details.php?id=$group_id&success=" . urlencode("Paluwagan ACTIVATED! First cycle invoices generated."));
+                // Log activation
+                log_group_history($conn, $group_id, 'group_activated', $current_user_id, null, 1, null, 
+                    "Group activated with {$activated_size} members - rotation started (partial roster frozen)");
+
+                header("Location: group_details.php?id=$group_id&success=" . urlencode("Paluwagan ACTIVATED with {$activated_size} members! Roster is now locked. First cycle invoices generated."));
+                exit();
+            } else {
+                header("Location: group_details.php?id=$group_id&error=" . urlencode("At least 3 members are required to activate the group."));
                 exit();
             }
         }

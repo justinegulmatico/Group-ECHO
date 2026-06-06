@@ -64,6 +64,22 @@
           </div>
         </div>
 
+        <?php if (isset($_GET['payment_success'])): 
+          $ps_amount   = isset($_GET['amount']) ? (float)$_GET['amount'] : 0;
+          $ps_cycle    = isset($_GET['cycle']) ? (int)$_GET['cycle'] : 0;
+          $ps_group    = isset($_GET['group']) ? htmlspecialchars($_GET['group']) : 'Group';
+        ?>
+          <!-- Visible "Record Payment" style confirmation (what users see in group details) -->
+          <div class="payment-record-success" style="background:#E8F5EE; border:1px solid #a7f3d0; color:#166534; padding:14px 18px; border-radius:12px; margin-bottom:20px; font-size:14px; display:flex; align-items:flex-start; gap:12px;">
+            <span style="font-size:20px; line-height:1; margin-top:1px;">✅</span>
+            <div style="flex:1;">
+              <strong>Payment recorded.</strong>
+              ₱<?= number_format($ps_amount, 0) ?> for Cycle <?= $ps_cycle ?> in "<?= $ps_group ?>" has been deducted from your wallet.
+              <a href="my_groups.php" style="margin-left:8px; color:#166534; font-weight:600; text-decoration:underline;">View in My Groups →</a>
+            </div>
+          </div>
+        <?php endif; ?>
+
         <div class="section-header">
           <span class="section-title">Active Groups</span>
           <button class="new-group-btn" id="open-group-choice">+ New Group</button>
@@ -82,17 +98,96 @@
               <a href="my_groups.php" class="btn-primary" style="width:auto; padding:12px 28px; margin-top:8px; text-decoration:none; display:inline-block; text-align:center;">Browse Groups →</a>
             </div>
         <?php else: ?>
-            <!-- Polished singular dashboard alert panel (replaces loose notice bars) -->
-            <div class="dashboard-alert">
-              <div class="dashboard-alert-icon">💰</div>
-              <div class="dashboard-alert-content">
-                <div class="dashboard-alert-title">You're in <?= $active_groups_count; ?> active savings loop<?= $active_groups_count > 1 ? 's' : ''; ?>.</div>
-                <?php if (isset($next_payout_info) && strpos($next_payout_info, 'Join or create') === false): ?>
-                  <div class="dashboard-alert-sub"><strong>Next in rotation:</strong> <?= htmlspecialchars($next_payout_info) ?></div>
-                <?php endif; ?>
-                <a href="my_groups.php" class="dashboard-alert-link">Track detailed progress and payouts in My Groups →</a>
+            <?php if (!empty($pending_payments)): ?>
+                <!-- High-Impact Pending Payments & Cycles Tracker -->
+                <div class="pending-payments-stack">
+                    <?php foreach ($pending_payments as $pp): ?>
+                        <div class="payment-alert-card">
+                            <!-- Left: Group Info + Icon -->
+                            <div class="pac-left">
+                                <div class="pac-icon">
+                                    <!-- Vibrant orange money / alert pouch icon -->
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 2C9.5 2 7.5 3.8 7.5 6v1.2H6c-1.1 0-2 .9-2 2v9.6c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V9.2c0-1.1-.9-2-2-2h-1.5V6c0-2.2-2-4-4.5-4z" fill="#E15225"/>
+                                        <path d="M9 11.5h6M9 14.5h4" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+                                    </svg>
+                                </div>
+                                <div class="pac-group-meta">
+                                    <div class="pac-group-title"><?= htmlspecialchars($pp['group_name']); ?></div>
+                                    <div class="pac-meta-tag">Cycle <?= (int)$pp['cycle_number']; ?> of <?= (int)$pp['cycle_length']; ?> • Contribution: ₱<?= number_format($pp['contribution'], 0); ?></div>
+                                </div>
+                            </div>
+
+                            <!-- Middle: Receiver Spotlight (cream pill) -->
+                            <div class="pac-receiver">
+                                <div class="pac-receiver-label">Receiver</div>
+                                <div class="pac-receiver-pill"><?= htmlspecialchars($pp['receiver_name']); ?></div>
+                            </div>
+
+                            <!-- Middle-Right: Status + thin progress -->
+                            <div class="pac-status">
+                                <div class="pac-progress-label"><?= (int)$pp['paid_count']; ?>/<?= (int)$pp['total_members']; ?> Members Paid</div>
+                                <div class="pac-progress-track">
+                                    <?php
+                                        $pct = $pp['total_members'] > 0 ? min(100, max(0, round(($pp['paid_count'] / $pp['total_members']) * 100))) : 0;
+                                    ?>
+                                    <div class="pac-progress-fill" style="width: <?= $pct; ?>%;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Far Right: Direct Pay Action -->
+                            <div class="pac-action">
+                                <form method="POST" action="dashboard.php" style="margin:0;">
+                                    <input type="hidden" name="action_pay_dashboard" value="1">
+                                    <input type="hidden" name="group_id" value="<?= (int)$pp['group_id']; ?>">
+                                    <input type="hidden" name="cycle_number" value="<?= (int)$pp['cycle_number']; ?>">
+                                    <input type="hidden" name="amount" value="<?= (float)$pp['contribution']; ?>">
+                                    <input type="hidden" name="member_id" value="<?= (int)$pp['member_id']; ?>">
+                                    <button type="submit" class="pay-now-btn">
+                                        Pay ₱<?= number_format($pp['contribution'], 0); ?> Now
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <!-- Healthy / Paid-Up State -->
+                <div class="all-caught-up-card">
+                    <div class="acu-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" fill="#E8F5EE"/>
+                            <path d="M7 12.5l3 3 6-6" stroke="#2D7A45" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="acu-content">
+                        <div class="acu-title">All caught up! No pending contributions for this week's rotation cycles.</div>
+                        <a href="my_groups.php" class="acu-link">Go to My Groups to track detailed individual charts →</a>
+                    </div>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        <?php if (!empty($newly_created_invite_code)): ?>
+          <!-- Improved post-create join code sharing (high-visibility, copyable) -->
+          <div class="invite-share-card">
+            <div class="invite-header">
+              <span class="invite-icon">🔑</span>
+              <div>
+                <strong>Group "<?= htmlspecialchars($newly_created_group_name) ?>" created!</strong>
+                <div style="font-size:12.5px; color:#6B6560; margin-top:1px;">Share this invite code with others so they can join:</div>
               </div>
             </div>
+
+            <div class="invite-code-row">
+              <div class="invite-code-box" id="invite-code-box" onclick="copyInviteCode()" title="Click to copy">
+                <?= htmlspecialchars($newly_created_invite_code) ?>
+              </div>
+              <button type="button" class="invite-copy-btn" onclick="copyInviteCode(event)">Copy Code</button>
+            </div>
+
+            <div class="invite-hint">Code is case-insensitive • 6 characters • Valid for this private group only</div>
+          </div>
         <?php endif; ?>
 
       </div>
@@ -166,6 +261,31 @@
 
   <div class="toast-container" id="toast-container"></div>
 
+  <?php if (!empty($toast_message)): ?>
+    <script>
+      // Simple fallback toast injection for dashboard actions (create/join/pay)
+      (function(){
+        var container = document.getElementById('toast-container');
+        if (container) {
+          var t = document.createElement('div');
+          t.className = 'toast show';
+          t.style.background = '<?= $toast_type === "error" ? "#C0392B" : "#2D7A45" ?>';
+          t.style.color = '#fff';
+          t.style.padding = '12px 18px';
+          t.style.borderRadius = '10px';
+          t.style.marginBottom = '8px';
+          t.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+          t.textContent = <?= json_encode($toast_message) ?>;
+          container.appendChild(t);
+
+          setTimeout(function(){
+            if (t && t.parentNode) t.parentNode.removeChild(t);
+          }, 4200);
+        }
+      })();
+    </script>
+  <?php endif; ?>
+
 <!-- Group Choice Modal -->
 <div class="modal-overlay" id="group-choice-modal" style="display:none;">
   <div class="modal" style="max-width: 400px; padding: 0;">
@@ -209,13 +329,13 @@
   </div>
 </div>
 
-<!-- Join Group Modal -->
+<!-- Join Group Modal (improved join code UX) -->
 <div class="modal-overlay" id="joinGroupModal" style="display:none;">
   <div class="modal">
     
     <!-- Header -->
     <div class="modal-header">
-      <span class="modal-title">Join a Group</span>
+      <span class="modal-title">Join with Invite Code</span>
       <button class="modal-close" onclick="toggleJoinModal(false)">✕</button>
     </div>
 
@@ -223,22 +343,31 @@
       <form method="POST" action="dashboard.php">
         <input type="hidden" name="action_join_group" value="1">
         
-        <div class="form-group">
-          <label class="input-label">Invite Code</label>
-          <input class="input-field" 
-                 type="text" 
-                 name="join_code" 
-                 required 
-                 placeholder="ENTER INVITE CODE"
-                 style="text-transform: uppercase; font-family: monospace; letter-spacing: 2px; text-align: center;">
+        <div class="join-instructions">
+          Enter the 6-character private invite code shared by the group creator.<br>
+          Codes are case-insensitive.
         </div>
 
-        <!-- Buttons using Global Styles -->
-        <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+        <div class="code-input-wrap">
+          <!-- Key icon -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777z"/>
+            <path d="M15.5 7.5l3 3L22 7"/>
+          </svg>
+          <input type="text" 
+                 name="join_code" 
+                 required 
+                 placeholder="ABC123"
+                 maxlength="6"
+                 autocomplete="off"
+                 id="join-code-input">
+        </div>
+
+        <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; border-top: 1px solid #E4DDD4; padding-top: 16px;">
           <button type="button" class="btn-outline" onclick="toggleJoinModal(false)">
             Cancel
           </button>
-          <button type="submit" class="btn-create">
+          <button type="submit" class="btn-create" style="background:#E15225; color:#fff; border:none; padding:11px 22px; border-radius:10px; font-weight:700;">
             Join Group
           </button>
         </div>
@@ -557,6 +686,30 @@
       }
     })();
     <?php endif; ?>
+
+    // Attach live formatter to the improved join code input (safe, after DOM ready)
+    const joinCodeInput = document.getElementById('join-code-input');
+    if (joinCodeInput) {
+      joinCodeInput.addEventListener('input', function() {
+        let cleaned = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (cleaned.length > 6) cleaned = cleaned.slice(0, 6);
+        this.value = cleaned;
+      });
+      // Also clean on paste
+      joinCodeInput.addEventListener('paste', function() {
+        setTimeout(() => {
+          let cleaned = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+          this.value = cleaned;
+        }, 0);
+      });
+    }
+
+    // After showing the "Record Payment" success banner from dashboard quick-pay,
+    // clean the URL so refreshing the page doesn't re-display the banner.
+    if (window.location.search.includes('payment_success')) {
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
   });
 
   // Close handler for the deposit pending approval modal
@@ -573,6 +726,51 @@
         pendingOverlay.style.display = 'none';
       }
     });
+  }
+
+  // ==================== IMPROVED JOIN CODE: copy after private group create ====================
+  function copyInviteCode(e) {
+    if (e) e.preventDefault();
+    const box = document.getElementById('invite-code-box');
+    if (!box) return;
+
+    const code = box.textContent.trim();
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(() => {
+        const originalText = box.textContent;
+        box.textContent = 'COPIED!';
+        setTimeout(() => { box.textContent = originalText; }, 1400);
+      }).catch(() => {
+        // fallback
+        fallbackCopy(code, box);
+      });
+    } else {
+      fallbackCopy(code, box);
+    }
+  }
+
+  function fallbackCopy(text, boxEl) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch(_) {}
+    document.body.removeChild(ta);
+
+    const original = boxEl.textContent;
+    boxEl.textContent = 'COPIED!';
+    setTimeout(() => { boxEl.textContent = original; }, 1400);
+  }
+
+  // ==================== JOIN CODE INPUT FORMATTER (auto uppercase + clean) ====================
+  function formatJoinCode(input) {
+    // Keep only A-Z 0-9, force uppercase, max 6 chars
+    let cleaned = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (cleaned.length > 6) cleaned = cleaned.slice(0, 6);
+    input.value = cleaned;
   }
 </script>
   <script src="../js/notifications.js"></script>
