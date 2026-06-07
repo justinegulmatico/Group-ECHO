@@ -216,6 +216,5 @@
       switchTab('register');
     <?php endif; ?>
 </script>
-<script src="front-end/js/notifications.js"></script>
 </body>
 </html>
