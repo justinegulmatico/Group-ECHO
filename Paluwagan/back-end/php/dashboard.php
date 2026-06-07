@@ -247,9 +247,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $allowed = ['jpg','jpeg','png','pdf','gif'];
         if (in_array($ext, $allowed)) {
           $fname = 'wallet_deposit_' . $current_user_id . '_' . time() . '.' . $ext;
-          $dest = $documents_dir . '/' . $fname;   // organized under uploads/documents
+          $dest = $payments_dir . '/' . $fname;   // organized under uploads/payments
           if (move_uploaded_file($_FILES['receipt']['tmp_name'], $dest)) {
-            $attachment = 'assets/uploads/documents/' . $fname;
+            $attachment = 'assets/uploads/payments/' . $fname;
           }
         }
       }
