@@ -1,6 +1,20 @@
 <?php
+/**
+ * admin/analytics.php
+ * OLAP Analytics Dashboard - Admin
+ * 
+ * This file follows the exact same structure and styling as other admin pages
+ * (index.php and transactions.php) for consistency.
+ * 
+ * - Uses the same topbar, sidebar, admin-hero, stat-cards, and page-content layout.
+ * - Fetches initial dropdown data and a default summary from the OLAP warehouse.
+ * - The interactive filtering, charts, and updates are handled by vanilla JS + AJAX.
+ */
+
 session_start();
-require_once "../../olap_db.php";  // OLAP PDO connection from Component 2
+
+// Include OLAP connection (separate from main OLTP db.php)
+require_once "../../olap_db.php";
 
 // Admin-only access
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
@@ -8,122 +22,731 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     exit();
 }
 
-$admin_id = (int)$_SESSION['user_id'];
-
-// Get filter params (for initial load and to pass to view)
-$group_id = isset($_GET['group_id']) ? (int)$_GET['group_id'] : 0;
-$year = isset($_GET['year']) ? (int)$_GET['year'] : 0; // 0 = All Years (overall)
-$trans_type = $_GET['trans_type'] ?? 'all'; // all, contribution, payout
-
 $olap = OlapDatabase::getInstance()->getPdo();
 
-// Fetch groups for filter dropdown (from OLAP dim)
-$groups_stmt = $olap->query("SELECT group_key, group_id, group_name FROM dim_group ORDER BY group_name");
+// ============================================
+// INITIAL DATA FOR DROPDOWNS (populated once on page load)
+// ============================================
+
+// Get all groups for the Group filter (from dim_group in OLAP)
+$groups_stmt = $olap->query("SELECT group_key, group_name FROM dim_group ORDER BY group_name ASC");
 $groups = $groups_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Initial data for charts (will be refreshed via AJAX too)
-function fetch_olap_data($olap, $group_key = 0, $year = null, $type = 'all') {
-    $where = "1=1";
-    $params = [];
-
-    if ($group_key > 0) {
-        $where .= " AND ft.group_key = ?";
-        $params[] = $group_key;
-    }
-    if ($year) {
-        // Use created_at from fact table for year filter to avoid dependency on dim_time columns
-        // (in case dim_time schema in your DB is not fully up to date)
-        $where .= " AND YEAR(ft.created_at) = ?";
-        $params[] = $year;
-    }
-    if ($type !== 'all') {
-        $where .= " AND ft.transaction_type = ?";
-        $params[] = $type;
-    }
-
-    // Time series data (by month for line/bar chart)
-    // Use YEAR on created_at for robustness (avoids missing columns in dim_time)
-    $time_sql = "
-        SELECT YEAR(ft.created_at) as year, MONTH(ft.created_at) as month, 
-               DATE_FORMAT(ft.created_at, '%b') as month_name,
-               SUM(ft.amount_contribution) AS contributions,
-               SUM(ft.amount_payout) AS payouts
-        FROM fact_transactions ft
-        JOIN dim_group dg ON ft.group_key = dg.group_key
-        WHERE $where
-        GROUP BY YEAR(ft.created_at), MONTH(ft.created_at)
-        ORDER BY YEAR(ft.created_at), MONTH(ft.created_at)
-    ";
-    $time_stmt = $olap->prepare($time_sql);
-    $time_stmt->execute($params);
-    $time_data = $time_stmt->fetchAll();
-
-    // By Group (pie / bar)
-    $group_sql = "
-        SELECT dg.group_name,
-               SUM(ft.amount_contribution) AS contributions,
-               SUM(ft.amount_payout) AS payouts,
-               COUNT(*) AS tx_count
-        FROM fact_transactions ft
-        JOIN dim_group dg ON ft.group_key = dg.group_key
-        WHERE $where
-        GROUP BY dg.group_key, dg.group_name
-        ORDER BY contributions DESC
-        LIMIT 8
-    ";
-    $group_stmt = $olap->prepare($group_sql);
-    $group_stmt->execute($params);
-    $group_data = $group_stmt->fetchAll();
-
-    // Top Members (for table + drill-down potential)
-    $member_sql = "
-        SELECT du.full_name, dg.group_name,
-               SUM(ft.amount_contribution) AS contributed,
-               SUM(CASE WHEN ft.transaction_type = 'payout' THEN ft.amount ELSE 0 END) AS received,
-               COUNT(*) AS tx_count
-        FROM fact_transactions ft
-        JOIN dim_user du ON ft.user_key = du.user_key
-        JOIN dim_group dg ON ft.group_key = dg.group_key
-        WHERE $where
-        GROUP BY du.user_key, du.full_name, dg.group_name
-        ORDER BY contributed DESC
-        LIMIT 10
-    ";
-    $member_stmt = $olap->prepare($member_sql);
-    $member_stmt->execute($params);
-    $member_data = $member_stmt->fetchAll();
-
-    // Summary totals - avoid mandatory dim_time join (many rows may use created_at filtering only)
-    $summary_sql = "
-        SELECT 
-            COALESCE(SUM(ft.amount_contribution),0) AS total_contributions,
-            COALESCE(SUM(ft.amount_payout),0) AS total_payouts,
-            COUNT(*) AS total_transactions
-        FROM fact_transactions ft
-        JOIN dim_group dg ON ft.group_key = dg.group_key
-        WHERE $where
-    ";
-    $summary_stmt = $olap->prepare($summary_sql);
-    $summary_stmt->execute($params);
-    $summary = $summary_stmt->fetch();
-
-    return [
-        'time_series' => $time_data,
-        'by_group' => $group_data,
-        'by_member' => $member_data,
-        'summary' => $summary ?: ['total_contributions' => 0, 'total_payouts' => 0, 'total_transactions' => 0]
-    ];
-}
-
-$initial_data = fetch_olap_data($olap, $group_id, $year, $trans_type);
-
-// Available years (for filter) - fallback to recent years if dim_time not populated or missing columns
-$years_stmt = $olap->query("SELECT DISTINCT YEAR(created_at) as yr FROM fact_transactions ORDER BY yr DESC LIMIT 5");
+// Get available years (from dim_time)
+$years_stmt = $olap->query("SELECT DISTINCT year FROM dim_time ORDER BY year DESC LIMIT 6");
 $available_years = $years_stmt->fetchAll(PDO::FETCH_COLUMN);
 if (empty($available_years)) {
     $available_years = [date('Y'), date('Y')-1, date('Y')-2];
 }
-$available_years = array_map('intval', $available_years);
 
-include "../../../front-end/views/admin/analytics-view.php";
+// Default summary for initial render (no filters)
+$initial_summary_stmt = $olap->query("
+    SELECT 
+        COALESCE(SUM(amount_contribution), 0) AS total_contributions,
+        COALESCE(SUM(amount_payout), 0) AS total_payouts,
+        COUNT(*) AS total_transactions,
+        COUNT(DISTINCT group_key) AS active_groups
+    FROM fact_transactions
+");
+$initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
+    'total_contributions' => 0,
+    'total_payouts' => 0,
+    'total_transactions' => 0,
+    'active_groups' => 0
+];
+
+// Include the full view (HTML + JS). We keep everything in one file for student simplicity
+// while matching the controller pattern of other admin pages.
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrustFund — OLAP Analytics | Admin</title>
+
+  <!-- Project CSS (exact same as other admin pages) -->
+  <link rel="stylesheet" href="../../../assets/css/global.css?v=<?= filemtime(__DIR__ . '/../../../assets/css/global.css') ?>" />
+  <link rel="stylesheet" href="../../../assets/css/admin-panel.css?v=<?= filemtime(__DIR__ . '/../../../assets/css/admin-panel.css') ?>" />
+
+  <!-- Chart.js via CDN (student-friendly, no build tools) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- jsPDF + autoTable for PDF export (student-friendly, CDN only) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- Tailwind via CDN for additional clean components (keeps modern feel while matching project) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <style>
+    /* Match the project's light beige/cream background and card styles */
+    body {
+      background: #F4EFEA;
+    }
+    
+    /* Keep topbar and page styles consistent with other admin pages */
+    .topbar-title {
+      font-family: var(--font-body);
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+
+    /* Custom card for filters and sections to match .table-wrap style used in transactions.php */
+    .analysis-card {
+      background: #fff;
+      border: 1px solid #E4DDD4;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 12px;
+    }
+
+    /* Granularity buttons styled to feel like part of the project */
+    .granularity-btn {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1.5px solid #D1C9BE;
+      background: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .granularity-btn.active {
+      background: #166534;
+      color: #fff;
+      border-color: #166534;
+    }
+    .granularity-btn:hover:not(.active) {
+      background: #F5F0E8;
+    }
+
+    /* Chart containers */
+    .chart-card {
+      background: #fff;
+      border: 1px solid #E4DDD4;
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .chart-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-card {
+      cursor: default;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar - exactly the same include used in other admin pages -->
+    <?php include __DIR__ . '/../../../front-end/views/components/sidebar-view.php'; ?>
+
+    <div class="main-content">
+      <!-- Topbar - matches index.php and transactions.php exactly -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <span class="topbar-title">Admin → OLAP Analytics</span>
+        </div>
+        <div class="topbar-right"></div>
+      </header>
+
+      <div class="page-content">
+
+        <!-- Admin Hero Header - matches style in transactions.php and index.php -->
+        <div class="admin-hero" style="margin-bottom: 20px; padding: 20px 24px;">
+          <div>
+            <div class="admin-hero-title" style="font-size: 22px;">OLAP Analytics Dashboard</div>
+            <div class="admin-hero-sub">
+              Slice, Dice, Roll-up and Drill-down analysis on the TrustFund data warehouse.
+            </div>
+          </div>
+        </div>
+
+        <!-- 1. TOP SUMMARY CARDS - Using the exact stat-cards system from other admin pages -->
+        <div class="stat-cards" style="margin-bottom: 24px; grid-template-columns: repeat(4, 1fr);">
+          <div class="stat-card">
+            <div class="stat-card-label">Total Contributions</div>
+            <div class="stat-card-value green" id="stat-contributions">₱<?= number_format($initial_summary['total_contributions'], 2) ?></div>
+            <div class="stat-card-sub">All time</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Total Payouts</div>
+            <div class="stat-card-value" style="color: #E15225;" id="stat-payouts">₱<?= number_format($initial_summary['total_payouts'], 2) ?></div>
+            <div class="stat-card-sub">All time</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Transactions Analyzed</div>
+            <div class="stat-card-value" id="stat-transactions"><?= number_format($initial_summary['total_transactions']) ?></div>
+            <div class="stat-card-sub">in current view</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Active Groups</div>
+            <div class="stat-card-value" id="stat-groups"><?= number_format($initial_summary['active_groups']) ?></div>
+            <div class="stat-card-sub">in current view</div>
+          </div>
+        </div>
+
+        <!-- 2. ANALYSIS FILTERS CARD -->
+        <div class="analysis-card">
+          <div class="section-title">
+            <i class="fas fa-filter mr-2"></i> Analysis Filters
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Year -->
+            <div>
+              <label class="input-label" style="font-size: 12px; margin-bottom: 4px;">Year</label>
+              <select id="filter-year" class="input-field" onchange="applyFilters()">
+                <option value="0">All Years</option>
+                <?php foreach ($available_years as $y): ?>
+                  <option value="<?= (int)$y ?>"><?= (int)$y ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+
+            <!-- Quarter -->
+            <div>
+              <label class="input-label" style="font-size: 12px; margin-bottom: 4px;">Quarter</label>
+              <select id="filter-quarter" class="input-field" onchange="applyFilters()">
+                <option value="0">All Quarters</option>
+                <option value="1">Q1 (Jan - Mar)</option>
+                <option value="2">Q2 (Apr - Jun)</option>
+                <option value="3">Q3 (Jul - Sep)</option>
+                <option value="4">Q4 (Oct - Dec)</option>
+              </select>
+            </div>
+
+            <!-- Group (Slice) -->
+            <div>
+              <label class="input-label" style="font-size: 12px; margin-bottom: 4px;">Group (Slice)</label>
+              <select id="filter-group" class="input-field" onchange="applyFilters()">
+                <option value="0">All Groups</option>
+                <?php foreach ($groups as $g): ?>
+                  <option value="<?= (int)$g['group_key'] ?>"><?= htmlspecialchars($g['group_name']) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+
+            <!-- Transaction Type (Dice) -->
+            <div>
+              <label class="input-label" style="font-size: 12px; margin-bottom: 4px;">Transaction Type</label>
+              <select id="filter-type" class="input-field" onchange="applyFilters()">
+                <option value="all">All Transactions</option>
+                <option value="contribution">Contributions Only</option>
+                <option value="payout">Payouts Only</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Time Granularity (Roll-up / Drill-down) -->
+          <div style="margin-top: 16px;">
+            <label class="input-label" style="font-size: 12px; margin-bottom: 6px;">Time Granularity (Roll-up ↔ Drill-down)</label>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" class="granularity-btn" data-level="year" onclick="setGranularity('year')">Year (Roll-up)</button>
+              <button type="button" class="granularity-btn" data-level="quarter" onclick="setGranularity('quarter')">Quarter</button>
+              <button type="button" class="granularity-btn active" data-level="month" onclick="setGranularity('month')">Month (Drill-down)</button>
+            </div>
+            <div style="font-size: 11px; color: #6B6560; margin-top: 4px;">
+              Higher level = more summarized data. Lower level = more detailed data.
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. THREE INTERACTIVE CHARTS -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+          
+          <!-- Bar Chart: Contributions by Group -->
+          <div class="chart-card">
+            <div class="chart-title">
+              <i class="fas fa-chart-bar text-[#166534]"></i>
+              <span>Contributions by Group (Bar)</span>
+            </div>
+            <div style="height: 280px;">
+              <canvas id="barChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Line Chart: Trends Over Time -->
+          <div class="chart-card">
+            <div class="chart-title">
+              <i class="fas fa-chart-line text-[#166534]"></i>
+              <span>Trends Over Time (Line)</span>
+            </div>
+            <div style="height: 280px;">
+              <canvas id="lineChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Pie Chart: Payout Distribution -->
+          <div class="chart-card lg:col-span-2">
+            <div class="chart-title">
+              <i class="fas fa-chart-pie text-[#E15225]"></i>
+              <span>Payout Distribution (Pie)</span>
+            </div>
+            <div style="height: 260px;">
+              <canvas id="pieChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 4. EXPORT SECTION -->
+        <div class="analysis-card">
+          <div class="section-title" style="margin-bottom: 10px;">
+            <i class="fas fa-download mr-2"></i> Export Current View
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <button onclick="exportCSV()" 
+                    class="px-5 py-2 bg-[#166534] hover:bg-[#14532d] text-white text-sm font-semibold rounded-lg flex items-center gap-2 transition-colors">
+              <i class="fas fa-file-csv"></i> Download CSV
+            </button>
+            <button onclick="exportPDF()" 
+                    class="px-5 py-2 bg-[#E15225] hover:bg-[#c93d12] text-white text-sm font-semibold rounded-lg flex items-center gap-2 transition-colors">
+              <i class="fas fa-file-pdf"></i> Generate PDF Report
+            </button>
+          </div>
+          <div style="font-size: 11.5px; color: #6B6560; margin-top: 10px;">
+            Exports use the currently filtered data shown in the charts and summary cards.
+          </div>
+        </div>
+
+        <!-- Student-friendly note -->
+        <div style="font-size: 12px; color: #6B6560; background: #F5F0E8; padding: 12px 16px; border-radius: 8px; margin-top: 16px;">
+          <strong>Tip for your defense:</strong> The API uses dynamic <strong>WHERE</strong> clauses for Slice (single group) and Dice (multiple dimensions), 
+          while the <strong>time_level</strong> parameter controls the <strong>GROUP BY</strong> for Roll-up / Drill-down.
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // STUDENT-FRIENDLY JAVASCRIPT (Vanilla only)
+    // ============================================
+
+    let barChartInstance = null;
+    let lineChartInstance = null;
+    let pieChartInstance = null;
+
+    // Store the last successful data response so we can export it
+    let lastData = null;
+
+    let currentFilters = {
+      year: 0,
+      quarter: 0,
+      group_key: 0,
+      trans_type: 'all',
+      time_level: 'month'
+    };
+
+    // Tailwind script config (optional polish)
+    function initTailwind() {
+      if (typeof tailwind !== 'undefined') {
+        tailwind.config = {
+          theme: {
+            extend: {
+              fontFamily: {
+                'body': ['var(--font-body)']
+              }
+            }
+          }
+        };
+      }
+    }
+
+    // Set active state on granularity buttons
+    function setGranularity(level) {
+      currentFilters.time_level = level;
+
+      // Update button active states
+      document.querySelectorAll('.granularity-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.level === level) {
+          btn.classList.add('active');
+        }
+      });
+
+      applyFilters();
+    }
+
+    // Collect current filter values from the UI
+    function getFiltersFromUI() {
+      return {
+        year: parseInt(document.getElementById('filter-year').value) || 0,
+        quarter: parseInt(document.getElementById('filter-quarter').value) || 0,
+        group_key: parseInt(document.getElementById('filter-group').value) || 0,
+        trans_type: document.getElementById('filter-type').value,
+        time_level: currentFilters.time_level
+      };
+    }
+
+    // Main function: Fetch data from API and update UI
+    async function loadAnalyticsData(filters) {
+      const params = new URLSearchParams(filters);
+      
+      try {
+        // Call our dedicated analytics API (relative path from admin/analytics.php)
+        const res = await fetch(`../../api/analytics_data.php?${params.toString()}`);
+        const data = await res.json();
+
+        if (!data.success) {
+          console.error('API error:', data.error);
+          return;
+        }
+
+        // Store the full response for PDF/CSV export
+        lastData = data;
+
+        // Update everything
+        updateSummaryCards(data.summary);
+        updateBarChart(data.by_group || []);
+        updateLineChart(data.time_series || []);
+        updatePieChart(data.by_group || []);
+
+        // Store current filters for export
+        currentFilters = filters;
+
+      } catch (err) {
+        console.error('Failed to load analytics data:', err);
+      }
+    }
+
+    // Update the 4 summary cards
+    function updateSummaryCards(summary) {
+      if (!summary) return;
+
+      document.getElementById('stat-contributions').textContent = 
+        '₱' + parseFloat(summary.total_contributions || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+
+      document.getElementById('stat-payouts').textContent = 
+        '₱' + parseFloat(summary.total_payouts || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+
+      document.getElementById('stat-transactions').textContent = 
+        parseInt(summary.total_transactions || 0).toLocaleString();
+
+      document.getElementById('stat-groups').textContent = 
+        parseInt(summary.active_groups || 0).toLocaleString();
+    }
+
+    // Chart 1: Bar - Contributions by Group
+    function updateBarChart(groupData) {
+      const ctx = document.getElementById('barChart');
+      if (barChartInstance) barChartInstance.destroy();
+
+      const labels = groupData.map(item => item.group_name);
+      const values = groupData.map(item => parseFloat(item.total_contributions || 0));
+
+      barChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Contributions (₱)',
+            data: values,
+            backgroundColor: '#166534',
+            borderColor: '#14532d',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { callback: (val) => '₱' + val.toLocaleString() } }
+          }
+        }
+      });
+    }
+
+    // Chart 2: Line - Trends Over Time
+    function updateLineChart(timeData) {
+      const ctx = document.getElementById('lineChart');
+      if (lineChartInstance) lineChartInstance.destroy();
+
+      const labels = timeData.map(item => item.period_label);
+      const contributions = timeData.map(item => parseFloat(item.contributions || 0));
+      const payouts = timeData.map(item => parseFloat(item.payouts || 0));
+
+      lineChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Contributions',
+              data: contributions,
+              borderColor: '#166534',
+              backgroundColor: 'rgba(22, 101, 52, 0.1)',
+              tension: 0.3,
+              fill: true
+            },
+            {
+              label: 'Payouts',
+              data: payouts,
+              borderColor: '#E15225',
+              backgroundColor: 'rgba(225, 82, 37, 0.1)',
+              tension: 0.3,
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' } },
+          scales: {
+            y: { beginAtZero: true, ticks: { callback: (val) => '₱' + val.toLocaleString() } }
+          }
+        }
+      });
+    }
+
+    // Chart 3: Pie - Payout Distribution
+    function updatePieChart(groupData) {
+      const ctx = document.getElementById('pieChart');
+      if (pieChartInstance) pieChartInstance.destroy();
+
+      const labels = groupData.map(item => item.group_name);
+      const values = groupData.map(item => parseFloat(item.total_payouts || 0));
+
+      const colors = ['#166534', '#E15225', '#3B82F6', '#F59E0B', '#8B5CF6', '#14B8A6'];
+
+      pieChartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors.slice(0, labels.length),
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'right' } }
+        }
+      });
+    }
+
+    // Called whenever any filter or granularity changes
+    function applyFilters() {
+      const newFilters = getFiltersFromUI();
+      loadAnalyticsData(newFilters);
+    }
+
+    // Export current data as CSV (simple client-side generation)
+    function exportCSV() {
+      if (!lastData) {
+        alert('No data available to export yet. Please wait for the charts to load.');
+        return;
+      }
+
+      let csv = [];
+
+      // Header row with metadata
+      csv.push('TrustFund OLAP Analytics Export');
+      csv.push('Generated,' + new Date().toLocaleString());
+      csv.push('Time Granularity,' + currentFilters.time_level);
+      csv.push('Year,' + (currentFilters.year || 'All'));
+      csv.push('Quarter,' + (currentFilters.quarter || 'All'));
+      csv.push('Group Key,' + (currentFilters.group_key || 'All'));
+      csv.push('Transaction Type,' + currentFilters.trans_type);
+      csv.push('');
+
+      // Summary section
+      csv.push('SUMMARY');
+      csv.push('Metric,Value');
+      csv.push('Total Contributions,' + (lastData.summary.total_contributions || 0));
+      csv.push('Total Payouts,' + (lastData.summary.total_payouts || 0));
+      csv.push('Transactions Analyzed,' + (lastData.summary.total_transactions || 0));
+      csv.push('Active Groups,' + (lastData.summary.active_groups || 0));
+      csv.push('');
+
+      // Group performance table
+      csv.push('GROUP PERFORMANCE');
+      csv.push('Group,Total Contributions,Total Payouts');
+      if (lastData.by_group && lastData.by_group.length > 0) {
+        lastData.by_group.forEach(row => {
+          csv.push(
+            '"' + (row.group_name || '') + '",' +
+            (row.total_contributions || 0) + ',' +
+            (row.total_payouts || 0)
+          );
+        });
+      } else {
+        csv.push('No group data');
+      }
+
+      // Create and download the file
+      const csvContent = csv.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.href = url;
+      link.download = `TrustFund_OLAP_Analytics_${new Date().toISOString().slice(0,10)}.csv`;
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Helper to format numbers safely for PDF (avoid ₱ symbol which causes font issues in jsPDF)
+    function formatCurrencyForPDF(amount) {
+      const num = parseFloat(amount || 0);
+      // Use clean "PHP " prefix + localized number (no special symbols)
+      return 'PHP ' + num.toLocaleString('en-PH', { 
+        minimumFractionDigits: 0, 
+        maximumFractionDigits: 0 
+      });
+    }
+
+    // Export as professional PDF using jsPDF + autoTable
+    function exportPDF() {
+      if (!lastData) {
+        alert('No data available to export yet. Please wait for the charts to load.');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Title
+      doc.setFontSize(18);
+      doc.text('TrustFund - OLAP Analytics Report', 20, 20);
+
+      // Metadata
+      doc.setFontSize(11);
+      doc.text('Generated: ' + new Date().toLocaleString(), 20, 28);
+      doc.text('Time Granularity: ' + currentFilters.time_level.toUpperCase(), 20, 34);
+
+      let filterText = 'Filters: ';
+      if (currentFilters.year) filterText += 'Year=' + currentFilters.year + ' ';
+      if (currentFilters.quarter) filterText += 'Q' + currentFilters.quarter + ' ';
+      if (currentFilters.group_key) filterText += 'Group ID=' + currentFilters.group_key + ' ';
+      if (currentFilters.trans_type !== 'all') filterText += 'Type=' + currentFilters.trans_type;
+      if (filterText === 'Filters: ') filterText += 'All data';
+      doc.text(filterText.trim(), 20, 40);
+
+      // Summary Section
+      doc.setFontSize(14);
+      doc.text('Key Metrics', 20, 52);
+
+      const summaryData = [
+        ['Total Contributions', formatCurrencyForPDF(lastData.summary.total_contributions)],
+        ['Total Payouts', formatCurrencyForPDF(lastData.summary.total_payouts)],
+        ['Transactions Analyzed', (lastData.summary.total_transactions || 0).toLocaleString()],
+        ['Active Groups in View', (lastData.summary.active_groups || 0).toLocaleString()]
+      ];
+
+      doc.autoTable({
+        startY: 56,
+        head: [['Metric', 'Value']],
+        body: summaryData,
+        theme: 'grid',
+        headStyles: { fillColor: [22, 101, 52] }, // Green to match project
+        styles: { fontSize: 11 }
+      });
+
+      // Group Performance Table
+      let finalY = doc.lastAutoTable.finalY + 12;
+      doc.setFontSize(14);
+      doc.text('Group Performance (Current Filter)', 20, finalY);
+
+      const groupTable = [];
+      if (lastData.by_group && lastData.by_group.length > 0) {
+        lastData.by_group.forEach(row => {
+          groupTable.push([
+            row.group_name || 'Unknown Group',
+            formatCurrencyForPDF(row.total_contributions),
+            formatCurrencyForPDF(row.total_payouts)
+          ]);
+        });
+      } else {
+        groupTable.push(['No data available for current filters', '', '']);
+      }
+
+      doc.autoTable({
+        startY: finalY + 4,
+        head: [['Group Name', 'Contributions (PHP)', 'Payouts (PHP)']],
+        body: groupTable,
+        theme: 'striped',
+        headStyles: { fillColor: [225, 82, 37] }, // Orange to match project
+        styles: { fontSize: 10 },
+        columnStyles: {
+          0: { halign: 'left' },
+          1: { halign: 'right' },
+          2: { halign: 'right' }
+        },
+        // Force right-align on the header cells for the two numeric columns too
+        didParseCell: function (data) {
+          if (data.section === 'head' && (data.column.index === 1 || data.column.index === 2)) {
+            data.cell.styles.halign = 'right';
+          }
+        },
+        // Prevent text overflow / character spacing issues
+        margin: { right: 15 }
+      });
+
+      // Footer note
+      const footerY = doc.lastAutoTable.finalY + 12;
+      doc.setFontSize(9);
+      doc.setTextColor(100);
+      doc.text('Report generated from TrustFund OLAP data warehouse.', 20, footerY);
+      doc.text('Data reflects current filter selections (Slice / Dice / Roll-up).', 20, footerY + 5);
+
+      // Save the PDF
+      const filename = `TrustFund_OLAP_Analytics_${new Date().toISOString().slice(0,10)}.pdf`;
+      doc.save(filename);
+    }
+
+    // Initial setup
+    function initializeAnalytics() {
+      initTailwind();
+
+      // Load data on first page load (uses default "all" filters)
+      const initialFilters = {
+        year: 0,
+        quarter: 0,
+        group_key: 0,
+        trans_type: 'all',
+        time_level: 'month'
+      };
+      
+      // Trigger initial data load (this populates charts + stores data for export)
+      loadAnalyticsData(initialFilters);
+
+      // Set initial active button
+      document.querySelectorAll('.granularity-btn').forEach(btn => {
+        if (btn.dataset.level === 'month') btn.classList.add('active');
+      });
+
+      // Optional: allow pressing Enter in selects to trigger (already handled by onchange)
+    }
+
+    // Boot the page
+    document.addEventListener('DOMContentLoaded', initializeAnalytics);
+  </script>
+</body>
+</html>
