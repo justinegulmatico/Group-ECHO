@@ -18,15 +18,7 @@
         <div class="topbar-left">
           <span class="topbar-title">Payments</span>
         </div>
-        <div class="topbar-right">
-          <button class="notif-btn" id="notif-btn" aria-label="Notifications">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-            </svg>
-            <span class="notif-badge" id="notif-badge" style="display:none;"></span>
-          </button>
-        </div>
+        <div class="topbar-right"></div>
       </header>
 
       <div class="page-content">
@@ -85,21 +77,6 @@
           </div>
         <?php endif; ?>
 
-      </div></div></div><div class="notif-overlay" id="notif-overlay"></div>
-  <div class="notif-panel" id="notif-panel">
-    <div class="notif-panel-header">
-      <span class="notif-panel-title">Notifications</span>
-      <button class="mark-all-btn" id="mark-all-btn">Mark all read</button>
-    </div>
-    <div class="notif-list" id="notif-list">
-      <div class="notif-empty">
-        <p>No notifications</p>
-        <span>You're all caught up!</span>
-      </div>
-    </div>
-  </div>
-  <div class="toast-container" id="toast-container"></div>
-  
-  <script src="../../front-end/js/notifications.js"></script>
+      </div></div></div>
 </body>
 </html>

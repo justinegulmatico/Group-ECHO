@@ -18,18 +18,21 @@
         <div class="topbar-left">
           <span class="topbar-title">Dashboard</span>
         </div>
-        <div class="topbar-right">
-          <button class="notif-btn" id="notif-btn" aria-label="Notifications">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-            </svg>
-            <span class="notif-badge" id="notif-badge" style="display:none;"></span>
-          </button>
-        </div>
+        <div class="topbar-right"></div>
       </header>
 
       <div class="page-content">
+
+        <?php if (isset($_GET['success'])): ?>
+          <div style="background:#E8F5EE; border:1px solid #a7f3d0; color:#166534; padding:12px 16px; border-radius:10px; margin-bottom:16px; font-size:14px;">
+            <?= htmlspecialchars($_GET['success']) ?>
+          </div>
+        <?php endif; ?>
+        <?php if (isset($_GET['error'])): ?>
+          <div style="background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; padding:12px 16px; border-radius:10px; margin-bottom:16px; font-size:14px;">
+            <?= htmlspecialchars($_GET['error']) ?>
+          </div>
+        <?php endif; ?>
 
         <div class="stat-cards stat-cards-5">
           <div class="stat-card">
@@ -259,32 +262,7 @@
     </div>
   </div>
 
-  <div class="toast-container" id="toast-container"></div>
 
-  <?php if (!empty($toast_message)): ?>
-    <script>
-      // Simple fallback toast injection for dashboard actions (create/join/pay)
-      (function(){
-        var container = document.getElementById('toast-container');
-        if (container) {
-          var t = document.createElement('div');
-          t.className = 'toast show';
-          t.style.background = '<?= $toast_type === "error" ? "#C0392B" : "#2D7A45" ?>';
-          t.style.color = '#fff';
-          t.style.padding = '12px 18px';
-          t.style.borderRadius = '10px';
-          t.style.marginBottom = '8px';
-          t.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-          t.textContent = <?= json_encode($toast_message) ?>;
-          container.appendChild(t);
-
-          setTimeout(function(){
-            if (t && t.parentNode) t.parentNode.removeChild(t);
-          }, 4200);
-        }
-      })();
-    </script>
-  <?php endif; ?>
 
 <!-- Group Choice Modal -->
 <div class="modal-overlay" id="group-choice-modal" style="display:none;">
@@ -773,6 +751,5 @@
     input.value = cleaned;
   }
 </script>
-  <script src="../js/notifications.js"></script>
 </body>
 </html>

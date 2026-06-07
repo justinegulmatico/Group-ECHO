@@ -9,23 +9,6 @@ if (!isset($_SESSION['user_id'])) {
 
 $current_user_id = (int)$_SESSION['user_id'];
 
-$toast_message = "";
-$toast_type = "";
-
-// Handle quick payment success redirect (PRG pattern for clean re-render of tracker)
-// We also support rich "Record Payment" style confirmation banner + toast
-if (isset($_GET['payment_success'])) {
-    $paid_amt = isset($_GET['amount']) ? (float)$_GET['amount'] : 0;
-    if ($paid_amt > 0) {
-        $toast_message = "Payment successful. ₱" . number_format($paid_amt, 2) . " deducted from your wallet.";
-        $toast_type = "success";
-    }
-}
-if (isset($_GET['payment_error'])) {
-    $toast_message = htmlspecialchars($_GET['payment_error']);
-    $toast_type = "error";
-}
-
 // Flags for post-deposit "awaiting admin approval" modal (only for regular users)
 $show_deposit_pending_modal = false;
 $pending_deposit_amount = 0;
@@ -58,8 +41,8 @@ if (isset($_POST['action_create_group'])) {
     mysqli_stmt_close($check_stmt);
 
     if ($duplicate) {
-        $toast_message = "A group with this name already exists. Please choose a different name.";
-        $toast_type = "error";
+        header("Location: dashboard.php?error=" . urlencode("A group with this name already exists. Please choose a different name."));
+        exit();
     } else {
         $sql = "INSERT INTO groups (group_name, description, privacy, contribution_amount, max_members, frequency, cycle_length, invite_code, created_by, is_active, status, current_cycle)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'pending', 1)";
@@ -84,8 +67,8 @@ if (isset($_POST['action_create_group'])) {
                 mysqli_stmt_close($stmtC);
             }
 
-            $toast_message = "Group created successfully! Cycles and positions ready.";
-            $toast_type = "success";
+            header("Location: dashboard.php?success=" . urlencode("Group created successfully! Cycles and positions ready."));
+            exit();
 
             // Expose private invite code for improved "share the join code" UX right on dashboard
             if ($privacy === 'private' && !empty($invite_code)) {
@@ -94,8 +77,8 @@ if (isset($_POST['action_create_group'])) {
             }
         } else {
             mysqli_stmt_close($stmt);
-            $toast_message = "Failed to create group.";
-            $toast_type = "error";
+            header("Location: dashboard.php?error=" . urlencode("Failed to create group."));
+            exit();
         }
     }
 }
@@ -127,15 +110,15 @@ if (isset($_POST['action_join_group'])) {
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
 
-            $toast_message = "Joined group successfully!";
-            $toast_type = "success";
+            header("Location: dashboard.php?success=" . urlencode("Joined group successfully!"));
+            exit();
         } else {
-            $toast_message = "You are already a member.";
-            $toast_type = "error";
+            header("Location: dashboard.php?error=" . urlencode("You are already a member."));
+            exit();
         }
     } else {
-        $toast_message = "Invalid invite code.";
-        $toast_type = "error";
+        header("Location: dashboard.php?error=" . urlencode("Invalid invite code."));
+        exit();
     }
 }
 
@@ -272,11 +255,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_bind_param($stmt, "idssi", $current_user_id, $amount, $method, $attachment, $dep_reviewed_by);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
-            $toast_message = "Deposit credited to your wallet immediately (admin direct).";
-            $toast_type = "success";
+            header("Location: dashboard.php?success=" . urlencode("Deposit credited to your wallet immediately (admin direct)."));
+            exit();
           } else {
-            $toast_message = "Failed to submit deposit (database error).";
-            $toast_type = "error";
+            header("Location: dashboard.php?error=" . urlencode("Failed to submit deposit (database error)."));
+            exit();
           }
         } else {
           $stmt = mysqli_prepare($conn, "INSERT INTO wallet_requests (user_id, type, amount, payment_method, attachment, status, created_at) VALUES (?, 'deposit', ?, ?, ?, 'pending', NOW())");
@@ -284,24 +267,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_bind_param($stmt, "idss", $current_user_id, $amount, $method, $attachment);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
-            $toast_message = "Deposit request submitted. Awaiting admin review.";
-            $toast_type = "success";
+            header("Location: dashboard.php?success=" . urlencode("Deposit request submitted. Awaiting admin review."));
+            exit();
 
             // Trigger a dedicated modal window telling the user to wait for admin approval
             $show_deposit_pending_modal = true;
             $pending_deposit_amount = $amount;
           } else {
-            $toast_message = "Failed to submit deposit (database error).";
-            $toast_type = "error";
+            header("Location: dashboard.php?error=" . urlencode("Failed to submit deposit (database error)."));
+            exit();
           }
         }
       } else {
-        $toast_message = "Wallet system not initialized yet. Please create the 'wallet_requests' table first (see admin/transactions.php for SQL).";
-        $toast_type = "error";
+        header("Location: dashboard.php?error=" . urlencode("Wallet system not initialized yet. Please create the 'wallet_requests' table first (see admin/transactions.php for SQL)."));
+        exit();
       }
     } else {
-      $toast_message = "Please enter a valid deposit amount.";
-      $toast_type = "error";
+      header("Location: dashboard.php?error=" . urlencode("Please enter a valid deposit amount."));
+      exit();
     }
   }
 
@@ -317,22 +300,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           mysqli_stmt_bind_param($stmt, "idss", $current_user_id, $amount, $method, $details);
           mysqli_stmt_execute($stmt);
           mysqli_stmt_close($stmt);
-          $toast_message = "Withdrawal request submitted. Awaiting admin review.";
-          $toast_type = "success";
+          header("Location: dashboard.php?success=" . urlencode("Withdrawal request submitted. Awaiting admin review."));
+          exit();
         } else {
-          $toast_message = "Failed to submit withdrawal (database error).";
-          $toast_type = "error";
+          header("Location: dashboard.php?error=" . urlencode("Failed to submit withdrawal (database error)."));
+          exit();
         }
       } else {
-        $toast_message = "Wallet system not initialized yet. Please create the 'wallet_requests' table first.";
-        $toast_type = "error";
+        header("Location: dashboard.php?error=" . urlencode("Wallet system not initialized yet. Please create the 'wallet_requests' table first."));
+        exit();
       }
     } else if ($amount > $wallet_balance) {
-      $toast_message = "Insufficient wallet balance for this withdrawal.";
-      $toast_type = "error";
+      header("Location: dashboard.php?error=" . urlencode("Insufficient wallet balance for this withdrawal."));
+      exit();
     } else {
-      $toast_message = "Please enter a valid withdrawal amount.";
-      $toast_type = "error";
+      header("Location: dashboard.php?error=" . urlencode("Please enter a valid withdrawal amount."));
+      exit();
     }
   }
 

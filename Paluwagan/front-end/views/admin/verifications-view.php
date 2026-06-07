@@ -176,20 +176,5 @@
       if (e.target.id === 'review-modal') closeReviewModal();
     });
   </script>
-  <div class="notif-overlay" id="notif-overlay"></div>
-  <div class="notif-panel" id="notif-panel">
-    <div class="notif-panel-header">
-      <span class="notif-panel-title">Notifications</span>
-      <button class="mark-all-btn" id="mark-all-btn">Mark all read</button>
-    </div>
-    <div class="notif-list" id="notif-list">
-      <div class="notif-empty">
-        <p>No notifications</p>
-        <span>You're all caught up!</span>
-      </div>
-    </div>
-  </div>
-  <div class="toast-container" id="toast-container"></div>
-  <script src="../../../front-end/js/notifications.js"></script>
 </body>
 </html>
