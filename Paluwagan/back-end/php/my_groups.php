@@ -149,7 +149,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['action_join_group']) 
 // This prevents groups the user has already joined from appearing in the "Public Groups" discovery tab.
 $public_stmt = mysqli_prepare($conn, "
     SELECT g.*, 
-        (SELECT COUNT(*) FROM group_members WHERE group_id = g.group_id AND status = 'active') AS member_count
+        (SELECT COUNT(*) FROM group_members WHERE group_id = g.group_id AND status = 'active') AS member_count,
+        g.current_cycle,
+        g.cycle_length
     FROM groups g 
     WHERE g.privacy = 'public' 
       AND g.status IN ('pending', 'active')
@@ -173,7 +175,9 @@ if ($public_stmt) {
 
 // ==================== MY GROUPS ====================
 $my_query = "SELECT g.*, 
-    (SELECT COUNT(*) FROM group_members WHERE group_id = g.group_id AND status = 'active') AS member_count
+    (SELECT COUNT(*) FROM group_members WHERE group_id = g.group_id AND status = 'active') AS member_count,
+    g.current_cycle,
+    g.cycle_length
     FROM groups g
     INNER JOIN group_members gm ON g.group_id = gm.group_id
     WHERE gm.user_id = ? AND gm.status = 'active'

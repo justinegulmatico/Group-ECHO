@@ -227,14 +227,23 @@
                 </div>
 
                 <?php if (!empty($is_member)): ?>
+                  <?php 
+                    $can_contribute = ($current_group['status'] === 'active') && !$user_paid_active;
+                  ?>
                   <?php if ($user_paid_active): ?>
                     <div class="ach-contrib-done">
                       <span class="check">✓</span> Your Contribution Submitted
                     </div>
-                  <?php else: ?>
+                  <?php elseif ($can_contribute): ?>
                     <button type="button" class="ach-contrib-btn" onclick="openRecordPaymentModal()">
                       Contribute ₱<?= number_format($current_group['contribution_amount'], 0) ?>
                     </button>
+                  <?php else: ?>
+                    <?php if ($current_group['status'] !== 'active'): ?>
+                      <div class="ach-contrib-done" style="background:#f3f4f6; color:#666; font-size:13px;">
+                        Waiting for activation
+                      </div>
+                    <?php endif; ?>
                   <?php endif; ?>
                 <?php else: ?>
                   <!-- Non-members see the join banner instead of contribute action -->
@@ -521,7 +530,7 @@
         <button class="modal-close-btn" onclick="closeRecordPaymentModal()">✕</button>
       </div>
       <div class="modal-body">
-        <form action="../process/process_record_payment.php" method="POST" id="recordPaymentForm">
+        <form action="../../back-end/process/process_contribution.php" method="POST" id="recordPaymentForm">
           <input type="hidden" name="group_id" value="<?= $group_id; ?>">
           <input type="hidden" name="member_id" value="<?= $my_member_id; ?>">
           
@@ -547,10 +556,30 @@
             <div class="form-group" style="flex: 1;">
               <label class="input-label">Cycle #</label>
               <select name="cycle_number" class="input-field">
-                <?php foreach ($cycles as $cyc): ?>
-                  <option value="<?= $cyc['cycle_number'] ?>">Cycle #<?= $cyc['cycle_number'] ?></option>
+                <?php 
+                  // Compute current user's position for receiver filtering
+                  $current_user_pos = 0;
+                  foreach ($group_members as $m) {
+                      if ((int)$m['user_id'] === $current_user_id) {
+                          $current_user_pos = (int)$m['position'];
+                          break;
+                      }
+                  }
+
+                  foreach ($cycles as $cyc): 
+                    $cyc_num = (int)$cyc['cycle_number'];
+                    $is_my_payout_cycle = ($current_user_pos > 0 && $current_user_pos === $cyc_num);
+                    $is_released = (($cyc['payout_status'] ?? 'pending') === 'released');
+
+                    // Skip cycles where user is the receiver or already paid out
+                    if ($is_my_payout_cycle || $is_released) {
+                        continue;
+                    }
+                ?>
+                  <option value="<?= $cyc_num ?>">Cycle #<?= $cyc_num ?></option>
                 <?php endforeach; ?>
               </select>
+              <small style="color:#666; font-size:11px;">Cycles where you are the receiver are hidden (you receive instead of contributing).</small>
             </div>
           </div>
 

@@ -156,6 +156,16 @@ function showToast(msg, type) {
   var toast = document.createElement('div');
   toast.className = 'toast toast-' + (type || 'info');
   toast.textContent = msg;
+
+  // Force background color inline so it doesn't get overridden / camouflaged
+  if (type === 'success') {
+    toast.style.background = '#2D7A45';
+  } else if (type === 'error') {
+    toast.style.background = '#C0392B';
+  } else {
+    toast.style.background = '#3B82F6';
+  }
+
   container.appendChild(toast);
   setTimeout(function () { toast.classList.add('show'); }, 10);
   setTimeout(function () {
@@ -167,9 +177,12 @@ function showToast(msg, type) {
 /* ── AUTOMATED SYSTEM INTERCEPTOR FOR URL FLAGGED MESSAGES ── */
 document.addEventListener("DOMContentLoaded", function() {
   var urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.has('success')) {
-    showToast(urlParams.get('success'), 'success');
-  } else if (urlParams.has('error')) {
-    showToast(urlParams.get('error'), 'error');
+  var msg = urlParams.get('success') || urlParams.get('error');
+  if (msg) {
+    var type = urlParams.get('type');
+    if (!type) {
+      type = urlParams.has('error') ? 'error' : 'success';
+    }
+    showToast(msg, type);
   }
 });

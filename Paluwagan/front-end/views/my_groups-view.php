@@ -40,28 +40,37 @@
           </div>
         <?php endif; ?>
 
-        <!-- TOP BAR: Search + Buttons -->
-        <div class="page-toolbar" style="margin-bottom: 24px;">
-          <div class="toolbar-left" style="flex: 1;">
-            <!-- Long Search Bar -->
-            <div class="search-wrap" style="max-width: 100%; width: 100%;">
+        <!-- Combined Tabs and Controls Bar -->
+        <div class="detail-tabs">
+          <button class="detail-tab active" id="tab-my" onclick="switchTab('my')">Your Groups</button>
+          <button class="detail-tab" id="tab-public" onclick="switchTab('public')">Public Groups</button>
+        </div>
+
+        <!-- Search and Action Controls (inside tab view) -->
+        <div class="page-toolbar" style="margin-bottom: 16px;">
+          <div class="toolbar-left" style="flex: 1; display: flex; align-items: center; gap: 12px;">
+            <div class="search-wrap" style="max-width: 300px; flex: 1;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
               </svg>
               <input type="text" id="search-input" class="search-input" placeholder="Search groups..." onkeyup="filterCurrentTable()">
             </div>
+            <!-- Sorting -->
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6B6560;">
+              <span>Sort by:</span>
+              <select style="padding: 6px 10px; border: 1px solid #E4DDD4; border-radius: 6px; font-size: 13px; background: #fff;" onchange="sortCurrentTable(this.value)">
+                <option value="Alphabetical">Alphabetical</option>
+                <option value="Most Members">Most Members</option>
+                <option value="Recent">Recent</option>
+              </select>
+            </div>
+
           </div>
 
-          <div class="toolbar-right">
+          <div class="toolbar-right" style="display: flex; gap: 8px;">
             <button class="btn-outline" onclick="toggleJoinModal(true)">Join with Code</button>
             <button class="btn-create" onclick="toggleCreateModal(true)">+ Create New</button>
           </div>
-        </div>
-
-        <!-- TABS -->
-        <div class="detail-tabs" style="margin-bottom: 20px;">
-          <button class="detail-tab active" id="tab-my" onclick="switchTab('my')">Your Groups</button>
-          <button class="detail-tab" id="tab-public" onclick="switchTab('public')">Public Groups</button>
         </div>
 
         <!-- YOUR GROUPS -->
@@ -72,6 +81,7 @@
                 <tr>
                   <th>Group Name</th>
                   <th>Frequency & Amount</th>
+                  <th>Progress</th>
                   <th>Members</th>
                   <th>Status</th>
                   <th style="text-align:right;">Action</th>
@@ -80,8 +90,35 @@
               <tbody id="my-tbody">
                 <?php while ($group = mysqli_fetch_assoc($my_groups)): ?>
                   <tr onclick="window.location.href='group_details.php?id=<?= $group['group_id'] ?>'">
-                    <td><strong><?= htmlspecialchars($group['group_name']) ?></strong></td>
+                    <td>
+                      <?php 
+                        $is_public = (isset($group['privacy']) && $group['privacy'] == 'public');
+                      ?>
+                      <?php if ($is_public): ?>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" style="vertical-align: middle; margin-right: 6px;"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                      <?php else: ?>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" style="vertical-align: middle; margin-right: 6px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      <?php endif; ?>
+                      <strong><?= htmlspecialchars($group['group_name']) ?></strong>
+                    </td>
                     <td><?= ucfirst($group['frequency']) ?> · ₱<?= number_format($group['contribution_amount']) ?></td>
+                    <td>
+                      <?php if ($group['status'] == 'active'): ?>
+                        <?php 
+                          $cycle_len = $group['cycle_length'] ?: $group['max_members'] ?: 5;
+                          $pct = $cycle_len > 0 ? round( ($group['current_cycle'] / $cycle_len ) * 100 ) : 0;
+                        ?>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                          <div class="progress-bar-wrap" style="flex: 1; height: 6px; margin: 0;">
+                            <div class="progress-bar-fill" style="width: <?= $pct ?>%;"></div>
+                          </div>
+                          <span style="font-size: 11px; color: #E15225; white-space: nowrap;"><?= $pct ?>%</span>
+                        </div>
+                        <div style="font-size: 10px; color: #6B6560; margin-top: 2px;">Cycle <?= $group['current_cycle'] ?> of <?= $cycle_len ?></div>
+                      <?php else: ?>
+                        <span style="font-size: 11px; color: #6B6560;">Awaiting pool</span>
+                      <?php endif; ?>
+                    </td>
                     <td><?= $group['member_count'] ?> / <?= $group['max_members'] ?> (positions)</td>
                     <td>
                       <span class="badge <?= $group['status'] == 'active' ? 'badge-active' : ($group['status'] == 'pending' ? 'badge-pending' : 'badge-closed') ?>">
@@ -106,6 +143,7 @@
                 <tr>
                   <th>Group Name</th>
                   <th>Frequency & Amount</th>
+                  <th>Progress</th>
                   <th>Members</th>
                   <th>Status</th>
                   <th style="text-align:right;">Action</th>
@@ -118,8 +156,28 @@
                       while ($group = mysqli_fetch_assoc($public_groups)): 
                 ?>
                   <tr onclick="window.location.href='group_details.php?id=<?= $group['group_id'] ?>'">
-                    <td><strong><?= htmlspecialchars($group['group_name']) ?></strong></td>
+                    <td>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" style="vertical-align: middle; margin-right: 6px;"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                      <strong><?= htmlspecialchars($group['group_name']) ?></strong>
+                    </td>
                     <td><?= ucfirst($group['frequency']) ?> · ₱<?= number_format($group['contribution_amount']) ?></td>
+                    <td>
+                      <?php if ($group['status'] == 'active'): ?>
+                        <?php 
+                          $cycle_len = $group['cycle_length'] ?: $group['max_members'] ?: 5;
+                          $pct = $cycle_len > 0 ? round( ($group['current_cycle'] / $cycle_len ) * 100 ) : 0;
+                        ?>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                          <div class="progress-bar-wrap" style="flex: 1; height: 6px; margin: 0;">
+                            <div class="progress-bar-fill" style="width: <?= $pct ?>%;"></div>
+                          </div>
+                          <span style="font-size: 11px; color: #E15225; white-space: nowrap;"><?= $pct ?>%</span>
+                        </div>
+                        <div style="font-size: 10px; color: #6B6560; margin-top: 2px;">Cycle <?= $group['current_cycle'] ?> of <?= $cycle_len ?></div>
+                      <?php else: ?>
+                        <span style="font-size: 11px; color: #6B6560;">Awaiting pool</span>
+                      <?php endif; ?>
+                    </td>
                     <td><?= $group['member_count'] ?> / <?= $group['max_members'] ?> (positions)</td>
                     <td>
                       <span class="badge <?= $group['status'] == 'active' ? 'badge-active' : ($group['status'] == 'pending' ? 'badge-pending' : 'badge-closed') ?>">
@@ -137,7 +195,7 @@
                   </tr>
                 <?php endwhile; 
                   } else {
-                      echo '<tr><td colspan="5" style="text-align:center; padding:20px; color:#8A837A;">No public groups available to join right now.</td></tr>';
+                      echo '<tr><td colspan="6" style="text-align:center; padding:20px; color:#8A837A;">No public groups available to join right now.</td></tr>';
                   }
                 ?>
               </tbody>
@@ -177,15 +235,44 @@
       const mySection = document.getElementById('section-my');
       const publicSection = document.getElementById('section-public');
 
-      if (mySection.style.display !== 'none') {
+      if (mySection && mySection.style.display !== 'none') {
         document.querySelectorAll('#my-tbody tr').forEach(row => {
           row.style.display = row.textContent.toLowerCase().includes(search) ? '' : 'none';
         });
-      } else {
+      } else if (publicSection) {
         document.querySelectorAll('#public-tbody tr').forEach(row => {
           row.style.display = row.textContent.toLowerCase().includes(search) ? '' : 'none';
         });
       }
+    }
+
+    function sortCurrentTable(sortBy) {
+      const mySection = document.getElementById('section-my');
+      const publicSection = document.getElementById('section-public');
+      let tbody = null;
+      if (mySection && mySection.style.display !== 'none') {
+        tbody = document.querySelector('#my-tbody');
+      } else if (publicSection) {
+        tbody = document.querySelector('#public-tbody');
+      }
+      if (!tbody) return;
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort((a, b) => {
+        if (sortBy === 'Alphabetical') {
+          const nameA = a.cells[0].textContent.trim().toLowerCase();
+          const nameB = b.cells[0].textContent.trim().toLowerCase();
+          return nameA.localeCompare(nameB);
+        } else if (sortBy === 'Most Members') {
+          const memA = parseInt(a.cells[3].textContent.split('/')[0]) || 0;
+          const memB = parseInt(b.cells[3].textContent.split('/')[0]) || 0;
+          return memB - memA;
+        } else if (sortBy === 'Recent') {
+          // No date info, fallback to original order or reverse
+          return 0;
+        }
+        return 0;
+      });
+      rows.forEach(row => tbody.appendChild(row));
     }
 
     function toggleCreateModal(show) {
@@ -199,6 +286,8 @@
     window.onload = function() {
       document.getElementById('section-public').style.display = 'none';
       document.getElementById('section-my').style.display = 'block';
+      document.getElementById('tab-my').classList.add('active');
+      document.getElementById('tab-public').classList.remove('active');
     }
   </script>
 

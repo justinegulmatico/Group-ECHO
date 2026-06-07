@@ -688,6 +688,10 @@ tbody tr:last-child td { border-bottom: none; }
   transform: translateY(0);
 }
 
+.toast-success { background: #2D7A45; color: #fff; }
+.toast-error   { background: #C0392B; color: #fff; }
+.toast-info    { background: #3B82F6; color: #fff; }
+
 /* ── Empty state (notif panel) ── */
 .empty-state {
   display: flex;

@@ -372,11 +372,13 @@ tbody tr:hover td {
 .admin-hero-title {
   font-size: 22px;
   font-weight: 700;
+  font-family: var(--font-display);
   margin-bottom: 4px;
 }
 
 .admin-hero-sub {
   font-size: 14px;
+  font-family: var(--font-body);
   color: rgba(255,255,255,0.55);
 }
 

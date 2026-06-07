@@ -411,14 +411,14 @@ th, td {
 }
 
 th {
-  background: #f8fafc;
+  background: var(--color-surface-muted);
   font-weight: 600;
-  color: #475569;
+  color: var(--color-text-secondary);
   font-size: 13px;
 }
 
 tr:hover {
-  background: #f8fafc;
+  background: var(--color-surface-muted);
 }
 
 .btn-row-view {
@@ -444,8 +444,8 @@ tr:hover {
 
 
 /* === Warm Global Color Theme === */
-body, .page-content {
-  background-color: #F5F0E8;
+body, .page-content, .main-content {
+  background-color: #F4EFEA;
 }
 
 .table-wrap {
@@ -466,45 +466,65 @@ body, .page-content {
   padding: 16px 20px;
 }
 
-/* === Proper Tab Design (Matching Admin Panel) === */
+/* === Proper Tab Design (Matching Admin Panel) - Stretched full-width segmented === */
 .detail-tabs {
   display: flex;
-  gap: 8px;
-  border-bottom: 2px solid #E4DDD4;
-  margin-bottom: 24px;
-  padding-bottom: 4px;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #E4DDD4;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
 }
 
 .detail-tab {
+  flex: 1;
   background: transparent;
   border: none;
-  padding: 10px 20px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #6B6560;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
   cursor: pointer;
-  position: relative;
-  transition: color 0.2s ease;
+  text-align: center;
+  transition: all 0.15s ease;
+  border-right: 1px solid var(--color-border);
+}
+
+.detail-tab:last-child {
+  border-right: none;
 }
 
 .detail-tab:hover {
-  color: #E8481A;
+  color: #E15225;
+  background: var(--color-surface-muted);
 }
 
 .detail-tab.active {
-  color: #E8481A;
-  font-weight: 700;
+  color: #E15225;
+  font-weight: 600;
+  background: #fff;
+  position: relative;
 }
 
 .detail-tab.active::after {
   content: '';
   position: absolute;
-  bottom: -6px;
+  bottom: 0;
   left: 0;
   width: 100%;
   height: 3px;
-  background-color: #E8481A;
-  border-radius: 3px;
+  background-color: #E15225;
+}
+
+.detail-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #E15225;
 }
 
 /* Long search bar inside each section */

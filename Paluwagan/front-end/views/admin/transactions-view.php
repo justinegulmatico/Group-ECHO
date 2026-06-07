@@ -9,6 +9,20 @@
   <style>
     /* Small scoped polish for this page only if needed */
     .tx-ledger { margin-bottom: 32px; }
+
+    /* Match global header font + text for topbar and hero headers */
+    .topbar-title {
+      font-family: var(--font-body);
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+    .admin-hero-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+    }
+    .admin-hero-sub {
+      font-family: var(--font-body);
+    }
   </style>
 </head>
 <body>
@@ -21,14 +35,24 @@
           <span class="topbar-title">Admin → Transaction Approvals</span>
         </div>
         <div class="topbar-right">
-          <a href="index.php" class="btn-outline" style="padding:6px 14px; font-size:13px; text-decoration:none;">← Back to Admin Dashboard</a>
+          <button class="notif-btn" id="notif-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </button>
         </div>
       </header>
 
       <div class="page-content">
 
-        <?php if (isset($_GET['success'])): ?>
-          <div style="background:#E8F5EE; border:1px solid #a7f3d0; color:#166534; padding:12px 18px; border-radius:10px; margin-bottom:22px;">
+        <?php if (isset($_GET['success'])): 
+          $is_error = (isset($_GET['type']) && $_GET['type'] === 'error');
+          $bg = $is_error ? '#FEE2E2' : '#E8F5EE';
+          $border = $is_error ? '#FCA5A5' : '#a7f3d0';
+          $color = $is_error ? '#C0392B' : '#166534';
+        ?>
+          <div style="background:<?= $bg ?>; border:1px solid <?= $border ?>; color:<?= $color ?>; padding:12px 18px; border-radius:10px; margin-bottom:22px;">
             <?= htmlspecialchars($_GET['success']) ?>
           </div>
         <?php endif; ?>
@@ -313,8 +337,22 @@
     </div>
   </div>
 
+  <div class="notif-overlay" id="notif-overlay"></div>
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-panel-header">
+      <span class="notif-panel-title">Notifications</span>
+      <button class="mark-all-btn" id="mark-all-btn">Mark all read</button>
+    </div>
+    <div class="notif-list" id="notif-list">
+      <div class="notif-empty">
+        <p>No notifications</p>
+        <span>You're all caught up!</span>
+      </div>
+    </div>
+  </div>
   <div class="toast-container" id="toast-container"></div>
 
+  <script src="../../../front-end/js/notifications.js"></script>
   <script>
     let currentApproveForm = null;
 

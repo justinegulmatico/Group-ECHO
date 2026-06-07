@@ -356,6 +356,7 @@ input, select {
 .topbar-title {
   font-size: 20px;
   font-weight: 700;
+  font-family: var(--font-body);
   color: var(--color-text-primary);
 }
 
@@ -448,6 +449,7 @@ input, select {
 .section-title {
   font-size: 17px;
   font-weight: 700;
+  font-family: var(--font-body);
   color: var(--color-text-primary);
 }
 
@@ -717,6 +719,10 @@ input, select {
   font-family: var(--font-body);
 }
 .toast.show    { opacity: 1; transform: translateY(0); }
+
+.toast-success { background: #2D7A45; color: #fff; }
+.toast-error   { background: #C0392B; color: #fff; }
+.toast-info    { background: #3B82F6; color: #fff; }
 
 /* ── Group Card ── */
 .group-card {

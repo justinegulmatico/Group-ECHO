@@ -82,79 +82,47 @@
           </div>
         </div>
 
-        <div class="profile-grid">
-
-          <!-- PERSONAL INFORMATION -->
-          <div class="profile-card">
-            <div class="profile-card-header">
-              <div>
-                <h2 class="profile-card-title">Personal Information</h2>
-                <p class="profile-card-subtitle">Update your contact &amp; work details</p>
-              </div>
+        <!-- PERSONAL INFORMATION (full width, stretched now that side content is removed) -->
+        <div class="profile-card">
+          <div class="profile-card-header">
+            <div>
+              <h2 class="profile-card-title">Personal Information</h2>
+              <p class="profile-card-subtitle">Update your contact &amp; work details</p>
             </div>
+          </div>
 
-            <form method="POST" action="my_profile.php" class="profile-form">
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="input-label">First Name</label>
-                  <input type="text" class="input-field" value="<?= htmlspecialchars($first_name); ?>" readonly style="background:#f8f6f3; cursor:not-allowed;" />
-                </div>
-                <div class="form-group">
-                  <label class="input-label">Last Name</label>
-                  <input type="text" class="input-field" value="<?= htmlspecialchars($last_name ?: '—'); ?>" readonly style="background:#f8f6f3; cursor:not-allowed;" />
-                </div>
-              </div>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="input-label" for="profile-phone">Phone Number</label>
-                  <input type="tel" id="profile-phone" name="phone" class="input-field" value="<?= htmlspecialchars($_SESSION['phone'] ?? ''); ?>" placeholder="0917 123 4567" />
-                </div>
-                <div class="form-group">
-                  <label class="input-label" for="profile-occupation">Occupation</label>
-                  <input type="text" id="profile-occupation" name="occupation" class="input-field" value="<?= htmlspecialchars($_SESSION['occupation'] ?? ''); ?>" placeholder="Student / Teacher / etc." />
-                </div>
-              </div>
-
+          <form method="POST" action="my_profile.php" class="profile-form">
+            <div class="form-row">
               <div class="form-group">
-                <label class="input-label" for="profile-address">Address</label>
-                <input type="text" id="profile-address" name="address" class="input-field" value="<?= htmlspecialchars($_SESSION['address'] ?? ''); ?>" placeholder="City, Province" />
+                <label class="input-label">First Name</label>
+                <input type="text" class="input-field" value="<?= htmlspecialchars($first_name); ?>" readonly />
               </div>
-
-              <div class="form-actions">
-                <button type="submit" class="btn-primary">Save Changes</button>
-              </div>
-            </form>
-          </div>
-
-          <!-- PROFILE COMPLETENESS + QUICK TIPS -->
-          <div class="profile-card">
-            <div class="profile-card-header">
-              <h2 class="profile-card-title">Profile Strength</h2>
-            </div>
-
-            <div class="completeness-wrap">
-              <div class="completeness-header">
-                <span class="completeness-label">Account completeness</span>
-                <span class="completeness-pct"><?= $completeness; ?>%</span>
-              </div>
-              <div class="progress-bar-wrap">
-                <div class="progress-bar-fill" style="width: <?= $completeness; ?>%;"></div>
-              </div>
-              <div class="completeness-hint">
-                <?php if ($completeness < 70): ?>
-                  Add your phone, occupation and address to reach 100%.
-                <?php else: ?>
-                  Great job! Your profile is looking complete.
-                <?php endif; ?>
+              <div class="form-group">
+                <label class="input-label">Last Name</label>
+                <input type="text" class="input-field" value="<?= htmlspecialchars($last_name ?: '—'); ?>" readonly />
               </div>
             </div>
 
-            <div style="margin-top:18px; font-size:13px; color:#6B6560;">
-              <strong>Tip:</strong> Keeping your profile updated helps group leaders contact you easily for contributions and payouts.
+            <div class="form-row">
+              <div class="form-group">
+                <label class="input-label" for="profile-phone">Phone Number</label>
+                <input type="tel" id="profile-phone" name="phone" class="input-field" value="<?= htmlspecialchars($_SESSION['phone'] ?? ''); ?>" placeholder="0917 123 4567" />
+              </div>
+              <div class="form-group">
+                <label class="input-label" for="profile-occupation">Occupation</label>
+                <input type="text" id="profile-occupation" name="occupation" class="input-field" value="<?= htmlspecialchars($_SESSION['occupation'] ?? ''); ?>" placeholder="Student / Teacher / etc." />
+              </div>
             </div>
-          </div>
 
+            <div class="form-group">
+              <label class="input-label" for="profile-address">Address</label>
+              <input type="text" id="profile-address" name="address" class="input-field" value="<?= htmlspecialchars($_SESSION['address'] ?? ''); ?>" placeholder="City, Province" />
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Save Changes</button>
+            </div>
+          </form>
         </div>
 
       </div>

@@ -1,113 +1,106 @@
 <?php
+/**
+ * process_join_group.php
+ * 
+ * OLTP Transaction: Join Paluwagan Group (assigns next available position)
+ * 
+ * Key Transactional Features:
+ * - Uses SELECT ... FOR UPDATE to lock the roster for this group (prevents race conditions when multiple users join simultaneously).
+ * - Entire operation (check capacity + assign position + insert + history log) is atomic.
+ * - If the group fills up between the time the user saw it and when they submit, the transaction will correctly reject.
+ */
+
 session_start();
-// process/ is sibling to php/ under back-end/
-include "../db.php";
+require_once "../db.php";
 
-// Auto-create group_history if missing
-$hist_check = mysqli_query($conn, "SHOW TABLES LIKE 'group_history'");
-if (!($hist_check && mysqli_num_rows($hist_check) > 0)) {
-    $hcreate = "
-    CREATE TABLE IF NOT EXISTS `group_history` (
-      `history_id` int(11) NOT NULL AUTO_INCREMENT,
-      `group_id` int(11) NOT NULL,
-      `event_type` varchar(50) NOT NULL,
-      `actor_user_id` int(11) DEFAULT NULL,
-      `target_user_id` int(11) DEFAULT NULL,
-      `cycle_number` int(11) DEFAULT NULL,
-      `amount` decimal(10,2) DEFAULT NULL,
-      `description` text,
-      `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-      PRIMARY KEY (`history_id`),
-      KEY `group_id` (`group_id`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-    ";
-    mysqli_query($conn, $hcreate);
-}
-
-// Note: process/ is one level below php/, so redirects to controllers must use ../php/...
-// e.g. ../php/group_details.php instead of ../group_details.php (which would 404)
-
-// 1. Force safety checkpoint redirect if no logged-in user session exists
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../index.php");
     exit();
 }
 
-// 2. Form submission intercept - FIXED to match actual schema & invite generation (6 char UPPER from md5)
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $user_id = $_SESSION['user_id'];
-    $invite_code = strtoupper(trim($_POST['invite_code'] ?? ''));
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    header("Location: ../php/my_groups.php");
+    exit();
+}
 
-    if (empty($invite_code)) {
-        header("Location: ../php/my_groups.php?error=" . urlencode("Invite code is required."));
-        exit();
-    }
+$user_id = (int)$_SESSION['user_id'];
+$invite_code = strtoupper(trim($_POST['invite_code'] ?? ''));
 
-    // Use prepared statement
-    $stmt = mysqli_prepare($conn, "SELECT * FROM groups WHERE invite_code = ? AND (status = 'active' OR status = 'pending') LIMIT 1");
-    mysqli_stmt_bind_param($stmt, "s", $invite_code);
-    mysqli_stmt_execute($stmt);
-    $verify_res = mysqli_stmt_get_result($stmt);
-    $group_data = mysqli_fetch_assoc($verify_res);
-    mysqli_stmt_close($stmt);
+if (empty($invite_code)) {
+    header("Location: ../php/my_groups.php?error=" . urlencode("Invite code is required."));
+    exit();
+}
 
-    if (!$group_data) {
-        header("Location: ../php/my_groups.php?error=" . urlencode("Invalid or inactive invite code."));
-        exit();
-    }
+try {
+    $db = Database::getInstance();
 
-    $target_group_id = (int)$group_data['group_id'];
+    $result = $db->transaction(function($pdo) use ($user_id, $invite_code) {
+        // 1. Lock and validate the group (using FOR UPDATE on the group row)
+        $stmt = $pdo->prepare(
+            "SELECT * FROM groups WHERE invite_code = ? AND (status = 'active' OR status = 'pending') FOR UPDATE"
+        );
+        $stmt->execute([$invite_code]);
+        $group = $stmt->fetch();
 
-    // Multi-slot support: Check total filled slots instead of per-user (one user can own multiple slots/positions)
-    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as current_slots FROM group_members WHERE group_id = ? AND status = 'active'");
-    mysqli_stmt_bind_param($stmt, "i", $target_group_id);
-    mysqli_stmt_execute($stmt);
-    $slots_res = mysqli_stmt_get_result($stmt);
-    $slots_data = mysqli_fetch_assoc($slots_res);
-    mysqli_stmt_close($stmt);
+        if (!$group) {
+            throw new Exception("Invalid or inactive invite code.");
+        }
 
-    $max_slots = (int)($group_data['cycle_length'] ?: $group_data['max_members'] ?: 5);
+        $target_group_id = (int)$group['group_id'];
+        $max_slots = (int)($group['cycle_length'] ?: $group['max_members'] ?: 5);
 
-    if ((int)($slots_data['current_slots'] ?? 0) >= $max_slots) {
-        header("Location: ../php/my_groups.php?error=" . urlencode("This savings group is already full. No open slots remain."));
-        exit();
-    }
+        // 2. Lock all current active members of this group (prevents two people joining at the exact same time and both getting the last slot)
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*) as current_slots FROM group_members 
+             WHERE group_id = ? AND status = 'active' 
+             FOR UPDATE"
+        );
+        $stmt->execute([$target_group_id]);
+        $current_slots = (int)$stmt->fetchColumn();
 
-    // Assign next position (simple paluwagan: position decides who gets paid in which cycle)
-    $stmtPos = mysqli_prepare($conn, "SELECT COALESCE(MAX(position), 0) + 1 as next_pos FROM group_members WHERE group_id = ?");
-    mysqli_stmt_bind_param($stmtPos, "i", $target_group_id);
-    mysqli_stmt_execute($stmtPos);
-    $posRow = mysqli_fetch_assoc(mysqli_stmt_get_result($stmtPos));
-    $nextPosition = (int)$posRow['next_pos'];
-    mysqli_stmt_close($stmtPos);
+        if ($current_slots >= $max_slots) {
+            throw new Exception("This savings group is already full. No open slots remain.");
+        }
 
-    $stmt = mysqli_prepare($conn, "INSERT INTO group_members (user_id, group_id, status, position) VALUES (?, ?, 'active', ?)");
-    mysqli_stmt_bind_param($stmt, "iii", $user_id, $target_group_id, $nextPosition);
-    $ok = mysqli_stmt_execute($stmt);
-    mysqli_stmt_close($stmt);
+        // 3. Compute next position under lock
+        $stmt = $pdo->prepare(
+            "SELECT COALESCE(MAX(position), 0) + 1 as next_pos 
+             FROM group_members 
+             WHERE group_id = ?"
+        );
+        $stmt->execute([$target_group_id]);
+        $nextPosition = (int)$stmt->fetchColumn();
 
-    if ($ok) {
-        // Log member joined to history
-        $join_desc = "Joined group as position #" . $nextPosition;
-        $jhist = mysqli_prepare($conn, "
+        // 4. Insert the new member
+        $stmt = $pdo->prepare(
+            "INSERT INTO group_members (user_id, group_id, status, position) VALUES (?, ?, 'active', ?)"
+        );
+        $stmt->execute([$user_id, $target_group_id, $nextPosition]);
+
+        // 5. Log the join
+        $hist = $pdo->prepare("
             INSERT INTO group_history (group_id, event_type, actor_user_id, target_user_id, description) 
             VALUES (?, 'member_joined', ?, ?, ?)
         ");
-        if ($jhist) {
-            mysqli_stmt_bind_param($jhist, "iiis", $target_group_id, $user_id, $user_id, $join_desc);
-            mysqli_stmt_execute($jhist);
-            mysqli_stmt_close($jhist);
-        }
+        $hist->execute([
+            $target_group_id, 
+            $user_id, 
+            $user_id, 
+            "Joined group as position #" . $nextPosition
+        ]);
 
-        header("Location: ../php/group_details.php?id=" . $target_group_id . "&success=" . urlencode("Successfully joined! You are position #$nextPosition."));
-        exit();
-    } else {
-        header("Location: ../php/my_groups.php?error=" . urlencode("Failed to join the group. Please try again."));
-        exit();
-    }
+        return [
+            'group_id' => $target_group_id,
+            'position' => $nextPosition
+        ];
+    });
+
+    header("Location: ../php/group_details.php?id=" . $result['group_id'] . 
+           "&success=" . urlencode("Successfully joined! You are position #" . $result['position'] . "."));
+    exit();
+
+} catch (Exception $e) {
+    header("Location: ../php/my_groups.php?error=" . urlencode($e->getMessage()));
+    exit();
 }
-
-// Fallback
-header("Location: ../php/my_groups.php");
-exit();
 ?>

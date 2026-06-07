@@ -74,18 +74,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Verify membership (security)
-    $stmt = mysqli_prepare($conn, "SELECT 1 FROM group_members WHERE member_id = ? AND user_id = ? AND group_id = ? AND status='active' LIMIT 1");
+    $stmt = mysqli_prepare($conn, "SELECT gm.position, g.status FROM group_members gm JOIN groups g ON g.group_id = gm.group_id WHERE gm.member_id = ? AND gm.user_id = ? AND gm.group_id = ? AND gm.status='active' LIMIT 1");
     mysqli_stmt_bind_param($stmt, "iii", $member_id, $user_id, $group_id);
     mysqli_stmt_execute($stmt);
-    $okMember = mysqli_num_rows(mysqli_stmt_get_result($stmt)) > 0;
+    $membership = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
     mysqli_stmt_close($stmt);
-    if (!$okMember) {
+
+    if (!$membership) {
         header("Location: ../php/group_details.php?id=" . $group_id . "&error=" . urlencode("Not authorized for this group."));
         exit();
     }
 
+    // === CRITICAL BUSINESS RULES ===
+    if (($membership['status'] ?? 'pending') !== 'active') {
+        header("Location: ../php/group_details.php?id=" . $group_id . "&error=" . urlencode("This group has not been activated yet. Contributions are only allowed after activation."));
+        exit();
+    }
+
+    $user_position = (int)($membership['position'] ?? 0);
+    if ($user_position > 0 && $user_position === $cycle_number) {
+        header("Location: ../php/group_details.php?id=" . $group_id . "&error=" . urlencode("You are the receiver for Cycle #{$cycle_number}. Receivers do not contribute to their own payout cycle."));
+        exit();
+    }
+
     // Find the pre-created cycle (we now generate all cycles on group creation)
-    $stmt = mysqli_prepare($conn, "SELECT cycle_id FROM cycles WHERE group_id = ? AND cycle_number = ? LIMIT 1");
+    $stmt = mysqli_prepare($conn, "SELECT cycle_id, payout_status FROM cycles WHERE group_id = ? AND cycle_number = ? LIMIT 1");
     mysqli_stmt_bind_param($stmt, "ii", $group_id, $cycle_number);
     mysqli_stmt_execute($stmt);
     $cres = mysqli_stmt_get_result($stmt);
@@ -94,6 +107,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (!$cycle) {
         header("Location: ../php/group_details.php?id=" . $group_id . "&error=" . urlencode("Cycle not found for this group."));
+        exit();
+    }
+    if (($cycle['payout_status'] ?? 'pending') === 'released') {
+        header("Location: ../php/group_details.php?id=" . $group_id . "&error=" . urlencode("This cycle has already been paid out."));
         exit();
     }
     $cycle_id = (int)$cycle['cycle_id'];

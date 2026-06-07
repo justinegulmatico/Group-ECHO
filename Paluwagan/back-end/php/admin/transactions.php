@@ -38,6 +38,7 @@ $toast_message = "";
 $toast_type = "";
 
 // Auto-create wallet_requests table if it doesn't exist yet (prevents "table does not exist" errors)
+// and ensure it has all required columns (including reviewed_by / reviewed_at for older installs)
 $table_check = mysqli_query($conn, "SHOW TABLES LIKE 'wallet_requests'");
 if (!($table_check && mysqli_num_rows($table_check) > 0)) {
     $create_sql = "
@@ -59,6 +60,19 @@ if (!($table_check && mysqli_num_rows($table_check) > 0)) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
     ";
     mysqli_query($conn, $create_sql);
+} else {
+    // Table exists — add any missing columns (reviewed_by / reviewed_at) so old tables don't break prepare()
+    $columns_to_ensure = [
+        'reviewed_by' => "int(11) DEFAULT NULL AFTER `payment_method`",
+        'reviewed_at' => "datetime DEFAULT NULL AFTER `reviewed_by`"
+    ];
+    foreach ($columns_to_ensure as $col => $definition) {
+        $col_check = mysqli_query($conn, "SHOW COLUMNS FROM `wallet_requests` LIKE '$col'");
+        if (!($col_check && mysqli_num_rows($col_check) > 0)) {
+            $alter_sql = "ALTER TABLE `wallet_requests` ADD COLUMN `$col` $definition";
+            mysqli_query($conn, $alter_sql);
+        }
+    }
 }
 
 // ─── HANDLE APPROVE / DECLINE ACTIONS + ADMIN DIRECT DEPOSIT ───
@@ -107,13 +121,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $toast_type = "error";
                     }
                 } else {
-                    $toast_message = "Failed to prepare database statement for credit.";
+                    $toast_message = "Failed to process the credit.";
                     $toast_type = "error";
                 }
             }
         }
 
-        header("Location: transactions.php?success=" . urlencode($toast_message));
+        header("Location: transactions.php?success=" . urlencode($toast_message) . "&type=" . urlencode($toast_type));
         exit();
     }
 
@@ -124,27 +138,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Fetch the request to know type/amount/user for potential immediate effects (balance computed on fly)
         $stmt = mysqli_prepare($conn, "SELECT * FROM wallet_requests WHERE request_id = ? AND status = 'pending' LIMIT 1");
-        mysqli_stmt_bind_param($stmt, "i", $req_id);
-        mysqli_stmt_execute($stmt);
-        $req = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
-        mysqli_stmt_close($stmt);
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "i", $req_id);
+            mysqli_stmt_execute($stmt);
+            $req = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+            mysqli_stmt_close($stmt);
+        } else {
+            $req = null;
+            // Do not expose raw DB errors in the UI toast.
+            $toast_message = "Failed to process the request.";
+            $toast_type = "error";
+        }
 
         if ($req) {
             $stmt = mysqli_prepare($conn, "UPDATE wallet_requests SET status = ?, reviewed_by = ?, reviewed_at = NOW() WHERE request_id = ?");
-            mysqli_stmt_bind_param($stmt, "sii", $new_status, $admin_id, $req_id);
-            mysqli_stmt_execute($stmt);
-            mysqli_stmt_close($stmt);
+            if ($stmt) {
+                mysqli_stmt_bind_param($stmt, "sii", $new_status, $admin_id, $req_id);
+                $ok = mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
 
-            $type_label = ucfirst($req['type']);
-            $toast_message = "Request #{$req_id} ({$type_label} ₱" . number_format($req['amount'], 2) . ") marked as {$new_status}.";
-            $toast_type = ($new_status === 'approved') ? "success" : "error";
+                if ($ok) {
+                    $type_label = ucfirst($req['type']);
+                    $toast_message = "Request #{$req_id} ({$type_label} ₱" . number_format($req['amount'], 2) . ") marked as {$new_status}.";
+                    $toast_type = ($new_status === 'approved') ? "success" : "error";
+                } else {
+                    // Do not expose raw DB errors in the UI toast.
+                    $toast_message = "Failed to process the request.";
+                    $toast_type = "error";
+                }
+            } else {
+                // Do not expose raw DB errors (like missing columns) in the UI toast.
+                // The column issue should be fixed by running the ALTER TABLE from the schema.
+                $toast_message = "Failed to process the request.";
+                $toast_type = "error";
+            }
         } else {
             $toast_message = "Request not found or already processed.";
             $toast_type = "error";
         }
 
         // Redirect to avoid resubmission
-        header("Location: transactions.php?success=" . urlencode($toast_message));
+        header("Location: transactions.php?success=" . urlencode($toast_message) . "&type=" . urlencode($toast_type));
         exit();
     }
 }

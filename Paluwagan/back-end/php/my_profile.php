@@ -84,14 +84,6 @@ mysqli_stmt_close($stmt);
 
 $net_position = $total_received - $total_contributed;
 
-// Profile completeness (simple student-friendly calculation)
-$completeness = 40; // base
-if (!empty($user_data['phone'])) $completeness += 15;
-if (!empty($user_data['occupation'])) $completeness += 15;
-if (!empty($user_data['address'])) $completeness += 15;
-if ($active_groups > 0) $completeness += 15;
-$completeness = min(100, $completeness);
-
 // Include the view
 include "../../front-end/views/my_profile-view.php";
 ?>

@@ -19,6 +19,8 @@ $is_nested_process = (strpos($_SERVER['PHP_SELF'], '/process/') !== false);
 $is_admin_sub = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false);
 $prefix = $is_nested_process ? '../' : ($is_admin_sub ? '../' : '');
 
+$current_page = basename($_SERVER['PHP_SELF']);
+
 $js_path = $is_admin_sub ? '../../../front-end/js/' : '../../front-end/js/';
 $js_file = __DIR__ . '/../../js/sidebar.js';
 $js_version = file_exists($js_file) ? filemtime($js_file) : time();
@@ -32,6 +34,7 @@ $js_version = file_exists($js_file) ? filemtime($js_file) : time();
   </div>
 
   <nav class="sidebar-nav">
+    <?php if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin'): ?>
     <div class="sidebar-section-label">Main</div>
 
     <a href="<?= $prefix ?>dashboard.php" class="sidebar-nav-item <?= ($current_page == 'dashboard.php') ? 'active' : '' ?>">
@@ -54,6 +57,7 @@ $js_version = file_exists($js_file) ? filemtime($js_file) : time();
       </svg>
       <span class="nav-text">Payments</span>
     </a>
+    <?php endif; ?>
 
     <a href="<?= $prefix ?>my_profile.php" class="sidebar-nav-item <?= ($current_page == 'my_profile.php') ? 'active' : '' ?>">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -64,19 +68,25 @@ $js_version = file_exists($js_file) ? filemtime($js_file) : time();
 
     <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
       <div class="sidebar-section-label" style="margin-top: 20px;">Admin</div>
-      <a href="<?= $prefix ?>admin/index.php" class="sidebar-nav-item <?= (strpos($_SERVER['PHP_SELF'], '/admin/') !== false && strpos($_SERVER['PHP_SELF'], 'transactions') === false) ? 'active' : '' ?>">
+      <a href="<?= $prefix ?>admin/index.php" class="sidebar-nav-item <?= ($current_page === 'index.php' && strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? 'active' : '' ?>">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           <polyline points="9 12 11 14 15 10"/>
         </svg>
         <span class="nav-text">Admin Panel</span>
       </a>
-      <a href="<?= $prefix ?>admin/transactions.php" class="sidebar-nav-item <?= (strpos($_SERVER['PHP_SELF'], 'transactions') !== false) ? 'active' : '' ?>">
+      <a href="<?= $prefix ?>admin/transactions.php" class="sidebar-nav-item <?= ($current_page === 'transactions.php') ? 'active' : '' ?>">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
           <path d="M6 15h.01M10 15h4"/>
         </svg>
         <span class="nav-text">Transaction Approvals</span>
+      </a>
+      <a href="<?= $prefix ?>admin/analytics.php" class="sidebar-nav-item <?= ($current_page === 'analytics.php') ? 'active' : '' ?>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>
+        </svg>
+        <span class="nav-text">OLAP Analytics</span>
       </a>
     <?php endif; ?>
   </nav>

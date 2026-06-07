@@ -65,6 +65,17 @@ if (!$current_group) {
     $my_member_id = (int)$current_group['member_id'];
 }
 
+// Load current user's position in the rotation (important for receiver checks)
+$my_position = 0;
+if ($my_member_id > 0) {
+    $pos_stmt = mysqli_prepare($conn, "SELECT position FROM group_members WHERE member_id = ? LIMIT 1");
+    mysqli_stmt_bind_param($pos_stmt, "i", $my_member_id);
+    mysqli_stmt_execute($pos_stmt);
+    $pos_row = mysqli_fetch_assoc(mysqli_stmt_get_result($pos_stmt));
+    mysqli_stmt_close($pos_stmt);
+    $my_position = (int)($pos_row['position'] ?? 0);
+}
+
 // Compat: many older creates left cycle_length NULL; fall back to max_members for UI
 if (empty($current_group['cycle_length']) || (int)$current_group['cycle_length'] < 1) {
     $current_group['cycle_length'] = (int)($current_group['max_members'] ?: 5);
@@ -445,6 +456,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['record_contribution'])) {
         $cycle_id = (int)$_POST['cycle_id'];
         $amount = (float)$_POST['amount'];
+
+        // === Load cycle info + group status for validation
+        $cycStmt = mysqli_prepare($conn, "SELECT cy.cycle_number, cy.payout_status, g.status FROM cycles cy JOIN groups g ON g.group_id = cy.group_id WHERE cy.cycle_id = ? LIMIT 1");
+        mysqli_stmt_bind_param($cycStmt, "i", $cycle_id);
+        mysqli_stmt_execute($cycStmt);
+        $cycRow = mysqli_fetch_assoc(mysqli_stmt_get_result($cycStmt));
+        mysqli_stmt_close($cycStmt);
+
+        $chosen_cycle_number = (int)($cycRow['cycle_number'] ?? 0);
+        $group_status        = $cycRow['status'] ?? 'pending';
+
+        // === CRITICAL: Prevent contributions before activation
+        if ($group_status !== 'active') {
+            $action_msg = "This group has not been activated yet. Contributions are only allowed after activation.";
+            header("Location: group_details.php?id=$group_id&error=" . urlencode($action_msg));
+            exit();
+        }
+
+        // === CRITICAL: Receiver cannot contribute to their own cycle
+        if ($my_position > 0 && $my_position === $chosen_cycle_number) {
+            $action_msg = "You are the receiver for Cycle #{$chosen_cycle_number}. Receivers do not contribute to their own payout cycle.";
+            header("Location: group_details.php?id=$group_id&error=" . urlencode($action_msg));
+            exit();
+        }
 
         // Prevent duplicate for same member + cycle
         $chk = mysqli_prepare($conn, "SELECT 1 FROM contributions WHERE cycle_id=? AND member_id=?");
