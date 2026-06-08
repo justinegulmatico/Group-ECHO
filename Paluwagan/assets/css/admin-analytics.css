@@ -1,0 +1,224 @@
+/* ================================================
+   TrustFund — Admin Analytics (OLAP) Page Styles
+   ================================================ */
+
+/* Match the project's light beige/cream background and card styles */
+body {
+  background: #F4EFEA;
+}
+
+/* Keep topbar and page styles consistent with other admin pages */
+.topbar-title {
+  font-family: var(--font-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* Custom card for filters and sections to match .table-wrap style used in transactions.php */
+.analysis-card {
+  background: #fff;
+  border: 1px solid #E4DDD4;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+/* Granularity buttons styled to feel like part of the project */
+.granularity-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1.5px solid #D1C9BE;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.granularity-btn.active {
+  background: #166534;
+  color: #fff;
+  border-color: #166534;
+}
+.granularity-btn:hover:not(.active) {
+  background: #F5F0E8;
+}
+
+/* Chart containers */
+.chart-card {
+  background: #fff;
+  border: 1px solid #E4DDD4;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.chart-title-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Modern per-chart PNG download buttons - matches site beige/cream + green theme */
+.chart-png-btn {
+  font-size: 10.5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #D1C9BE;
+  background: #fff;
+  color: #6B6560;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.03);
+}
+.chart-png-btn:hover {
+  background: #F5F0E8;
+  border-color: #166534;
+  color: #166534;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+.chart-png-btn:active {
+  transform: translateY(0.5px);
+}
+.chart-png-btn i {
+  font-size: 10px;
+}
+
+/* Analytics stat cards should not look clickable */
+.stat-card {
+  cursor: default;
+}
+
+/* Analytics specific helpers */
+.analytics-label {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.analytics-granularity-label {
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.analytics-granularity-hint {
+  font-size: 11px;
+  color: #6B6560;
+  margin-top: 4px;
+}
+
+.analytics-export-note {
+  font-size: 11.5px;
+  color: #6B6560;
+  margin-top: 10px;
+}
+
+.analytics-tip {
+  font-size: 12px;
+  color: #6B6560;
+  background: #F5F0E8;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+/* Chart canvas containers */
+.chart-canvas-container {
+  height: 280px;
+}
+.chart-canvas-container.pie {
+  height: 260px;
+}
+
+/* Stat cards grid override for analytics (4 equal columns) */
+.analytics-stat-cards {
+  margin-bottom: 24px;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Export buttons — keep Tailwind look but ensure consistency */
+.analytics-export-btn {
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+}
+.analytics-export-btn.csv {
+  background: #166534;
+}
+.analytics-export-btn.csv:hover {
+  background: #14532d;
+}
+.analytics-export-btn.pdf {
+  background: #E15225;
+}
+.analytics-export-btn.pdf:hover {
+  background: #c93d12;
+}
+
+/* Sync buttons in topbar */
+.analytics-sync-btn {
+  padding: 5px 11px;
+  font-size: 12px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.analytics-sync-btn.full {
+  color: #c2410f;
+  border-color: #f5c7b0;
+}
+
+/* Sync result banner */
+#sync-result {
+  display: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 12px;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Last ETL timestamp in topbar */
+.analytics-last-sync {
+  font-size: 12px;
+  color: #6B6560;
+  white-space: nowrap;
+}
+
+/* Hero title override */
+.analytics-hero-title {
+  font-size: 22px;
+}

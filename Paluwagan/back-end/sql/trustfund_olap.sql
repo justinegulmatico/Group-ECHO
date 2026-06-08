@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS dim_group (
     privacy             ENUM('public','private'),
     contribution_amount DECIMAL(10,2),
     max_members         INT,
-    frequency           ENUM('weekly','monthly'),
+    frequency           ENUM('weekly','biweekly','monthly'),
     status              VARCHAR(20),
     created_by_user_id  INT,
     created_at          DATETIME,

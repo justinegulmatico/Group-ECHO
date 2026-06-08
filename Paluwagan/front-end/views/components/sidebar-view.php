@@ -21,8 +21,8 @@ $prefix = $is_nested_process ? '../' : ($is_admin_sub ? '../' : '');
 
 $current_page = basename($_SERVER['PHP_SELF']);
 
-$js_path = $is_admin_sub ? '../../../front-end/js/' : '../../front-end/js/';
-$js_file = __DIR__ . '/../../js/sidebar.js';
+$js_path = $is_admin_sub ? '../../../assets/js/' : '../../assets/js/';
+$js_file = __DIR__ . '/../../../assets/js/sidebar.js';
 $js_version = file_exists($js_file) ? filemtime($js_file) : time();
 ?>
 <aside class="sidebar">
@@ -97,14 +97,84 @@ $js_version = file_exists($js_file) ? filemtime($js_file) : time();
       <div class="sidebar-user-name" title="<?= htmlspecialchars($full_name); ?>"><?= htmlspecialchars($full_name); ?></div>
       <div class="sidebar-user-role" style="text-transform: capitalize;"><?= htmlspecialchars($user_role); ?></div>
     </div>
-    <a href="<?= $prefix ?>logout.php" class="sidebar-logout-btn" title="Sign Out">
+    <button type="button" class="sidebar-logout-btn" id="logout-trigger" data-logout-url="<?= $prefix ?>logout.php" title="Sign Out" style="font:inherit; padding:0; margin:0; appearance:none; -webkit-appearance:none;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
         <polyline points="16 17 21 12 16 7"/>
         <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>
-    </a>
+    </button>
   </div>
 </aside>
+
+<!-- Logout Confirmation Modal -->
+<div id="logout-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:99999; align-items:center; justify-content:center;">
+  <div onclick="event.target.id==='logout-modal' && hideLogoutModal()" style="position:absolute; inset:0;"></div>
+  <div style="position:relative; background:#fff; border:1.5px solid #E4DDD4; border-radius:16px; padding:28px 32px; width:100%; max-width:340px; box-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); text-align:center;">
+    <div style="margin-bottom:16px;">
+      <div style="width:48px; height:48px; margin:0 auto 12px; background:#FEF2F2; border-radius:9999px; display:flex; align-items:center; justify-content:center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c93d12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </div>
+      <div style="font-size:18px; font-weight:700; color:#1f2937; margin-bottom:6px;">Are you sure to log out?</div>
+      <div style="font-size:13.5px; color:#6B6560; line-height:1.4;">You will be signed out of your account and redirected to the login page.</div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:20px;">
+      <button type="button" onclick="hideLogoutModal()" style="flex:1; padding:10px 16px; font-size:14px; font-weight:600; border:1.5px solid #D1C9BE; background:#fff; color:#374151; border-radius:10px; cursor:pointer;">
+        Cancel
+      </button>
+      <button type="button" id="confirm-logout-btn" style="flex:1; padding:10px 16px; font-size:14px; font-weight:600; border:none; background:#c93d12; color:#fff; border-radius:10px; cursor:pointer;">
+        Log out
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const trigger = document.getElementById('logout-trigger');
+    const modal = document.getElementById('logout-modal');
+    const confirmBtn = document.getElementById('confirm-logout-btn');
+
+    if (!trigger || !modal) return;
+
+    function showLogoutModal() {
+      modal.style.display = 'flex';
+      // Focus the cancel button for accessibility
+      setTimeout(() => {
+        const cancel = modal.querySelector('button');
+        if (cancel) cancel.focus();
+      }, 10);
+    }
+
+    window.hideLogoutModal = function() {
+      modal.style.display = 'none';
+    };
+
+    trigger.addEventListener('click', function(e) {
+      e.preventDefault();
+      showLogoutModal();
+    });
+
+    // Confirm logout
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', function() {
+        const url = trigger.getAttribute('data-logout-url') || 'logout.php';
+        window.location.href = url;
+      });
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modal.style.display !== 'none') {
+        hideLogoutModal();
+      }
+    });
+  })();
+</script>
 
 <script src="<?= $js_path ?>sidebar.js?v=<?= $js_version ?>"></script>

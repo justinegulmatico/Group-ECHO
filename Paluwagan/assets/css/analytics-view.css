@@ -1,0 +1,316 @@
+/* ================================================
+   CLEAN, STUDENT-FRIENDLY STYLES FOR ANALYTICS
+   (extracted from analytics-view.php)
+   ================================================ */
+
+:root {
+    --primary: #166534;
+    --accent: #E15225;
+}
+
+body {
+    background: #F8F5F1;
+}
+
+.analytics-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px 36px;
+}
+
+/* Header */
+.analytics-header {
+    background: linear-gradient(135deg, #1f2937, #111827);
+    color: white;
+    border-radius: 16px;
+    padding: 28px 36px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.analytics-header h1 {
+    font-size: 29px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.analytics-header p {
+    margin: 6px 0 0;
+    opacity: 0.75;
+    font-size: 14px;
+}
+
+/* KPI Cards */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.kpi-card {
+    background: white;
+    border: 1px solid #E5E0D8;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.kpi-label {
+    font-size: 13px;
+    color: #6B6560;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.kpi-value {
+    font-size: 30px;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1.1;
+}
+
+.kpi-value.green { color: #166534; }
+.kpi-value.orange { color: #E15225; }
+
+/* Filter Section */
+.filters-card {
+    background: white;
+    border: 1px solid #E5E0D8;
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-bottom: 24px;
+}
+
+.filters-title {
+    font-weight: 600;
+    margin-bottom: 14px;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.filter-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B6560;
+    margin-bottom: 6px;
+}
+
+.filter-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #D1C9BE;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+}
+
+.filter-group select:focus {
+    outline: none;
+    border-color: #166534;
+}
+
+/* Time Granularity (Roll-up / Drill-down) */
+.granularity-buttons {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.granularity-btn {
+    padding: 9px 18px;
+    border: 1.5px solid #D1C9BE;
+    background: white;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.granularity-btn.active {
+    background: #166534;
+    color: white;
+    border-color: #166534;
+}
+
+.granularity-btn:hover:not(.active) {
+    background: #F5F0E8;
+}
+
+/* Chart Cards */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.chart-card {
+    background: white;
+    border: 1px solid #E5E0D8;
+    border-radius: 12px;
+    padding: 22px 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.chart-title {
+    font-weight: 600;
+    color: #374151;
+    font-size: 15.5px;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+.chart-help {
+    font-size: 11px;
+    color: #6B6560;
+    margin-top: 8px;
+}
+
+/* Export Section */
+.export-section {
+    background: white;
+    border: 1px solid #E5E0D8;
+    border-radius: 12px;
+    padding: 22px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.export-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.export-btn.csv {
+    background: #166534;
+    color: white;
+}
+
+.export-btn.pdf {
+    background: #E15225;
+    color: white;
+}
+
+.export-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Loading state */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Inline style replacements */
+.filter-note {
+    font-size: 11px;
+    font-weight: 400;
+    color: #9CA3AF;
+}
+
+.granularity-section {
+    margin-top: 18px;
+}
+
+.granularity-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B6560;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.granularity-hint {
+    color: #9CA3AF;
+    font-size: 11px;
+}
+
+.chart-png-btn {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid #D1C9BE;
+    background: white;
+    cursor: pointer;
+}
+
+.export-label {
+    margin-right: 12px;
+}
+
+.export-note {
+    margin-left: auto;
+    font-size: 12px;
+    color: #6B6560;
+}
+
+.student-note {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #6B6560;
+    background: #F5F0E8;
+    padding: 12px 16px;
+    border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+    .analytics-container {
+        padding: 16px 20px;
+    }
+}
+
+/* Use even more width on large screens */
+@media (min-width: 1400px) {
+    .analytics-container {
+        max-width: 1700px;
+        padding: 20px 48px;
+    }
+}
+
+@media (min-width: 1800px) {
+    .analytics-container {
+        max-width: 1850px;
+        padding: 24px 64px;
+    }
+}
