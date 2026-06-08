@@ -60,7 +60,7 @@ CREATE TABLE `groups` (
   `privacy` enum('public','private') DEFAULT 'public',
   `contribution_amount` decimal(10,2) DEFAULT NULL,
   `max_members` int(11) NOT NULL DEFAULT 5,
-  `frequency` enum('weekly','monthly') DEFAULT 'monthly',
+  `frequency` enum('weekly','biweekly','monthly') DEFAULT 'monthly',
   `cycle_length` int(11) DEFAULT NULL,
   `current_cycle` int(11) NOT NULL DEFAULT 1,
   `invite_code` varchar(10) DEFAULT NULL,
@@ -74,6 +74,8 @@ CREATE TABLE `groups` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
+
+
 
 --
 -- Table structure for table `group_members`

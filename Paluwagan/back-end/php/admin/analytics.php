@@ -32,11 +32,52 @@ $olap = OlapDatabase::getInstance()->getPdo();
 $groups_stmt = $olap->query("SELECT group_key, group_name FROM dim_group ORDER BY group_name ASC");
 $groups = $groups_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get available years (from dim_time)
-$years_stmt = $olap->query("SELECT DISTINCT year FROM dim_time ORDER BY year DESC LIMIT 6");
-$available_years = $years_stmt->fetchAll(PDO::FETCH_COLUMN);
+// Get available years directly from the OLAP fact data (most reliable for "what years do I actually have?").
+// We prefer YEAR(created_at) on the facts themselves so the filter reflects real data in the warehouse
+// (e.g. 2026 transactions will appear even if dim_time join has issues or time_key fallback was used during ETL).
+// Falls back to the dim_time join if created_at is not populated.
+try {
+    $years_stmt = $olap->query("
+        SELECT DISTINCT YEAR(created_at) as y
+        FROM fact_transactions
+        WHERE created_at IS NOT NULL
+        ORDER BY y DESC
+    ");
+    $available_years = $years_stmt->fetchAll(PDO::FETCH_COLUMN);
+} catch (Throwable $e) {
+    $available_years = [];
+}
+
 if (empty($available_years)) {
-    $available_years = [date('Y'), date('Y')-1, date('Y')-2];
+    // Fallback: derive from the time dimension rows that are actually referenced by facts
+    try {
+        $years_stmt = $olap->query("
+            SELECT DISTINCT dt.year 
+            FROM fact_transactions ft
+            JOIN dim_time dt ON ft.time_key = dt.time_key
+            ORDER BY dt.year DESC
+        ");
+        $available_years = $years_stmt->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Throwable $e) {
+        $available_years = [];
+    }
+}
+
+if (empty($available_years)) {
+    // Still nothing → just show the "All Years" option (no year-specific slices available)
+    $available_years = [];
+}
+
+// Last ETL sync timestamp (shown in header)
+$lastSyncTimestamp = null;
+try {
+    $lsStmt = $olap->prepare("SELECT last_sync_timestamp FROM etl_control ORDER BY last_sync_timestamp DESC LIMIT 1");
+    $lsStmt->execute();
+    $row = $lsStmt->fetch(PDO::FETCH_ASSOC);
+    $lastSyncTimestamp = $row['last_sync_timestamp'] ?? null;
+} catch (Throwable $e) {
+    // etl_control table may not exist yet (no sync run)
+    $lastSyncTimestamp = null;
 }
 
 // Default summary for initial render (no filters)
@@ -68,6 +109,7 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
   <!-- Project CSS (exact same as other admin pages) -->
   <link rel="stylesheet" href="../../../assets/css/global.css?v=<?= filemtime(__DIR__ . '/../../../assets/css/global.css') ?>" />
   <link rel="stylesheet" href="../../../assets/css/admin-panel.css?v=<?= filemtime(__DIR__ . '/../../../assets/css/admin-panel.css') ?>" />
+  <link rel="stylesheet" href="../../../assets/css/admin-analytics.css?v=<?= filemtime(__DIR__ . '/../../../assets/css/admin-analytics.css') ?>" />
 
   <!-- Chart.js via CDN (student-friendly, no build tools) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -79,80 +121,6 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
   <!-- Tailwind via CDN for additional clean components (keeps modern feel while matching project) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
-  <style>
-    /* Match the project's light beige/cream background and card styles */
-    body {
-      background: #F4EFEA;
-    }
-    
-    /* Keep topbar and page styles consistent with other admin pages */
-    .topbar-title {
-      font-family: var(--font-body);
-      font-weight: 700;
-      color: var(--color-text-primary);
-    }
-
-    /* Custom card for filters and sections to match .table-wrap style used in transactions.php */
-    .analysis-card {
-      background: #fff;
-      border: 1px solid #E4DDD4;
-      border-radius: 12px;
-      padding: 20px 24px;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    }
-
-    .section-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 12px;
-    }
-
-    /* Granularity buttons styled to feel like part of the project */
-    .granularity-btn {
-      padding: 8px 16px;
-      font-size: 13px;
-      font-weight: 600;
-      border: 1.5px solid #D1C9BE;
-      background: #fff;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .granularity-btn.active {
-      background: #166534;
-      color: #fff;
-      border-color: #166534;
-    }
-    .granularity-btn:hover:not(.active) {
-      background: #F5F0E8;
-    }
-
-    /* Chart containers */
-    .chart-card {
-      background: #fff;
-      border: 1px solid #E4DDD4;
-      border-radius: 12px;
-      padding: 18px 20px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    }
-
-    .chart-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .stat-card {
-      cursor: default;
-    }
-  </style>
 </head>
 <body>
   <div class="app-layout">
@@ -165,15 +133,37 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
         <div class="topbar-left">
           <span class="topbar-title">Admin → OLAP Analytics</span>
         </div>
-        <div class="topbar-right"></div>
+        <div class="topbar-right" style="display:flex; align-items:center; gap:10px;">
+          <?php if ($lastSyncTimestamp): ?>
+            <span id="last-sync-text" class="analytics-last-sync">
+              Last ETL: <strong><?= htmlspecialchars(date('M j, H:i', strtotime($lastSyncTimestamp))) ?></strong>
+            </span>
+          <?php else: ?>
+            <span id="last-sync-text" class="analytics-last-sync">No ETL sync yet</span>
+          <?php endif; ?>
+
+          <button type="button" id="btn-sync" onclick="triggerETLSync(false)"
+                  class="btn-outline analytics-sync-btn">
+            <i class="fas fa-sync-alt"></i>
+            <span>ETL Sync</span>
+          </button>
+
+          <button type="button" id="btn-full-sync" onclick="triggerETLSync(true)"
+                  class="btn-outline analytics-sync-btn full">
+            Full Sync
+          </button>
+        </div>
       </header>
 
       <div class="page-content">
 
+        <!-- Sync result banner (populated by JS when ETL Sync / Full Sync is used) -->
+        <div id="sync-result"></div>
+
         <!-- Admin Hero Header - matches style in transactions.php and index.php -->
         <div class="admin-hero" style="margin-bottom: 20px; padding: 20px 24px;">
           <div>
-            <div class="admin-hero-title" style="font-size: 22px;">OLAP Analytics Dashboard</div>
+            <div class="admin-hero-title analytics-hero-title">OLAP Analytics Dashboard</div>
             <div class="admin-hero-sub">
               Slice, Dice, Roll-up and Drill-down analysis on the TrustFund data warehouse.
             </div>
@@ -181,7 +171,7 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
         </div>
 
         <!-- 1. TOP SUMMARY CARDS - Using the exact stat-cards system from other admin pages -->
-        <div class="stat-cards" style="margin-bottom: 24px; grid-template-columns: repeat(4, 1fr);">
+        <div class="stat-cards analytics-stat-cards">
           <div class="stat-card">
             <div class="stat-card-label">Total Contributions</div>
             <div class="stat-card-value green" id="stat-contributions">₱<?= number_format($initial_summary['total_contributions'], 2) ?></div>
@@ -213,7 +203,7 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Year -->
             <div>
-              <label class="input-label" style="font-size: 12px; margin-bottom: 4px;">Year</label>
+              <label class="input-label analytics-label">Year</label>
               <select id="filter-year" class="input-field" onchange="applyFilters()">
                 <option value="0">All Years</option>
                 <?php foreach ($available_years as $y): ?>
@@ -224,7 +214,7 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
 
             <!-- Quarter -->
             <div>
-              <label class="input-label" style="font-size: 12px; margin-bottom: 4px;">Quarter</label>
+              <label class="input-label analytics-label">Quarter</label>
               <select id="filter-quarter" class="input-field" onchange="applyFilters()">
                 <option value="0">All Quarters</option>
                 <option value="1">Q1 (Jan - Mar)</option>
@@ -236,7 +226,7 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
 
             <!-- Group (Slice) -->
             <div>
-              <label class="input-label" style="font-size: 12px; margin-bottom: 4px;">Group (Slice)</label>
+              <label class="input-label analytics-label">Group (Slice)</label>
               <select id="filter-group" class="input-field" onchange="applyFilters()">
                 <option value="0">All Groups</option>
                 <?php foreach ($groups as $g): ?>
@@ -247,7 +237,7 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
 
             <!-- Transaction Type (Dice) -->
             <div>
-              <label class="input-label" style="font-size: 12px; margin-bottom: 4px;">Transaction Type</label>
+              <label class="input-label analytics-label">Transaction Type</label>
               <select id="filter-type" class="input-field" onchange="applyFilters()">
                 <option value="all">All Transactions</option>
                 <option value="contribution">Contributions Only</option>
@@ -258,13 +248,13 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
 
           <!-- Time Granularity (Roll-up / Drill-down) -->
           <div style="margin-top: 16px;">
-            <label class="input-label" style="font-size: 12px; margin-bottom: 6px;">Time Granularity (Roll-up ↔ Drill-down)</label>
+            <label class="input-label analytics-granularity-label">Time Granularity (Roll-up ↔ Drill-down)</label>
             <div class="flex flex-wrap gap-2">
               <button type="button" class="granularity-btn" data-level="year" onclick="setGranularity('year')">Year (Roll-up)</button>
               <button type="button" class="granularity-btn" data-level="quarter" onclick="setGranularity('quarter')">Quarter</button>
               <button type="button" class="granularity-btn active" data-level="month" onclick="setGranularity('month')">Month (Drill-down)</button>
             </div>
-            <div style="font-size: 11px; color: #6B6560; margin-top: 4px;">
+            <div class="analytics-granularity-hint">
               Higher level = more summarized data. Lower level = more detailed data.
             </div>
           </div>
@@ -276,10 +266,17 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
           <!-- Bar Chart: Contributions by Group -->
           <div class="chart-card">
             <div class="chart-title">
-              <i class="fas fa-chart-bar text-[#166534]"></i>
-              <span>Contributions by Group (Bar)</span>
+              <div class="chart-title-icon">
+                <i class="fas fa-chart-bar text-[#166534]"></i>
+                <span>Contributions by Group (Bar)</span>
+              </div>
+              <button onclick="downloadChartPNG('barChart', 'contributions-by-group')" 
+                      class="chart-png-btn" title="Download this chart as PNG">
+                <i class="fas fa-download"></i>
+                <span>PNG</span>
+              </button>
             </div>
-            <div style="height: 280px;">
+            <div class="chart-canvas-container">
               <canvas id="barChart"></canvas>
             </div>
           </div>
@@ -287,10 +284,17 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
           <!-- Line Chart: Trends Over Time -->
           <div class="chart-card">
             <div class="chart-title">
-              <i class="fas fa-chart-line text-[#166534]"></i>
-              <span>Trends Over Time (Line)</span>
+              <div class="chart-title-icon">
+                <i class="fas fa-chart-line text-[#166534]"></i>
+                <span>Trends Over Time (Line)</span>
+              </div>
+              <button onclick="downloadChartPNG('lineChart', 'trends-over-time')" 
+                      class="chart-png-btn" title="Download this chart as PNG">
+                <i class="fas fa-download"></i>
+                <span>PNG</span>
+              </button>
             </div>
-            <div style="height: 280px;">
+            <div class="chart-canvas-container">
               <canvas id="lineChart"></canvas>
             </div>
           </div>
@@ -298,10 +302,17 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
           <!-- Pie Chart: Payout Distribution -->
           <div class="chart-card lg:col-span-2">
             <div class="chart-title">
-              <i class="fas fa-chart-pie text-[#E15225]"></i>
-              <span>Payout Distribution (Pie)</span>
+              <div class="chart-title-icon">
+                <i class="fas fa-chart-pie text-[#E15225]"></i>
+                <span>Payout Distribution (Pie)</span>
+              </div>
+              <button onclick="downloadChartPNG('pieChart', 'payout-distribution')" 
+                      class="chart-png-btn" title="Download this chart as PNG">
+                <i class="fas fa-download"></i>
+                <span>PNG</span>
+              </button>
             </div>
-            <div style="height: 260px;">
+            <div class="chart-canvas-container pie">
               <canvas id="pieChart"></canvas>
             </div>
           </div>
@@ -314,22 +325,20 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
             <i class="fas fa-download mr-2"></i> Export Current View
           </div>
           <div class="flex flex-wrap gap-3">
-            <button onclick="exportCSV()" 
-                    class="px-5 py-2 bg-[#166534] hover:bg-[#14532d] text-white text-sm font-semibold rounded-lg flex items-center gap-2 transition-colors">
+            <button onclick="exportCSV()" class="analytics-export-btn csv">
               <i class="fas fa-file-csv"></i> Download CSV
             </button>
-            <button onclick="exportPDF()" 
-                    class="px-5 py-2 bg-[#E15225] hover:bg-[#c93d12] text-white text-sm font-semibold rounded-lg flex items-center gap-2 transition-colors">
+            <button onclick="exportPDF()" class="analytics-export-btn pdf">
               <i class="fas fa-file-pdf"></i> Generate PDF Report
             </button>
           </div>
-          <div style="font-size: 11.5px; color: #6B6560; margin-top: 10px;">
+          <div class="analytics-export-note">
             Exports use the currently filtered data shown in the charts and summary cards.
           </div>
         </div>
 
         <!-- Student-friendly note -->
-        <div style="font-size: 12px; color: #6B6560; background: #F5F0E8; padding: 12px 16px; border-radius: 8px; margin-top: 16px;">
+        <div class="analytics-tip">
           <strong>Tip for your defense:</strong> The API uses dynamic <strong>WHERE</strong> clauses for Slice (single group) and Dice (multiple dimensions), 
           while the <strong>time_level</strong> parameter controls the <strong>GROUP BY</strong> for Roll-up / Drill-down.
         </div>
@@ -556,6 +565,61 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
       loadAnalyticsData(newFilters);
     }
 
+    // Download individual chart as high-quality PNG (uses Chart.js toBase64Image when available)
+    function downloadChartPNG(canvasId, filename) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) {
+        console.warn('Chart canvas not found:', canvasId);
+        return;
+      }
+
+      // Prefer the official Chart.js instance method (cleanest output, respects current state)
+      let dataUrl = null;
+      try {
+        if (typeof Chart !== 'undefined' && typeof Chart.getChart === 'function') {
+          const chart = Chart.getChart(canvas);
+          if (chart && typeof chart.toBase64Image === 'function') {
+            dataUrl = chart.toBase64Image('image/png', 1); // 1 = no compression
+          }
+        }
+      } catch (e) {
+        console.warn('Chart.getChart failed, using canvas fallback', e);
+      }
+
+      // Fallback to raw canvas (still works even if Chart.js instance is lost)
+      if (!dataUrl) {
+        dataUrl = canvas.toDataURL('image/png');
+      }
+
+      const link = document.createElement('a');
+      link.download = filename + '.png';
+      link.href = dataUrl;
+      link.click();
+    }
+
+    // Reusable: get PNG data URL for a chart canvas (used by PDF export + download buttons)
+    function getChartImageData(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return null;
+
+      try {
+        if (typeof Chart !== 'undefined' && typeof Chart.getChart === 'function') {
+          const chart = Chart.getChart(canvas);
+          if (chart && typeof chart.toBase64Image === 'function') {
+            return chart.toBase64Image('image/png', 1); // high quality
+          }
+        }
+      } catch (e) {
+        console.warn('Chart.getChart failed for', canvasId, e);
+      }
+      // Fallback
+      try {
+        return canvas.toDataURL('image/png');
+      } catch (e) {
+        return null;
+      }
+    }
+
     // Export current data as CSV (simple client-side generation)
     function exportCSV() {
       if (!lastData) {
@@ -709,16 +773,164 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
         margin: { right: 15 }
       });
 
-      // Footer note
-      const footerY = doc.lastAutoTable.finalY + 12;
+      // ============================================
+      // ANALYTICS CHARTS (embedded images)
+      // ============================================
+      let y = doc.lastAutoTable.finalY + 14;
+      doc.setFontSize(14);
+      doc.setTextColor(0);
+      doc.text('Analytics Charts', 20, y);
+      y += 7;
+
+      const imgWidth = 170; // mm (fits well in A4 with margins)
+
+      function addChartImage(canvasId, label, defaultHeight) {
+        const dataUrl = getChartImageData(canvasId);
+        if (!dataUrl) return y;
+
+        // Page break if needed before this chart
+        if (y > 230) {
+          doc.addPage();
+          y = 20;
+        }
+
+        doc.setFontSize(11);
+        doc.text(label, 20, y);
+        y += 3;
+
+        // Try to preserve aspect ratio from the canvas backing store
+        let imgHeight = defaultHeight;
+        const canvasEl = document.getElementById(canvasId);
+        if (canvasEl && canvasEl.width > 0 && canvasEl.height > 0) {
+          const ratio = canvasEl.height / canvasEl.width;
+          imgHeight = Math.max(35, Math.min(imgWidth * ratio, 95));
+        }
+
+        try {
+          doc.addImage(dataUrl, 'PNG', 20, y, imgWidth, imgHeight);
+        } catch (e) {
+          console.warn('Failed to add chart image to PDF:', canvasId, e);
+        }
+        y += imgHeight + 8;
+        return y;
+      }
+
+      // Add the three analytics charts
+      y = addChartImage('barChart', 'Contributions by Group', 58);
+      y = addChartImage('lineChart', 'Trends Over Time', 52);
+      y = addChartImage('pieChart', 'Payout Distribution', 68);
+
+      // Footer note (after charts)
+      if (y > 240) {
+        doc.addPage();
+        y = 20;
+      }
       doc.setFontSize(9);
       doc.setTextColor(100);
-      doc.text('Report generated from TrustFund OLAP data warehouse.', 20, footerY);
-      doc.text('Data reflects current filter selections (Slice / Dice / Roll-up).', 20, footerY + 5);
+      doc.text('Report generated from TrustFund OLAP data warehouse.', 20, y);
+      doc.text('Data reflects current filter selections (Slice / Dice / Roll-up). Charts captured from current view.', 20, y + 5);
 
       // Save the PDF
       const filename = `TrustFund_OLAP_Analytics_${new Date().toISOString().slice(0,10)}.pdf`;
       doc.save(filename);
+    }
+
+    // ============================================
+    // ETL SYNC / FULL SYNC (header buttons)
+    // ============================================
+    async function triggerETLSync(isFull) {
+      const btnSync = document.getElementById('btn-sync');
+      const btnFull = document.getElementById('btn-full-sync');
+      const resultEl = document.getElementById('sync-result');
+      const lastSyncText = document.getElementById('last-sync-text');
+
+      if (!btnSync || !btnFull) return;
+
+      // Confirmation for full sync (can be heavy)
+      if (isFull && !confirm('Full Sync will clear and reload ALL data from the beginning.\nThis can take significantly longer. Continue?')) {
+        return;
+      }
+
+      // Disable buttons + show loading state
+      const originalSyncHTML = btnSync.innerHTML;
+      const originalFullHTML = btnFull.innerHTML;
+
+      btnSync.disabled = true;
+      btnFull.disabled = true;
+      btnSync.style.opacity = '0.6';
+      btnFull.style.opacity = '0.6';
+
+      btnSync.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Syncing...</span>';
+      if (isFull) {
+        btnFull.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Full Sync...</span>';
+      }
+
+      // Show processing banner
+      resultEl.style.display = 'flex';
+      resultEl.style.background = '#fef3c7';
+      resultEl.style.border = '1px solid #fde68a';
+      resultEl.style.color = '#92400e';
+      resultEl.innerHTML = isFull 
+        ? '<i class="fas fa-spinner fa-spin"></i> <span>Running <strong>Full ETL Sync</strong> (this may take a while)...</span>'
+        : '<i class="fas fa-spinner fa-spin"></i> <span>Running incremental ETL Sync...</span>';
+
+      try {
+        const url = `../../api/olap_sync.php${isFull ? '?full=1' : ''}`;
+        const res = await fetch(url, { method: 'GET' });
+        const data = await res.json();
+
+        if (data.success) {
+          // Success UI
+          resultEl.style.background = '#dcfce7';
+          resultEl.style.border = '1px solid #bbf7d0';
+          resultEl.style.color = '#166534';
+          resultEl.innerHTML = `<i class="fas fa-check-circle"></i> <span><strong>Sync complete!</strong> ${data.message || 'Data warehouse updated.'}</span>`;
+
+          // Update last sync text in header (immediate feedback)
+          if (lastSyncText) {
+            lastSyncText.innerHTML = `Last ETL: <strong>just now</strong>`;
+          }
+
+          // Refresh the analytics charts with current filters so new data shows immediately
+          try {
+            const currentFilters = getFiltersFromUI();
+            await loadAnalyticsData(currentFilters);
+          } catch (e) {
+            console.warn('Could not auto-refresh analytics after sync:', e);
+          }
+
+          // Hide the success banner after a few seconds
+          setTimeout(() => {
+            resultEl.style.display = 'none';
+          }, 5500);
+
+          // Optional: log full ETL output to console (great for demos/defense)
+          if (data.output) {
+            console.log('%c[ETL Sync Output]', 'color:#166534; font-weight:600', '\n' + data.output);
+          }
+        } else {
+          resultEl.style.background = '#fee2e2';
+          resultEl.style.border = '1px solid #fecaca';
+          resultEl.style.color = '#991b1b';
+          resultEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> <span><strong>Sync failed:</strong> ${data.error || data.message || 'Unknown error'}</span>`;
+          setTimeout(() => { resultEl.style.display = 'none'; }, 8000);
+        }
+      } catch (err) {
+        console.error('ETL sync request failed:', err);
+        resultEl.style.background = '#fee2e2';
+        resultEl.style.border = '1px solid #fecaca';
+        resultEl.style.color = '#991b1b';
+        resultEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> <span><strong>Network error:</strong> Could not reach the ETL sync endpoint.</span>`;
+        setTimeout(() => { resultEl.style.display = 'none'; }, 8000);
+      } finally {
+        // Restore buttons
+        btnSync.disabled = false;
+        btnFull.disabled = false;
+        btnSync.style.opacity = '1';
+        btnFull.style.opacity = '1';
+        btnSync.innerHTML = originalSyncHTML;
+        btnFull.innerHTML = originalFullHTML;
+      }
     }
 
     // Initial setup

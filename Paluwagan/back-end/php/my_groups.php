@@ -19,7 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action_create_group'])
     $max_members = isset($_POST['max_members']) ? max(2, (int)$_POST['max_members']) : 5;
     $frequency = $_POST['frequency'] ?? 'monthly';
     $privacy = $_POST['privacy'] ?? 'public';
-    if ($frequency === 'biweekly') $frequency = 'weekly';
+    $start_date = $_POST['start_date'] ?? date('Y-m-d');
 
     $invite_code = null;
     if ($privacy === 'private') {
@@ -55,9 +55,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action_create_group'])
 
             // Pre-generate ALL cycles for the full paluwagan rotation (student-simple model)
             // Cycle N will be paid to the member who has position = N
+            // Payout date rotation: Cycle 1 uses start_date; others increment per frequency.
             for ($c = 1; $c <= $cycle_length; $c++) {
-                $stmtC = mysqli_prepare($conn, "INSERT INTO cycles (group_id, cycle_number, start_date, status, payout_status) VALUES (?, ?, CURDATE(), 'ongoing', 'pending')");
-                mysqli_stmt_bind_param($stmtC, "ii", $new_group_id, $c);
+                $cycle_date = $start_date;
+                if ($c > 1) {
+                    $dt = new DateTime($start_date);
+                    if ($frequency === 'weekly') {
+                        $dt->modify('+' . (7 * ($c - 1)) . ' days');
+                    } elseif ($frequency === 'biweekly') {
+                        $dt->modify('+' . (14 * ($c - 1)) . ' days');
+                    } else {
+                        $dt->modify('+' . ($c - 1) . ' months');
+                    }
+                    $cycle_date = $dt->format('Y-m-d');
+                }
+                $stmtC = mysqli_prepare($conn, "INSERT INTO cycles (group_id, cycle_number, start_date, status, payout_status) VALUES (?, ?, ?, 'ongoing', 'pending')");
+                mysqli_stmt_bind_param($stmtC, "iis", $new_group_id, $c, $cycle_date);
                 mysqli_stmt_execute($stmtC);
                 mysqli_stmt_close($stmtC);
             }

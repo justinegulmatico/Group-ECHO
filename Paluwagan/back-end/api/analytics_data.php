@@ -48,8 +48,12 @@ $where = "1=1";
 $params = [];
 
 if ($year > 0) {
-    // SLICE on time dimension (one specific year)
-    $where .= " AND dt.year = ?";
+    // SLICE on time dimension (one specific year).
+    // We also check YEAR(ft.created_at) so that the year filter stays functional
+    // even if some facts use a fallback time_key (common during early ETL or date population issues).
+    // This makes the dropdown options (populated from actual OLAP fact data) actually work.
+    $where .= " AND (dt.year = ? OR YEAR(ft.created_at) = ?)";
+    $params[] = $year;
     $params[] = $year;
 }
 

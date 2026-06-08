@@ -168,7 +168,7 @@
         const name = row.querySelector('td:first-child')?.textContent.toLowerCase() || '';
         const owner = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
         const statusEl = row.querySelector('.badge');
-        const status = statusEl ? statusEl.textContent.toLowerCase() : '';
+        let status = statusEl ? statusEl.textContent.toLowerCase().replace(/\s+/g, '_') : '';
 
         const match = (name.includes(search) || owner.includes(search)) && 
                       (filter === 'all' || status === filter);

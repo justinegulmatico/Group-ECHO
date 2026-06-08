@@ -36,8 +36,7 @@ $privacy    = $_POST['privacy'] ?? 'public';
 $amount     = isset($_POST['contribution']) ? (float)$_POST['contribution'] : 0.0;
 $max_members = isset($_POST['max_members']) ? max(2, (int)$_POST['max_members']) : 5;
 $freq       = $_POST['frequency'] ?? 'monthly';
-
-if ($freq === 'biweekly') $freq = 'weekly';
+$start_date = $_POST['start_date'] ?? date('Y-m-d');
 
 $invite_code = null;
 if ($privacy === 'private') {
@@ -52,7 +51,7 @@ try {
     // The entire multi-step creation is wrapped in one atomic transaction
     $new_group_id = $db->transaction(function($pdo) use (
         $owner_id, $group_name, $desc, $privacy, $amount, $max_members, 
-        $freq, $invite_code, $cycle_length
+        $freq, $invite_code, $cycle_length, $start_date
     ) {
         // 1. Prevent duplicate names (inside transaction for isolation)
         $stmt = $pdo->prepare("SELECT group_id FROM groups WHERE group_name = ? LIMIT 1");
@@ -90,12 +89,27 @@ try {
         $hist->execute([$new_group_id, 'member_joined', $owner_id, $owner_id, 'Joined as position #1 (creator)']);
 
         // 5. Pre-create ALL rotation cycles (this is a core Paluwagan rule)
+        // Only Cycle #1 uses the group's initialization start_date.
+        // Subsequent cycles increment by frequency interval for payout date rotation.
         $cycleStmt = $pdo->prepare(
             "INSERT INTO cycles (group_id, cycle_number, start_date, status, payout_status) 
-             VALUES (?, ?, CURDATE(), 'ongoing', 'pending')"
+             VALUES (?, ?, ?, 'ongoing', 'pending')"
         );
         for ($c = 1; $c <= $max_members; $c++) {
-            $cycleStmt->execute([$new_group_id, $c]);
+            $cycle_date = $start_date;
+            if ($c > 1) {
+                $dt = new DateTime($start_date);
+                if ($freq === 'weekly') {
+                    $dt->modify('+' . (7 * ($c - 1)) . ' days');
+                } elseif ($freq === 'biweekly') {
+                    $dt->modify('+' . (14 * ($c - 1)) . ' days');
+                } else {
+                    // monthly: add exact months (handles month length variations)
+                    $dt->modify('+' . ($c - 1) . ' months');
+                }
+                $cycle_date = $dt->format('Y-m-d');
+            }
+            $cycleStmt->execute([$new_group_id, $c, $cycle_date]);
         }
 
         return $new_group_id;

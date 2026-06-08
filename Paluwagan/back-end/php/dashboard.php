@@ -25,7 +25,7 @@ if (isset($_POST['action_create_group'])) {
     $amount = isset($_POST['contribution']) ? (float)$_POST['contribution'] : 0;
     $max = isset($_POST['max_members']) ? max(2, (int)$_POST['max_members']) : 5;
     $freq = $_POST['frequency'] ?? 'monthly';
-    if ($freq === 'biweekly') $freq = 'weekly';
+    $start_date = $_POST['start_date'] ?? date('Y-m-d');
 
     $invite_code = null;
     if ($privacy === 'private') {
@@ -60,9 +60,22 @@ if (isset($_POST['action_create_group'])) {
             mysqli_stmt_close($stmt2);
 
             // Pre-generate full cycles for paluwagan (position N receives in cycle N)
+            // Payout date rotation logic: Cycle #1 = start_date; +freq interval for each next cycle.
             for ($c = 1; $c <= $max; $c++) {
-                $stmtC = mysqli_prepare($conn, "INSERT INTO cycles (group_id, cycle_number, start_date, status, payout_status) VALUES (?, ?, CURDATE(), 'ongoing', 'pending')");
-                mysqli_stmt_bind_param($stmtC, "ii", $gid, $c);
+                $cycle_date = $start_date;
+                if ($c > 1) {
+                    $dt = new DateTime($start_date);
+                    if ($freq === 'weekly') {
+                        $dt->modify('+' . (7 * ($c - 1)) . ' days');
+                    } elseif ($freq === 'biweekly') {
+                        $dt->modify('+' . (14 * ($c - 1)) . ' days');
+                    } else {
+                        $dt->modify('+' . ($c - 1) . ' months');
+                    }
+                    $cycle_date = $dt->format('Y-m-d');
+                }
+                $stmtC = mysqli_prepare($conn, "INSERT INTO cycles (group_id, cycle_number, start_date, status, payout_status) VALUES (?, ?, ?, 'ongoing', 'pending')");
+                mysqli_stmt_bind_param($stmtC, "iis", $gid, $c, $cycle_date);
                 mysqli_stmt_execute($stmtC);
                 mysqli_stmt_close($stmtC);
             }
