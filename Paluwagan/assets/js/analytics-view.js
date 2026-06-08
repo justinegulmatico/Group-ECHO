@@ -255,31 +255,99 @@ function updatePieChart(payoutData) {
 // EXPORT FUNCTIONS (CSV + PDF)
 // =====================================================
 
-// Simple CSV export using current chart data
+// Robust CSV export — includes all visible analytics data + proper Excel compatibility
 function exportToCSV() {
     if (!currentData) {
         alert('Please wait for data to load first.');
         return;
     }
-    
-    let csvContent = "data:text/csv;charset=utf-8,";
-    
-    // Summary row
-    csvContent += "Metric,Value\n";
-    csvContent += `Total Contributions,${currentData.summary.total_contributions}\n`;
-    csvContent += `Total Payouts,${currentData.summary.total_payouts}\n`;
-    csvContent += `Transactions,${currentData.summary.total_transactions}\n\n`;
-    
-    // Group data
-    csvContent += "Group,Contributions,Payouts,Transactions\n";
-    currentData.by_group.forEach(row => {
-        csvContent += `"${row.group_name}",${row.total_contributions},${row.total_payouts},${row.transaction_count}\n`;
-    });
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `trustfund_analytics_${new Date().toISOString().slice(0,10)}.csv`);
+
+    const rows = [];
+
+    // Header + filters (designed to look good in Excel/Sheets — matches main admin analytics)
+    rows.push(['TrustFund OLAP Analytics Export']);
+    rows.push(['━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━']);
+    rows.push(['Professional OLAP Report  •  Slice • Dice • Roll-up • Drill-down']);
+    rows.push(['━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━']);
+    rows.push([]);
+    rows.push(['Generated', new Date().toLocaleString()]);
+    // Note: filters object may be in currentFilters (populated on fetch)
+    const f = (typeof currentFilters !== 'undefined' && currentFilters) || {};
+    rows.push(['Time Granularity', f.time_level || 'month']);
+    rows.push(['Year', f.year || 'All']);
+    rows.push(['Quarter', f.quarter || 'All']);
+    rows.push(['Group', f.group_key || 'All']);
+    rows.push(['Transaction Type', f.trans_type || 'all']);
+    rows.push(['Note', 'All amounts in PHP. Designed for Excel / Google Sheets.']);
+    rows.push([]);
+
+    // SUMMARY
+    rows.push(['▶ SUMMARY']);
+    rows.push(['────────────────────────────']);
+    rows.push(['Metric', 'Value']);
+    const sum = currentData.summary || {};
+    rows.push(['Total Contributions', sum.total_contributions || 0]);
+    rows.push(['Total Payouts', sum.total_payouts || 0]);
+    rows.push(['Transactions', sum.total_transactions || 0]);
+    rows.push([]);
+
+    // BY GROUP (includes tx count when present)
+    rows.push(['▶ BY GROUP PERFORMANCE']);
+    rows.push(['────────────────────────────']);
+    rows.push(['Group', 'Contributions (PHP)', 'Payouts (PHP)', 'Transactions']);
+    let gTotalC = 0, gTotalP = 0, gTotalTx = 0;
+    if (currentData.by_group && currentData.by_group.length) {
+        currentData.by_group.forEach(r => {
+            const c = parseFloat(r.total_contributions || 0);
+            const p = parseFloat(r.total_payouts || 0);
+            const tx = parseInt(r.transaction_count || 0);
+            gTotalC += c; gTotalP += p; gTotalTx += tx;
+            rows.push([r.group_name || '', c, p, tx]);
+        });
+        rows.push(['']);
+        rows.push(['TOTAL (current view)', gTotalC, gTotalP, gTotalTx]);
+    } else {
+        rows.push(['No group data', '', '', '']);
+    }
+    rows.push([]);
+
+    // TIME SERIES (full trends data from line chart)
+    rows.push(['▶ TIME SERIES TRENDS']);
+    rows.push(['────────────────────────────']);
+    rows.push(['Period', 'Contributions (PHP)', 'Payouts (PHP)']);
+    if (currentData.time_series && currentData.time_series.length) {
+        currentData.time_series.forEach(r => {
+            rows.push([
+                r.period_label || '',
+                parseFloat(r.contributions || 0),
+                parseFloat(r.payouts || 0)
+            ]);
+        });
+    } else {
+        rows.push(['No time series data', '', '']);
+    }
+    rows.push([]);
+
+    // Footer / provenance (styled to match main export)
+    rows.push(['──────────────────────────────────────────────────────────────────────────────────────────────']);
+    rows.push(['Exported from TrustFund OLAP data warehouse  •  Filters & granularity from current dashboard view']);
+    rows.push(['──────────────────────────────────────────────────────────────────────────────────────────────']);
+
+    // Proper CSV escaping
+    function esc(v) {
+        if (v === null || v === undefined) return '';
+        const s = String(v);
+        if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+        return s;
+    }
+
+    const csvContent = rows.map(r => r.map(esc).join(',')).join('\n');
+
+    // data: URI + BOM for best cross-app compatibility (especially Excel on Windows)
+    const encoded = encodeURIComponent('\uFEFF' + csvContent);
+    const link = document.createElement('a');
+    link.href = 'data:text/csv;charset=utf-8,' + encoded;
+    link.download = `TrustFund_Analytics_${(f.time_level||'month')}_${new Date().toISOString().slice(0,10)}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

@@ -196,7 +196,7 @@ d>
                     </button>
                     
                     <span class="export-note">
-                        Data updates live when you change any filter.
+                        CSV includes full Summary + Group + Time Series data (Excel-friendly).
                     </span>
                 </div>
                 

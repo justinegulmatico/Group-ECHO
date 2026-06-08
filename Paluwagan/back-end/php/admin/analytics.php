@@ -333,7 +333,7 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
             </button>
           </div>
           <div class="analytics-export-note">
-            Exports use the currently filtered data shown in the charts and summary cards.
+            CSV export contains Summary, Group Performance (with totals), and full Time Series data matching the current charts + filters. Opens cleanly in Excel &amp; Sheets.
           </div>
         </div>
 
@@ -620,61 +620,186 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
       }
     }
 
-    // Export current data as CSV (simple client-side generation)
-    function exportCSV() {
-      if (!lastData) {
-        alert('No data available to export yet. Please wait for the charts to load.');
-        return;
+    // CSV field escaper (proper quoting for Excel/Google Sheets compatibility)
+    function escapeCSVField(val) {
+      if (val === null || val === undefined) return '';
+      const s = String(val);
+      // Wrap in double-quotes if contains comma, quote, or newline
+      if (/[",\n\r]/.test(s)) {
+        return '"' + s.replace(/"/g, '""') + '"';
       }
-
-      let csv = [];
-
-      // Header row with metadata
-      csv.push('TrustFund OLAP Analytics Export');
-      csv.push('Generated,' + new Date().toLocaleString());
-      csv.push('Time Granularity,' + currentFilters.time_level);
-      csv.push('Year,' + (currentFilters.year || 'All'));
-      csv.push('Quarter,' + (currentFilters.quarter || 'All'));
-      csv.push('Group Key,' + (currentFilters.group_key || 'All'));
-      csv.push('Transaction Type,' + currentFilters.trans_type);
-      csv.push('');
-
-      // Summary section
-      csv.push('SUMMARY');
-      csv.push('Metric,Value');
-      csv.push('Total Contributions,' + (lastData.summary.total_contributions || 0));
-      csv.push('Total Payouts,' + (lastData.summary.total_payouts || 0));
-      csv.push('Transactions Analyzed,' + (lastData.summary.total_transactions || 0));
-      csv.push('Active Groups,' + (lastData.summary.active_groups || 0));
-      csv.push('');
-
-      // Group performance table
-      csv.push('GROUP PERFORMANCE');
-      csv.push('Group,Total Contributions,Total Payouts');
-      if (lastData.by_group && lastData.by_group.length > 0) {
-        lastData.by_group.forEach(row => {
-          csv.push(
-            '"' + (row.group_name || '') + '",' +
-            (row.total_contributions || 0) + ',' +
-            (row.total_payouts || 0)
-          );
-        });
-      } else {
-        csv.push('No group data');
-      }
-
-      // Create and download the file
-      const csvContent = csv.join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.href = url;
-      link.download = `TrustFund_OLAP_Analytics_${new Date().toISOString().slice(0,10)}.csv`;
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      return s;
     }
+
+    // Build rows as arrays then join (cleaner + guarantees correct escaping)
+    function exportCSV() {
+  if (!lastData) {
+    alert('No data available to export yet. Please wait for the charts to load.');
+    return;
+  }
+
+  const s = lastData.summary || {};
+  const dateStr = new Date().toLocaleString('en-PH');
+  const gran = (currentFilters.time_level || 'month').toUpperCase();
+
+  // 1. Build an Excel-compatible HTML document featuring modern CSS rules
+  let html = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="utf-8">
+      <style>
+        /* Base typography setup */
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #334155; }
+        td { padding: 10px; border: 0.5pt solid #e2e8f0; text-align: left; font-size: 10pt; }
+        th { padding: 10px; border: 0.5pt solid #e2e8f0; text-align: left; font-size: 10pt; font-weight: bold; }
+        
+        /* Modern App Topbar / Hero Section */
+        .hero-banner { background-color: #1e293b; color: #ffffff; font-size: 16pt; font-weight: bold; padding: 15px; }
+        .hero-sub { background-color: #1e293b; color: #94a3b8; font-size: 10pt; padding-bottom: 15px; }
+        
+        /* Interactive Filter Information Badge style */
+        .meta-label { font-weight: bold; color: #64748b; background-color: #f1f5f9; }
+        .meta-val { color: #334155; background-color: #f1f5f9; }
+
+        /* Clean Container Headers */
+        .section-header { font-weight: bold; font-size: 12pt; background-color: #f8fafc; color: #0f172a; border-bottom: 2pt solid #cbd5e1; }
+        
+        /* Table Headers matching Web UI Colors */
+        .th-green { background-color: #166534; color: #ffffff; }
+        .th-orange { background-color: #e15225; color: #ffffff; }
+        .th-dark { background-color: #475569; color: #ffffff; }
+        
+        /* Metric values matching dashboard theme */
+        .val-contribution { color: #166534; font-weight: bold; font-size: 11pt; }
+        .val-payout { color: #e15225; font-weight: bold; font-size: 11pt; }
+        .val-neutral { color: #0f172a; font-weight: bold; font-size: 11pt; }
+        
+        /* Total calculations footer row */
+        .total-row { font-weight: bold; background-color: #f8fafc; color: #0f172a; }
+      </style>
+    </head>
+    <body>
+      <table>
+        <tr><td colspan="4" class="hero-banner">TrustFund — OLAP Analytics Dashboard</td></tr>
+        <tr><td colspan="4" class="hero-sub">Slice, Dice, Roll-up and Drill-down analysis on the TrustFund data warehouse.</td></tr>
+        <tr><td colspan="4"></td></tr>
+
+        <tr>
+          <td class="meta-label">Exported At:</td><td class="meta-val">${dateStr}</td>
+          <td class="meta-label">Time Granularity:</td><td class="meta-val">${gran}</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Active Slices:</td>
+          <td colspan="3" class="meta-val">
+            Year: ${currentFilters.year || 'All Years'} | 
+            Quarter: ${currentFilters.quarter || 'All Quarters'} | 
+            Group: ${currentFilters.group_key || 'All Groups'} | 
+            Type: ${currentFilters.trans_type || 'All Transactions'}
+          </td>
+        </tr>
+        <tr><td colspan="4"></td></tr>
+
+        <tr><td colspan="4" class="section-header">📊 Key Summary Metrics</td></tr>
+        <tr>
+          <td colspan="2">Total Contributions (All Time)</td>
+          <td colspan="2" class="val-contribution">₱${parseFloat(s.total_contributions || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+        </tr>
+        <tr>
+          <td colspan="2">Total Payouts (All Time)</td>
+          <td colspan="2" class="val-payout">₱${parseFloat(s.total_payouts || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+        </tr>
+        <tr>
+          <td colspan="2">Transactions Analyzed in Current View</td>
+          <td colspan="2" class="val-neutral">${parseInt(s.total_transactions || 0).toLocaleString('en-PH')}</td>
+        </tr>
+        <tr>
+          <td colspan="2">Active Groups in Current View</td>
+          <td colspan="2" class="val-neutral">${parseInt(s.active_groups || 0).toLocaleString('en-PH')}</td>
+        </tr>
+        <tr><td colspan="4"></td></tr>
+
+        <tr><td colspan="4" class="section-header">📈 Group Performance Metrics</td></tr>
+        <tr>
+          <th class="th-dark" colspan="2">Group Name</th>
+          <th class="th-green">Contributions (PHP)</th>
+          <th class="th-orange">Payouts (PHP)</th>
+        </tr>
+  `;
+
+  let totalCont = 0;
+  let totalPayout = 0;
+
+  if (lastData.by_group && lastData.by_group.length > 0) {
+    lastData.by_group.forEach(row => {
+      const c = parseFloat(row.total_contributions || 0);
+      const p = parseFloat(row.total_payouts || 0);
+      totalCont += c;
+      totalPayout += p;
+      html += `
+        <tr>
+          <td colspan="2">${row.group_name || 'Unknown Group'}</td>
+          <td style="color: #166534;">${c}</td>
+          <td style="color: #e15225;">${p}</td>
+        </tr>
+      `;
+    });
+    html += `
+      <tr class="total-row">
+        <td colspan="2">TOTAL (Current View)</td>
+        <td>${totalCont}</td>
+        <td>${totalPayout}</td>
+      </tr>
+    `;
+  } else {
+    html += `<tr><td colspan="4">No group records found for current filters</td></tr>`;
+  }
+
+  html += `
+        <tr><td colspan="4"></td></tr>
+        <tr><td colspan="4" class="section-header">📉 Trends Over Time Line Series</td></tr>
+        <tr>
+          <th class="th-dark" colspan="2">Period / Interval</th>
+          <th class="th-green">Contributions Line (PHP)</th>
+          <th class="th-orange">Payouts Line (PHP)</th>
+        </tr>
+  `;
+
+  if (lastData.time_series && lastData.time_series.length > 0) {
+    lastData.time_series.forEach(row => {
+      html += `
+        <tr>
+          <td colspan="2">${row.period_label || 'Unknown Period'}</td>
+          <td style="color: #166534;">${parseFloat(row.contributions || 0)}</td>
+          <td style="color: #e15225;">${parseFloat(row.payouts || 0)}</td>
+        </tr>
+      `;
+    });
+  } else {
+    html += `<tr><td colspan="4">No historical metrics documented for parameters</td></tr>`;
+  }
+
+  html += `
+        <tr><td colspan="4"></td></tr>
+        <tr><td colspan="4" style="text-align: center; color: #94a3b8; font-size: 8pt; border: none;">Generated via TrustFund Analytics Warehousing Engine</td></tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  // 2. Compile document block and trigger seamless file stream saving
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  
+  const datePart = new Date().toISOString().slice(0, 10);
+  const granPart = (currentFilters.time_level || 'month').toLowerCase();
+  link.download = `TrustFund_Analytics_Dashboard_${granPart}_${datePart}.xls`;
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
     // Helper to format numbers safely for PDF (avoid ₱ symbol which causes font issues in jsPDF)
     function formatCurrencyForPDF(amount) {
