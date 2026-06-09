@@ -244,7 +244,7 @@
             </div>
             <?php endif; ?>
 
-            <!--Members & Positions (kept in Overview)-->
+            <!--Members & Positions-->
             <div style="margin-top: 24px;">
               <div style="font-size:14px; font-weight:700; color:#1F1C19; margin-bottom:10px;">Members &amp; Positions</div>
               <div class="table-wrap">
@@ -362,7 +362,6 @@
                     $recName = $rec ? htmlspecialchars($rec['first_name']) : 'Pos ' . $cy['cycle_number'];
                     //Check if current user paid this cycle
                     $myPaid = 0;
-                    //student code just shows collected (no extra query)
                   ?>
                     <tr>
                       <td><strong>#<?= $cy['cycle_number'] ?></strong></td>
@@ -599,7 +598,7 @@
           if (e.target === this) this.classList.remove('open');
       });
 
-      //Live insufficient balance warning (client-side convenience)
+      //Live insufficient balance warning
       (function() {
         const amountInput = document.getElementById('pay-amount');
         const warning = document.getElementById('insufficient-warning');
