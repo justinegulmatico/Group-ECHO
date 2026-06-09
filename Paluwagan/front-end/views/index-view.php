@@ -167,19 +167,19 @@
         : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`;
     }
 
-    // modal logic + dynamic ui
+    //modal logic and dynamic ui
     function openStatusModal(title, message, iconType, buttonType, username = "") {
         const modal = document.getElementById('status-modal');
         document.getElementById('modal-title').textContent = title;
         document.getElementById('modal-message').textContent = message;
         
-        // Handle Icons
+        //Handle Icons
         document.getElementById('icon-pending').style.display = (iconType === 'pending') ? 'block' : 'none';
         document.getElementById('icon-success').style.display = (iconType === 'success') ? 'block' : 'none';
         document.getElementById('icon-error').style.display = (iconType === 'error') ? 'block' : 'none';
         document.getElementById('icon-suspended').style.display = (iconType === 'suspended') ? 'block' : 'none';
 
-        // Handle Buttons
+        //Handle Buttons
         if (buttonType === 'denied') {
             document.getElementById('btn-got-it').style.display = 'none';
             document.getElementById('form-delete-account').style.display = 'block';
@@ -189,7 +189,7 @@
             document.getElementById('form-delete-account').style.display = 'none';
         }
         
-        // Display Modal
+        //Display Modal
         modal.style.setProperty('display', 'flex', 'important');
         modal.style.opacity = '0';
         setTimeout(() => { modal.style.opacity = '1'; modal.style.transition = 'opacity 0.3s ease'; }, 10);
@@ -199,7 +199,7 @@
         document.getElementById('status-modal').style.setProperty('display', 'none', 'important');
     }
 
-    // single trigger for modal
+    //single trigger for modal
     document.addEventListener("DOMContentLoaded", function() {
         <?php if (isset($status_trigger) && $status_trigger): ?>
             openStatusModal(
