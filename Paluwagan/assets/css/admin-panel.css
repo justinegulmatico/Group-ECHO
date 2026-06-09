@@ -1,17 +1,11 @@
-/* ================================================
-   TrustFund — Admin Panel Page Styles
-   ================================================ */
-
-/* ── Topbar ── */
+/*Topbar*/
 .topbar {
   height: 72px;
   padding-top: 0;
   padding-bottom: 0;
 }
 
-/* ── Admin Avatar override (uses initials, not icon) ── */
-
-/* ── Admin Banner ── */
+/*Admin Banner*/
 .admin-banner {
   display: flex;
   align-items: center;
@@ -47,7 +41,7 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* ── Stat Cards ── */
+/*Stat Cards*/
 .stat-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -80,7 +74,7 @@
 .stat-card-value.green { color: var(--color-success); }
 .stat-card-value.red   { color: var(--color-danger);  }
 
-/* ── Section Titles ── */
+/*Section Titles*/
 .section-title {
   font-size: 22px;
   font-weight: 700;
@@ -88,9 +82,7 @@
   margin-bottom: 14px;
 }
 
-/* ── Create Group Button ── */
-
-/* ── Tables ── */
+/*Tables*/
 .table-wrap {
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
@@ -136,7 +128,7 @@ tbody tr:hover td {
   background: var(--color-surface-muted);
 }
 
-/* ── User Cell ── */
+/*User Cell*/
 .user-cell {
   display: flex;
   align-items: center;
@@ -169,7 +161,7 @@ tbody tr:hover td {
   color: var(--color-text-muted);
 }
 
-/* ── Group Cell (name + code) ── */
+/*Group Cell (name and code)*/
 .group-cell-name {
   font-size: 14px;
   font-weight: 600;
@@ -182,7 +174,7 @@ tbody tr:hover td {
   color: var(--color-text-muted);
 }
 
-/* ── Badges ── */
+/*Badges*/
 .badge {
   display: inline-flex;
   align-items: center;
@@ -214,8 +206,7 @@ tbody tr:hover td {
   color: var(--color-success);
 }
 
-/* ── Row Action Buttons ── */
-
+/*Row Action Buttons*/
 .btn-row-view {
   padding: 7px 16px;
   border-radius: var(--radius-md);
@@ -231,9 +222,7 @@ tbody tr:hover td {
 
 .btn-row-view:hover { background: var(--color-surface-muted); }
 
-/* Change Status dropdown */
-
-/* ── Table Empty State ── */
+/*Table Empty State*/
 .table-empty {
   display: flex;
   flex-direction: column;
@@ -333,7 +322,7 @@ tbody tr:hover td {
 }
 .tf-btn-approve:hover { background: #236336; }
 
-    /* --- USER MANAGEMENT: SEARCH, FILTER & BADGES --- */
+/*User management: Search, Filter and Badges*/
 .tf-action-bar { 
     display: flex; gap: 12px; margin-bottom: 16px; align-items: center; 
 }
@@ -350,17 +339,14 @@ tbody tr:hover td {
 }
 .tf-filter-select:focus { border-color: var(--color-primary, #E8481A); outline: none; }
 
-/* Status Badges */
+/*Status Badges*/
 .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-block; }
 .badge-active { background: #E8F5EE; color: #2D7A45; }    /* Green */
 .badge-suspended { background: #FDE8E2; color: #C0392B; } /* Red */
 .badge-pending { background: #F0EBE3; color: #6B6560; }   /* Gray */
 .badge-finished { background: #E0E7FF; color: #3730A3; } /* Blue for Finished */
 
-/* ================================================
-   NEW ADMIN DASHBOARD + CLEAN PAGES
-   ================================================ */
-
+/*Admin dashboard*/
 .admin-hero {
   background: var(--color-dark);
   color: #fff;
@@ -457,16 +443,12 @@ tbody tr:hover td {
   padding: 20px;
 }
 
-/* spacing for sub admin pages */
+/*spacing for sub admin pages*/
 .page-content {
   padding: 24px 32px;
 }
 
-/* ================================================
-   TRANSACTION APPROVALS — LEDGER TABLE + ACTIONS
-   ================================================ */
-
-/* Attachment badge (clickable) */
+/*Attachment badge (clickable)*/
 .tx-attachment-badge {
   display: inline-flex;
   align-items: center;
@@ -487,7 +469,7 @@ tbody tr:hover td {
   color: #c7461d;
 }
 
-/* Compact modern action buttons in the ledger */
+/*Compact modern action buttons in the ledger*/
 .tx-action-btn {
   font-size: 12.5px;
   font-weight: 700;
@@ -525,7 +507,7 @@ tbody tr:hover td {
   color: #C0392B;
 }
 
-/* Slightly tighter table cells for this ledger */
+/*Slightly tighter table cells for this ledger*/
 .tx-ledger td,
 .tx-ledger th {
   padding-top: 11px;
