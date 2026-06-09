@@ -1,8 +1,3 @@
-/* ================================================
-   CLEAN, STUDENT-FRIENDLY STYLES FOR ANALYTICS
-   (extracted from analytics-view.php)
-   ================================================ */
-
 :root {
     --primary: #166534;
     --accent: #E15225;
@@ -18,7 +13,7 @@ body {
     padding: 20px 36px;
 }
 
-/* Header */
+/*Header*/
 .analytics-header {
     background: linear-gradient(135deg, #1f2937, #111827);
     color: white;
@@ -44,7 +39,7 @@ body {
     font-size: 14px;
 }
 
-/* KPI Cards */
+/*KPI Cards*/
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -77,7 +72,7 @@ body {
 .kpi-value.green { color: #166534; }
 .kpi-value.orange { color: #E15225; }
 
-/* Filter Section */
+/*Filter Section*/
 .filters-card {
     background: white;
     border: 1px solid #E5E0D8;
@@ -124,7 +119,7 @@ body {
     border-color: #166534;
 }
 
-/* Time Granularity (Roll-up / Drill-down) */
+/*Time Granularity (Roll-up/ Drill-down)*/
 .granularity-buttons {
     display: flex;
     gap: 6px;
@@ -152,7 +147,7 @@ body {
     background: #F5F0E8;
 }
 
-/* Chart Cards */
+/*Chart Cards*/
 .charts-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
@@ -192,7 +187,7 @@ body {
     margin-top: 8px;
 }
 
-/* Export Section */
+/*Export Section*/
 .export-section {
     background: white;
     border: 1px solid #E5E0D8;
@@ -232,13 +227,13 @@ body {
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-/* Loading state */
+/*Loading state*/
 .loading {
     opacity: 0.6;
     pointer-events: none;
 }
 
-/* Inline style replacements */
+/*Inline style replacements*/
 .filter-note {
     font-size: 11px;
     font-weight: 400;
@@ -290,7 +285,7 @@ body {
     border-radius: 8px;
 }
 
-/* Responsive */
+/*Page Responsiveness*/
 @media (max-width: 768px) {
     .charts-grid {
         grid-template-columns: 1fr;
@@ -300,7 +295,7 @@ body {
     }
 }
 
-/* Use even more width on large screens */
+/*Use even more width on large screens*/
 @media (min-width: 1400px) {
     .analytics-container {
         max-width: 1700px;
