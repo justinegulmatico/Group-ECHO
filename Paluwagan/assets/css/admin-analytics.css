@@ -1,20 +1,13 @@
-/* ================================================
-   TrustFund — Admin Analytics (OLAP) Page Styles
-   ================================================ */
-
-/* Match the project's light beige/cream background and card styles */
 body {
   background: #F4EFEA;
 }
 
-/* Keep topbar and page styles consistent with other admin pages */
 .topbar-title {
   font-family: var(--font-body);
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
-/* Custom card for filters and sections to match .table-wrap style used in transactions.php */
 .analysis-card {
   background: #fff;
   border: 1px solid #E4DDD4;
@@ -31,7 +24,6 @@ body {
   margin-bottom: 12px;
 }
 
-/* Granularity buttons styled to feel like part of the project */
 .granularity-btn {
   padding: 8px 16px;
   font-size: 13px;
@@ -51,7 +43,7 @@ body {
   background: #F5F0E8;
 }
 
-/* Chart containers */
+/*Chart containers*/
 .chart-card {
   background: #fff;
   border: 1px solid #E4DDD4;
@@ -77,7 +69,6 @@ body {
   gap: 8px;
 }
 
-/* Modern per-chart PNG download buttons - matches site beige/cream + green theme */
 .chart-png-btn {
   font-size: 10.5px;
   padding: 3px 8px;
@@ -107,12 +98,11 @@ body {
   font-size: 10px;
 }
 
-/* Analytics stat cards should not look clickable */
 .stat-card {
   cursor: default;
 }
 
-/* Analytics specific helpers */
+/*Analytics specific helpers*/
 .analytics-label {
   font-size: 12px;
   margin-bottom: 4px;
@@ -144,7 +134,7 @@ body {
   margin-top: 16px;
 }
 
-/* Chart canvas containers */
+/*Chart canvas containers*/
 .chart-canvas-container {
   height: 280px;
 }
@@ -152,13 +142,13 @@ body {
   height: 260px;
 }
 
-/* Stat cards grid override for analytics (4 equal columns) */
+/*Stat cards grid override for analytics*/
 .analytics-stat-cards {
   margin-bottom: 24px;
   grid-template-columns: repeat(4, 1fr);
 }
 
-/* Export buttons — keep Tailwind look but ensure consistency */
+/*Export buttons*/
 .analytics-export-btn {
   padding: 10px 20px;
   font-size: 0.875rem;
@@ -185,7 +175,7 @@ body {
   background: #c93d12;
 }
 
-/* Sync buttons in topbar */
+/*Sync buttons in topbar*/
 .analytics-sync-btn {
   padding: 5px 11px;
   font-size: 12px;
@@ -199,7 +189,7 @@ body {
   border-color: #f5c7b0;
 }
 
-/* Sync result banner */
+/*Sync result banner*/
 #sync-result {
   display: none;
   padding: 10px 14px;
@@ -211,14 +201,14 @@ body {
   flex-wrap: wrap;
 }
 
-/* Last ETL timestamp in topbar */
+/*Last ETL timestamp in topbar*/
 .analytics-last-sync {
   font-size: 12px;
   color: #6B6560;
   white-space: nowrap;
 }
 
-/* Hero title override */
+/*Hero title override*/
 .analytics-hero-title {
   font-size: 22px;
 }
