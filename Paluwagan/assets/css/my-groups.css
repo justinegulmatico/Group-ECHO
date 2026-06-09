@@ -1,15 +1,11 @@
-/* ================================================
-   TrustFund — My Groups Page Styles
-   ================================================ */
-
-/* ── Topbar height — matches sidebar logo ── */
+/*Topbar height*/
 .topbar {
   height: 73px;
   padding-top: 0;
   padding-bottom: 0;
 }
 
-/* ── Page Toolbar (search + buttons) ── */
+/*Page Toolbar: search and buttons*/
 .page-toolbar {
   display: flex;
   align-items: center;
@@ -34,7 +30,7 @@
   flex-shrink: 0;
 }
 
-/* ── Search Bar ── */
+/*Search Bar*/
 .search-wrap {
   position: relative;
   width: 100%;
@@ -71,7 +67,7 @@
   outline: none;
 }
 
-/* ── Toolbar Buttons ── */
+/*Toolbar Buttons*/
 .btn-outline {
   display: inline-flex;
   align-items: center;
@@ -111,14 +107,14 @@
 
 .btn-create:hover { background: var(--color-primary-hover); }
 
-/* ── Group Cards Grid ── */
+/*Group Cards Grid*/
 .group-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
 
-/* ── Group Card ── */
+/*Group Card*/
 .group-card {
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
@@ -155,7 +151,7 @@
   margin-top: 2px;
 }
 
-/* ── Badge ── */
+/*Badge*/
 .badge {
   padding: 3px 10px;
   border-radius: var(--radius-full);
@@ -169,7 +165,7 @@
 .badge-closed  { background: #F0ECE8; color: var(--color-text-muted); }
 .badge-pending { background: #FFF4E0; color: var(--color-warning); }
 
-/* ── Progress Bar ── */
+/*Progress Bar*/
 .progress-bar-wrap {
   height: 5px;
   background: var(--color-border-light);
@@ -184,7 +180,7 @@
   border-radius: var(--radius-full);
 }
 
-/* ── Group Card Bottom ── */
+/*Group Card Bottom*/
 .group-card-bottom {
   display: flex;
   align-items: center;
@@ -223,7 +219,7 @@
 
 .member-chip:first-child { margin-left: 0; }
 
-/* ── Empty State ── */
+/*Empty State*/
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -253,7 +249,7 @@
   max-width: 300px;
 }
 
-/* ── Modal Overlay ── */
+/*Modal Overlay*/
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -265,7 +261,7 @@
   padding: 24px;
 }
 
-/* ── Modal Box ── */
+/*Modal Box*/
 .modal {
   background: var(--color-surface);
   border-radius: var(--radius-xl);
@@ -323,7 +319,7 @@
   justify-content: flex-end;
 }
 
-/* ── Form Row (two columns) ── */
+/*Form Row*/
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -336,18 +332,12 @@
   gap: 6px;
 }
 
-/* ============================================
-   FIX: Make Tables Full Width (My Groups Page)
-   ============================================ */
-
-/* Make the main page content use full available width */
 .page-content {
   max-width: 100% !important;
   width: 100% !important;
   padding: 32px 40px;
 }
 
-/* Force table container to be full width */
 .table-wrap {
   width: 100% !important;
   max-width: 100% !important;
@@ -359,7 +349,6 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-/* Make the actual table full width */
 .table-wrap table {
   width: 100% !important;
   min-width: 100%;
@@ -367,31 +356,26 @@
   table-layout: auto;
 }
 
-/* Better column spacing */
 .table-wrap th,
 .table-wrap td {
   padding: 16px 20px;
   white-space: nowrap;
 }
 
-/* Make Action column align properly */
 .table-wrap td:last-child,
 .table-wrap th:last-child {
   text-align: right;
   padding-right: 24px;
 }
 
-/* Improve row hover */
 .table-wrap tr:hover {
   background-color: #f8fafc;
 }
 
-/* section header spacing */
 .section-header {
   margin-bottom: 12px;
 }
 
-/* === List View Styles (matching Admin Panel) === */
 .table-wrap {
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -442,8 +426,6 @@ tr:hover {
   padding: 40px !important;
 }
 
-
-/* === Warm Global Color Theme === */
 body, .page-content, .main-content {
   background-color: #F4EFEA;
 }
@@ -455,18 +437,16 @@ body, .page-content, .main-content {
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
-/* Longer Search Bar */
+/*Longer Search Bar*/
 .search-wrap {
   max-width: 520px;
   width: 100%;
 }
 
-/* Better table row spacing */
 .table-wrap th, .table-wrap td {
   padding: 16px 20px;
 }
 
-/* === Proper Tab Design (Matching Admin Panel) - Stretched full-width segmented === */
 .detail-tabs {
   display: flex;
   width: 100%;
@@ -527,7 +507,7 @@ body, .page-content, .main-content {
   background-color: #E15225;
 }
 
-/* Long search bar inside each section */
+/*Long search bar inside each section*/
 .search-wrap {
   width: 100% !important;
   max-width: 100% !important;
@@ -536,5 +516,3 @@ body, .page-content, .main-content {
 .search-input {
   width: 100%;
 }
-
-/* ── Join preview box ── */
