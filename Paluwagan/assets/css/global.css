@@ -1,60 +1,56 @@
-/* ================================================
-   TrustFund — Global Styles & Design Tokens
-   ================================================ */
-
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-/* ── Design Tokens ── */
+/*Design Tokens*/
 :root {
-  /* Brand Colors */
-  --color-primary:       #E8481A;
+  /*Brand Colors*/
+  --color-primary: #E8481A;
   --color-primary-hover: #C93D12;
   --color-primary-light: #FDE8E2;
 
-  /* Neutrals */
-  --color-bg:            #F5F0E8;
-  --color-surface:       #FFFFFF;
+  /*Neutrals*/
+  --color-bg: #F5F0E8;
+  --color-surface: #FFFFFF;
   --color-surface-muted: #F9F6F1;
-  --color-dark:          #1A1A1A;
-  --color-dark-card:     #1C1A17;
+  --color-dark: #1A1A1A;
+  --color-dark-card: #1C1A17;
 
-  /* Text */
-  --color-text-primary:  #1A1A1A;
-  --color-text-secondary:#6B6560;
-  --color-text-muted:    #9E9790;
+  /*Text*/
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #6B6560;
+  --color-text-muted: #9E9790;
 
-  /* Status */
-  --color-success:       #2D7A45;
-  --color-success-bg:    #E8F5EE;
-  --color-danger:        #C0392B;
-  --color-danger-bg:     #FDE8E2;
-  --color-warning:       #B8860B;
+  /*Status*/
+  --color-success: #2D7A45;
+  --color-success-bg: #E8F5EE;
+  --color-danger: #C0392B;
+  --color-danger-bg: #FDE8E2;
+  --color-warning: #B8860B;
 
-  /* Borders */
-  --color-border:        #E4DDD4;
-  --color-border-light:  #F0EBE3;
+  /*Borders*/
+  --color-border: #E4DDD4;
+  --color-border-light: #F0EBE3;
 
-  /* Sidebar */
-  --sidebar-width:       260px;
+  /*Sidebar*/
+  --sidebar-width: 260px;
 
-  /* Typography */
-  --font-display:        'Playfair Display', Georgia, serif;
-  --font-body:           'DM Sans', sans-serif;
+  /*Typography*/
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', sans-serif;
 
-  /* Spacing */
-  --radius-sm:           6px;
-  --radius-md:           12px;
-  --radius-lg:           16px;
-  --radius-xl:           24px;
-  --radius-full:         9999px;
+  /*Spacing*/
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-sm:           0 1px 3px rgba(0,0,0,0.06);
-  --shadow-md:           0 4px 16px rgba(0,0,0,0.08);
-  --shadow-lg:           0 8px 32px rgba(0,0,0,0.12);
+  /*Shadows*/
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
 }
 
-/* ── Reset ── */
+/*Reset*/
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -88,7 +84,7 @@ input, select {
   outline: none;
 }
 
-/* ── Shared Button Styles ── */
+/*Shared Button Styles*/
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -130,7 +126,7 @@ input, select {
   border-color: #ccc;
 }
 
-/* ── Shared Input Styles ── */
+/*Shared Input Styles*/
 .input-field {
   width: 100%;
   padding: 12px 14px;
@@ -151,7 +147,7 @@ input, select {
   color: var(--color-text-muted);
 }
 
-/* ── Shared Label ── */
+/*Shared Label*/
 .input-label {
   display: block;
   font-size: 13px;
@@ -160,13 +156,13 @@ input, select {
   margin-bottom: 6px;
 }
 
-/* ── App Layout (Sidebar + Content) ── */
+/*App Layout: Sidebar + Content*/
 .app-layout {
   display: flex;
   min-height: 100vh;
 }
 
-/* ── Sidebar ── */
+/*Sidebar*/
 .sidebar {
   width: var(--sidebar-width);
   min-height: 100vh;
@@ -207,7 +203,6 @@ input, select {
 
 .app-layout.sidebar-collapsed .sidebar-nav {
   padding: 20px 0;
-  /* ensure icons are centered with no side padding affecting the column */
 }
 
 .sidebar-section-label {
@@ -324,7 +319,7 @@ input, select {
   color: var(--color-danger);
 }
 
-/* ── Main Content Area ── */
+/*Main Content Area*/
 .main-content {
   margin-left: var(--sidebar-width);
   flex: 1;
@@ -334,7 +329,7 @@ input, select {
   transition: margin-left 0.3s ease;
 }
 
-/* ── Top Header ── */
+/*Top Header*/
 .topbar {
   display: flex;
   align-items: center;
@@ -360,13 +355,13 @@ input, select {
   color: var(--color-text-primary);
 }
 
-/* ── Page Content ── */
+/*Page Content*/
 .page-content {
   padding: 32px;
   flex: 1;
 }
 
-/* ── Stat Cards ── */
+/*Stat Cards*/
 .stat-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -404,7 +399,7 @@ input, select {
   margin-top: 4px;
 }
 
-/* ── Section Header ── */
+/*Section Header*/
 .section-header {
   display: flex;
   align-items: center;
@@ -419,7 +414,7 @@ input, select {
   color: var(--color-text-primary);
 }
 
-/* ── Empty State ── */
+/*Empty State*/
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -449,7 +444,7 @@ input, select {
   max-width: 300px;
 }
 
-/* ── Overlay / Modal ── */
+/*Overlay/ Modal*/
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -502,7 +497,7 @@ input, select {
 
 .modal-close-btn:hover { background: var(--color-border); }
 
-/* ── Select field ── */
+/*Select field*/
 .select-field {
   width: 100%;
   padding: 12px 38px 12px 14px;
@@ -525,7 +520,7 @@ input, select {
   box-shadow: 0 0 0 3px rgba(232, 72, 26, 0.10);
 }
 
-/* ── Group Card ── */
+/*Group Card*/
 .group-card {
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
@@ -638,7 +633,7 @@ input, select {
   margin: 0 auto 24px;
 }
 .status-icon-box.pending {
-  background-color: #FEF3C7; /* Soft yellow accent */
+  background-color: #FEF3C7;
   color: var(--color-warning);
 }
 .status-icon-box.denied {
@@ -670,9 +665,7 @@ input, select {
   background: #A93226;
 }
 
-/* ================================================
-   SIDEBAR COLLAPSE / SLIDE TOGGLE
-   ================================================ */
+/*Sidebar Collapse/ Slide Toggle*/
 .app-layout .sidebar {
   transition: width 0.3s ease;
 }
@@ -762,8 +755,6 @@ input, select {
   padding: 0;
 }
 
-/* duplicate removed - main rule above */
-
 .app-layout.sidebar-collapsed .sidebar-footer {
   display: flex;
   justify-content: center;
@@ -788,7 +779,7 @@ input, select {
   display: none;
 }
 
-/* Prevent transition flash on page load when restoring collapsed state */
+/*Prevent transition flash on page load when restoring collapsed state*/
 .app-layout.no-transition .sidebar,
 .app-layout.no-transition .main-content {
   transition: none !important;
