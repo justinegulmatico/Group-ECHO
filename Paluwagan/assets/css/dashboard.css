@@ -1,15 +1,11 @@
-/* ================================================
-   TrustFund — Dashboard Page Styles
-   ================================================ */
-
-/* ── Topbar height — matches sidebar logo section exactly ── */
+/*Topbar height*/
 .topbar {
   height: 73px;
   padding-top: 0;
   padding-bottom: 0;
 }
 
-/* ── Stat Cards ── */
+/*Stat Cards*/
 .stat-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -52,7 +48,7 @@
   margin-top: 4px;
 }
 
-/* ── Section Header ── */
+/*Section Header*/
 .section-header {
   display: flex;
   align-items: center;
@@ -66,7 +62,7 @@
   color: var(--color-text-primary);
 }
 
-/* ── New Group Button ── */
+/*New Group Button*/
 .new-group-btn {
   display: inline-flex;
   align-items: center;
@@ -84,14 +80,14 @@
 
 .new-group-btn:hover { background: var(--color-primary-hover); }
 
-/* ── Group Cards Grid ── */
+/*Group Cards Grid*/
 .group-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
 
-/* ── Group Card ── */
+/*Group Card*/
 .group-card {
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
@@ -125,7 +121,7 @@
   margin-top: 2px;
 }
 
-/* ── Badge ── */
+/*Badge*/
 .badge {
   padding: 3px 10px;
   border-radius: var(--radius-full);
@@ -165,7 +161,7 @@
   transition: width 0.4s ease;
 }
 
-/* ── Group Card Bottom Row ── */
+/*Group Card Bottom Row*/
 .group-card-bottom {
   display: flex;
   align-items: center;
@@ -184,7 +180,7 @@
   color: var(--color-text-secondary);
 }
 
-/* ── Member Chips ── */
+/*Member Chips*/
 .member-chips {
   display: flex;
 }
@@ -206,7 +202,7 @@
 
 .member-chip:first-child { margin-left: 0; }
 
-/* ── Empty State ── */
+/*Empty State*/
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -236,9 +232,7 @@
   max-width: 300px;
 }
 
-/* ================================================
-   MODAL OVERLAY & Z-INDEX FIX
-   ================================================ */
+/*modal overlay and Z-index fix*/
 
 .modal-overlay {
         position: fixed !important;
@@ -253,7 +247,7 @@
     }
 
 .modal {
-        background: var(--color-surface) !important; /* Uses your global surface color */
+        background: var(--color-surface) !important;
         width: 90% !important;
         max-width: 500px !important;
         max-height: 85vh !important;
@@ -265,7 +259,6 @@
         z-index: 1000000 !important;
     }
 
-/* Ensure the close button stays positioned correctly */
 .modal-close {
         position: absolute;
         top: 15px;
@@ -277,14 +270,12 @@
         color: var(--color-text-secondary);
     }
 
-/* =========================================
-       MODAL INTERNAL LININGS & FORM STYLES
-       ========================================= */
+/*Modal Internal Linings & Form Styles*/
     .modal-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid #e3e3e3; /* The dividing line under the title */
+        border-bottom: 1px solid #e3e3e3;
         padding-bottom: 15px;
         margin-bottom: 20px;
     }
@@ -296,14 +287,14 @@
     }
 
     .modal-footer {
-        border-top: 1px solid #e3e3e3; /* The dividing line above the button */
+        border-top: 1px solid #e3e3e3;
         padding-top: 20px;
         margin-top: 10px;
     }
 
     .form-row {
         display: flex;
-        gap: 15px; /* Adds space between columns */
+        gap: 15px;
         margin-bottom: 15px;
     }
 
@@ -324,19 +315,18 @@
     .input-field {
         width: 100%;
         padding: 10px 12px;
-        border: 1.5px solid #ccc; /* The lining of the input boxes */
+        border: 1.5px solid #ccc;
         border-radius: 8px;
         font-size: 0.95rem;
-        box-sizing: border-box; /* Ensures padding doesn't break width */
+        box-sizing: border-box;
         transition: border-color 0.2s ease;
     }
 
     .input-field:focus {
-        border-color: #f47321; /* Brand orange when clicked */
+        border-color: #f47321;
         outline: none;
     }
 
-    /* Fix the button inside the dashboard */
 .modal .btn-primary {
         background-color: var(--color-primary) !important;
         color: white !important;
@@ -353,9 +343,7 @@
         border: 1px dashed var(--color-primary) !important;
     }
 
-/* ================================================
-   WALLET BALANCE CARD (5th metric card)
-   ================================================ */
+/*Wallet Balance Card*/
 .wallet-card {
   display: flex;
   flex-direction: column;
@@ -409,9 +397,7 @@
   border-color: #d4ccc2;
 }
 
-/* ================================================
-   POLISHED SINGLE DASHBOARD ALERT PANEL
-   ================================================ */
+/*Single Dashboard Alert Panel*/
 .dashboard-alert {
   background: #fff;
   border: 1.5px solid var(--color-border);
@@ -462,9 +448,7 @@
   text-decoration: underline;
 }
 
-/* ================================================
-   DEPOSIT / WITHDRAW ACTION MODALS (ultra-clean)
-   ================================================ */
+/*Deposit/ Withdraw Action Modals*/
 .tx-modal {
   background: #ffffff;
   width: 92%;
@@ -635,10 +619,7 @@
   background: #c7461d;
 }
 
-/* ================================================
-   PENDING PAYMENTS & CYCLES TRACKER (Dashboard Redesign)
-   ================================================ */
-
+/*Pending Payments and Cycles Tracker*/
 .pending-payments-stack {
   display: flex;
   flex-direction: column;
@@ -646,7 +627,7 @@
   margin-bottom: 8px;
 }
 
-/* Elongated horizontal alert card for action-required cycles */
+/*Elongated horizontal alert card for action-required cycles*/
 .payment-alert-card {
   background: #FFFFFF;
   border-radius: 12px;
@@ -660,7 +641,7 @@
   min-height: 78px;
 }
 
-/* Left block: icon + group title + meta */
+/*Left block: icon, group title, and meta*/
 .pac-left {
   display: flex;
   align-items: center;
@@ -702,7 +683,7 @@
   letter-spacing: -.1px;
 }
 
-/* Middle: Receiver spotlight */
+/*Middle: Receiver spotlight*/
 .pac-receiver {
   flex: 1 1 auto;
   min-width: 160px;
@@ -730,7 +711,7 @@
   line-height: 1;
 }
 
-/* Middle-Right: status + thin progress */
+/*Middle-Right: status and thin progress*/
 .pac-status {
   flex: 0 0 148px;
   min-width: 130px;
@@ -758,7 +739,7 @@
   transition: width .35s ease;
 }
 
-/* Far Right: prominent pay button */
+/*Far Right: prominent pay button*/
 .pac-action {
   flex: 0 0 auto;
   display: flex;
@@ -787,9 +768,7 @@
   transform: translateY(1px);
 }
 
-/* ================================================
-   ALL CAUGHT UP (Paid-up healthy state)
-   ================================================ */
+/*Paid-up healthy state*/
 
 .all-caught-up-card {
   background: #FFFFFF;
@@ -838,12 +817,7 @@
   text-decoration: underline;
 }
 
-/* ================================================
-   IMPROVED JOIN CODE EXPERIENCE
-   - Post-create share code card
-   - Enhanced join modal styles (used in dashboard)
-   ================================================ */
-
+/*Join Code: Post-create share code card + Enhanced join modal styles*/
 .invite-share-card {
   background: #fff;
   border: 1.5px solid #E4DDD4;
@@ -917,7 +891,7 @@
   color: #8A837A;
 }
 
-/* Join code modal polish (dashboard join flow) */
+/*Join code modal polish*/
 #joinGroupModal .modal {
   max-width: 420px;
 }
