@@ -1,9 +1,5 @@
-/* ================================================
-   TrustFund — Group Details Page Styles
-   ================================================ */
-
-/* ── App layout: make main-content a fixed-height flex column ── */
-.app-layout {
+/*App layout*/
+.app-layout 
   height: 100vh;
   overflow: hidden;
 }
@@ -18,7 +14,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  margin-left: 260px !important; /* ensure consistent with original sidebar width */
+  margin-left: 260px !important;
   transition: margin-left 0.3s ease;
 }
 
@@ -26,7 +22,7 @@
   margin-left: 72px !important;
 }
 
-/* ── Topbar ── */
+/*Topbar*/
 .topbar {
   height: 73px;
   padding-top: 0;
@@ -34,7 +30,7 @@
   flex-shrink: 0;
 }
 
-/* ── Page content: scrollable for all tabs except chat ── */
+/*Page content: scrollable for all tabs except chat*/
 .page-content {
   flex: 1;
   overflow-y: auto;
@@ -43,13 +39,11 @@
   flex-direction: column;
 }
 
-/* When chat tab is active, page-content stops scrolling
-   and the chat panel fills remaining space */
 .page-content:has(#tab-chat.active) {
   overflow: hidden;
 }
 
-/* ── Group Hero Banner (refined sleek) ── */
+/*Group Hero Banner*/
 .group-hero {
   background: #1C1A17;
   border-radius: 16px;
@@ -174,7 +168,7 @@
   color: #fff;
 }
 
-/* ── Detail Tabs (flat, sharp underline) ── */
+/*Detail Tabs*/
 .detail-tabs {
   display: flex;
   gap: 28px;
@@ -220,13 +214,11 @@
   pointer-events: none;
 }
 
-/* ── Tab Panels ── */
+/*Tab Panels*/
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
-/* Chat tab panel fills remaining space */
-
-/* ══ OVERVIEW TAB ══ */
+/*Overview Tab*/
 .overview-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -261,10 +253,7 @@
 .ov-value.green { color: #166534; }
 .ov-value.red   { color: #991B1B; }
 
-/* Old upcoming row styles removed - using clean table layout */
-
-/* ══ PAYOUT SCHEDULE & MEMBERS TABLES (clean modern) ══ */
-
+/*Payout Schedule and Members Tables*/
 .table-wrap {
   background: #fff;
   border: 1px solid #EDEAE3;
@@ -421,11 +410,7 @@ tbody tr:last-child td { border-bottom: none; }
 .badge-pending { background: #FFF4E0; color: var(--color-warning); }
 .badge-paid    { background: var(--color-success-bg); color: var(--color-success); }
 
-/* ══ SCHEDULE TAB ══ */
-
-/* ══ CHAT TAB ══ */
-
-/* ══ MODALS ══ */
+/*Modals*/
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -524,7 +509,7 @@ tbody tr:last-child td { border-bottom: none; }
   outline: none;
 }
 
-/* ── Empty state ── */
+/*Empty state*/
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -545,7 +530,7 @@ tbody tr:last-child td { border-bottom: none; }
   color: var(--color-text-secondary);
 }
 
-/* === Schedule Tab Card and Table (matching refined design) === */
+/*Schedule Tab Card and Table*/
 .schedule-card {
   background: #FFFFFF;
   border-radius: 12px;
@@ -562,7 +547,7 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 .you-tag {
-  color: #E8A87C; /* low-contrast orange */
+  color: #E8A87C;
   font-size: 11px;
   font-weight: 600;
   margin-left: 4px;
@@ -575,7 +560,7 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 .status-pending {
-  background: #FEF3C7; /* soft pastel yellow/orange */
+  background: #FEF3C7;
   color: #92400E;
   font-size: 11px;
   font-weight: 600;
@@ -611,7 +596,7 @@ tbody tr:last-child td { border-bottom: none; }
   padding-top: 8px;
 }
 
-/* === History Tab Ledger/Timeline === */
+/*History Tab Ledger/Timelin*/
 .history-ledger {
   background: #fff;
   border: 1px solid #EDEAE3;
@@ -681,9 +666,7 @@ tbody tr:last-child td { border-bottom: none; }
   color: #8A837A;
 }
 
-/* ================================================
-   ACTIVE CYCLE HIGHLIGHT CARD (new prominent section)
-   ================================================ */
+/*Actice Cycle Highlight Card*/
 .active-cycle-card {
   background: #fff;
   border: 1.5px solid #E4DDD4;
@@ -706,7 +689,7 @@ tbody tr:last-child td { border-bottom: none; }
   margin-bottom: 8px;
 }
 
-/* Receiver Spotlight */
+/*Receiver Spotlight*/
 .ach-receiver-block {
   padding-right: 8px;
 }
@@ -761,7 +744,7 @@ tbody tr:last-child td { border-bottom: none; }
   color: #166534;
 }
 
-/* Progress Center */
+/*Progress Center*/
 .ach-progress-block {
   padding: 0 6px;
 }
@@ -807,7 +790,7 @@ tbody tr:last-child td { border-bottom: none; }
   border: 1px solid #E4DDD4;
 }
 
-/* Right: Pot + Action */
+/*Right: Pot and Action*/
 .ach-pot-block {
   text-align: right;
 }
@@ -866,7 +849,6 @@ tbody tr:last-child td { border-bottom: none; }
   font-weight: 800;
 }
 
-/* Polish: make the 4 overview cards values pop a bit more */
 .overview-stat-card .ov-value {
   font-weight: 800;
   letter-spacing: -0.3px;
