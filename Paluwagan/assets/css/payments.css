@@ -1,15 +1,11 @@
-/* ================================================
-   TrustFund — Payments Page Styles
-   ================================================ */
-
-/* ── Topbar height — matches sidebar logo ── */
+/*Topbar height*/
 .topbar {
   height: 73px;
   padding-top: 0;
   padding-bottom: 0;
 }
 
-/* ── Page Toolbar ── */
+/*Page Toolbar*/
 .page-toolbar {
   display: flex;
   align-items: center;
@@ -34,7 +30,7 @@
   flex-shrink: 0;
 }
 
-/* ── Search Bar ── */
+/*Search Bar*/
 .search-wrap {
   position: relative;
   width: 100%;
@@ -71,9 +67,7 @@
   outline: none;
 }
 
-/* ── Filter Select ── */
-
-/* ── Table Card ── */
+/*Table Card*/
 .table-card {
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
@@ -81,7 +75,7 @@
   overflow: hidden;
 }
 
-/* ── Table ── */
+/*Table*/
 .payments-table {
   width: 100%;
   border-collapse: collapse;
@@ -119,7 +113,7 @@
   background: var(--color-surface-muted);
 }
 
-/* ── Table Cell Types ── */
+/*Table Cell Types*/
 .cell-group {
   font-weight: 600;
   color: var(--color-text-primary);
@@ -141,7 +135,7 @@
   white-space: nowrap;
 }
 
-/* ── Badge ── */
+/*Badge*/
 .badge {
   display: inline-flex;
   align-items: center;
@@ -155,7 +149,7 @@
 .badge-paid    { background: var(--color-success-bg); color: var(--color-success); }
 .badge-pending { background: #FFF4E0; color: var(--color-warning); }
 
-/* ── Empty State ── */
+/*Empty State*/
 .empty-state {
   display: flex;
   flex-direction: column;
