@@ -175,16 +175,16 @@
               $ac_status = ($ac_collected + 0.5 >= $ac_full) ? 'Ready to Collect' : 'Awaiting Pool Completion';
               $ac_status_class = ($ac_collected + 0.5 >= $ac_full) ? 'ready' : 'awaiting';
 
-              // did current user pay this cycle?
+              //did current user pay this cycle?
               $user_paid_active = false;
               if (!empty($my_member_id)) {
-                // computed in controller
+                //computed in controller
                 $user_paid_active = !empty($user_paid_for_active_cycle);
               }
             ?>
-            <!-- Active Cycle Highlight Card -->
+            <!--Active Cycle Highlight Card -->
             <div class="active-cycle-card">
-              <!-- Left: Receiver Spotlight -->
+              <!--Left: Receiver Spotlight-->
               <div class="ach-receiver-block">
                 <div class="ach-section-label">Current Receiver</div>
                 <div class="ach-receiver-main">
@@ -197,7 +197,7 @@
                 <span class="ach-status-badge <?= $ac_status_class ?>"><?= $ac_status ?></span>
               </div>
 
-              <!-- Center: Progress -->
+              <!--Center: Progress-->
               <div class="ach-progress-block">
                 <div class="ach-section-label">Collection Progress</div>
                 <div class="ach-progress-container">
@@ -211,7 +211,7 @@
                 </div>
               </div>
 
-              <!-- Right: Pot + Action -->
+              <!--Right: Pot + Action -->
               <div class="ach-pot-block">
                 <div class="ach-pot-mini">
                   <div class="ach-pot-label">Pot to be Distributed</div>
@@ -238,13 +238,13 @@
                     <?php endif; ?>
                   <?php endif; ?>
                 <?php else: ?>
-                  <!-- Non-members see the join banner instead of contribute action -->
+                  <!--Non-members see the join banner instead of contribute action-->
                 <?php endif; ?>
               </div>
             </div>
             <?php endif; ?>
 
-            <!-- Members & Positions (kept in Overview) -->
+            <!--Members & Positions (kept in Overview)-->
             <div style="margin-top: 24px;">
               <div style="font-size:14px; font-weight:700; color:#1F1C19; margin-bottom:10px;">Members &amp; Positions</div>
               <div class="table-wrap">
@@ -360,9 +360,9 @@
                   <?php foreach ($cycles as $cy): 
                     $rec = $cy['receiver'];
                     $recName = $rec ? htmlspecialchars($rec['first_name']) : 'Pos ' . $cy['cycle_number'];
-                    // Check if current user paid this cycle
+                    //Check if current user paid this cycle
                     $myPaid = 0;
-                    // student code just shows collected (no extra query)
+                    //student code just shows collected (no extra query)
                   ?>
                     <tr>
                       <td><strong>#<?= $cy['cycle_number'] ?></strong></td>
@@ -450,7 +450,7 @@
       </div></div></div>
 
   <?php if ($current_group['status'] === 'pending' && (int)$current_group['created_by'] === $current_user_id): ?>
-  <!-- Activation Confirmation Modal -->
+  <!--Activation Confirmation Modal-->
   <div class="modal-backdrop" id="activationModal">
     <div class="modal" style="max-width: 460px;">
       <div class="modal-header">
@@ -481,7 +481,7 @@
   <?php endif; ?>
 
   <script>
-    // activate modal funcs
+    //activate modal funcs
     function openActivationModal(memberCount) {
       const modal = document.getElementById('activationModal');
       const countEl = document.getElementById('activationMemberCount');
@@ -497,13 +497,13 @@
     function confirmAndActivate() {
       const form = document.getElementById('activateForm');
       if (form) {
-        // submit hidden form for activate
+        //submit hidden form for activate
         form.submit();
       }
       closeActivationModal();
     }
 
-    // close activate modal on backdrop
+    //close activate modal on backdrop
     (function() {
       const actModal = document.getElementById('activationModal');
       if (actModal) {
@@ -531,7 +531,7 @@
             <input class="input-field" type="text" value="<?= htmlspecialchars($full_name); ?>" readonly style="background-color: #f3f4f6; cursor: not-allowed;" />
           </div>
 
-          <!-- Wallet Balance (replaces Payment Method) -->
+          <!--Wallet Balance (replaces Payment Method)-->
           <div class="wallet-balance-box">
             <div class="wb-label">Paying from your Wallet Balance</div>
             <div class="wb-amount">₱<?= number_format($wallet_balance, 2); ?></div>
@@ -549,7 +549,7 @@
               <label class="input-label">Cycle #</label>
               <select name="cycle_number" class="input-field">
                 <?php 
-                  // user pos for receiver filter
+                  //user pos for receiver filter
                   $current_user_pos = 0;
                   foreach ($group_members as $m) {
                       if ((int)$m['user_id'] === $current_user_id) {
@@ -563,7 +563,7 @@
                     $is_my_payout_cycle = ($current_user_pos > 0 && $current_user_pos === $cyc_num);
                     $is_released = (($cyc['payout_status'] ?? 'pending') === 'released');
 
-                    // skip if user is receiver or already paid
+                    //skip if user is receiver or already paid
                     if ($is_my_payout_cycle || $is_released) {
                         continue;
                     }
@@ -594,12 +594,12 @@
       function closeRecordPaymentModal() {
           document.getElementById('paymentRecordModal').classList.remove('open');
       }
-      // Backdrop close registration layout engine
+      //Backdrop close registration layout engine
       document.getElementById('paymentRecordModal').addEventListener('click', function(e) {
           if (e.target === this) this.classList.remove('open');
       });
 
-      // Live insufficient balance warning (client-side convenience)
+      //Live insufficient balance warning (client-side convenience)
       (function() {
         const amountInput = document.getElementById('pay-amount');
         const warning = document.getElementById('insufficient-warning');
