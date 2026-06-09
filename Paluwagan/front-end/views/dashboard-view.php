@@ -56,7 +56,7 @@
             <div class="stat-card-sub">received minus contributed</div>
           </div>
 
-          <!-- Wallet Balance Card -->
+          <!--Wallet Balance Card-->
           <div class="stat-card wallet-card">
             <div class="stat-card-label" style="color:#9E9790; font-size:11px; letter-spacing:0.02em;">WALLET BALANCE</div>
             <div class="wallet-balance-amount">₱<?= number_format($wallet_balance, 2); ?></div>
@@ -102,14 +102,14 @@
             </div>
         <?php else: ?>
             <?php if (!empty($pending_payments)): ?>
-                <!-- High-Impact Pending Payments & Cycles Tracker -->
+                <!--High-Impact Pending Payments and Cycles Tracker-->
                 <div class="pending-payments-stack">
                     <?php foreach ($pending_payments as $pp): ?>
                         <div class="payment-alert-card">
-                            <!-- Left: Group Info + Icon -->
+                            <!--Left: Group Info and Icon-->
                             <div class="pac-left">
                                 <div class="pac-icon">
-                                    <!-- Vibrant orange money / alert pouch icon -->
+                                    <!--Vibrant orange money/ alert pouch icon-->
                                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M12 2C9.5 2 7.5 3.8 7.5 6v1.2H6c-1.1 0-2 .9-2 2v9.6c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V9.2c0-1.1-.9-2-2-2h-1.5V6c0-2.2-2-4-4.5-4z" fill="#E15225"/>
                                         <path d="M9 11.5h6M9 14.5h4" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
@@ -121,13 +121,13 @@
                                 </div>
                             </div>
 
-                            <!-- Middle: Receiver Spotlight (cream pill) -->
+                            <!--Middle: Receiver Spotlight (cream pill)-->
                             <div class="pac-receiver">
                                 <div class="pac-receiver-label">Receiver</div>
                                 <div class="pac-receiver-pill"><?= htmlspecialchars($pp['receiver_name']); ?></div>
                             </div>
 
-                            <!-- Middle-Right: Status + thin progress -->
+                            <!--Middle-Right: Status and thin progress-->
                             <div class="pac-status">
                                 <div class="pac-progress-label"><?= (int)$pp['paid_count']; ?>/<?= (int)$pp['total_members']; ?> Members Paid</div>
                                 <div class="pac-progress-track">
@@ -138,7 +138,7 @@
                                 </div>
                             </div>
 
-                            <!-- Far Right: Direct Pay Action -->
+                            <!--Far Right: Direct Pay Action-->
                             <div class="pac-action">
                                 <form method="POST" action="dashboard.php" style="margin:0;">
                                     <input type="hidden" name="action_pay_dashboard" value="1">
@@ -155,7 +155,7 @@
                     <?php endforeach; ?>
                 </div>
             <?php else: ?>
-                <!-- Healthy / Paid-Up State -->
+                <!--Healthy/ Paid-Up State-->
                 <div class="all-caught-up-card">
                     <div class="acu-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -172,7 +172,7 @@
         <?php endif; ?>
 
         <?php if (!empty($newly_created_invite_code)): ?>
-          <!-- Improved post-create join code sharing (high-visibility, copyable) -->
+          <!--Improved post-create join code sharing (high-visibility, copyable)-->
           <div class="invite-share-card">
             <div class="invite-header">
               <span class="invite-icon">🔑</span>
@@ -262,9 +262,7 @@
     </div>
   </div>
 
-
-
-<!-- Group Choice Modal -->
+<!--Group Choice Modal-->
 <div class="modal-overlay" id="group-choice-modal" style="display:none;">
   <div class="modal" style="max-width: 400px; padding: 0;">
     
@@ -275,7 +273,7 @@
 
     <div class="modal-body" style="padding: 20px 24px 28px;">
       
-      <!-- Create Group -->
+      <!--Create Group-->
       <div onclick="chooseCreateGroup()" 
            style="display:flex; align-items:center; gap:14px; padding:16px; border:2px solid #E4DDD4; border-radius:12px; cursor:pointer; margin-bottom:12px; transition:all 0.2s;"
            onmouseover="this.style.borderColor='#E8481A'"
@@ -289,7 +287,7 @@
         </div>
       </div>
 
-      <!-- Join Group -->
+      <!--Join Group-->
       <div onclick="chooseJoinGroup()" 
            style="display:flex; align-items:center; gap:14px; padding:16px; border:2px solid #E4DDD4; border-radius:12px; cursor:pointer; transition:all 0.2s;"
            onmouseover="this.style.borderColor='#E8481A'"
@@ -307,11 +305,11 @@
   </div>
 </div>
 
-<!-- Join Group Modal (improved join code UX) -->
+<!--Join Group Modal (improved join code UX)-->
 <div class="modal-overlay" id="joinGroupModal" style="display:none;">
   <div class="modal">
     
-    <!-- Header -->
+    <!--Header-->
     <div class="modal-header">
       <span class="modal-title">Join with Invite Code</span>
       <button class="modal-close" onclick="toggleJoinModal(false)">✕</button>
@@ -327,7 +325,7 @@
         </div>
 
         <div class="code-input-wrap">
-          <!-- Key icon -->
+          <!--Key icon-->
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777z"/>
             <path d="M15.5 7.5l3 3L22 7"/>
@@ -355,7 +353,7 @@
   </div>
 </div>
 
-  <!-- ==================== DEPOSIT FUNDS MODAL ==================== -->
+  <!--deposit funds modal-->
   <div class="modal-overlay" id="deposit-modal" style="display:none;">
     <div class="tx-modal">
       <div class="tx-modal-header">
@@ -403,7 +401,7 @@
     </div>
   </div>
 
-  <!-- ==================== WITHDRAW FUNDS MODAL ==================== -->
+  <!--Withdraw funds modal-->
   <div class="modal-overlay" id="withdraw-modal" style="display:none;">
     <div class="tx-modal">
       <div class="tx-modal-header">
@@ -450,7 +448,7 @@
     </div>
   </div>
 
-  <!-- Deposit Pending Approval Modal (shown after regular user submits a deposit) -->
+  <!--Deposit Pending Approval Modal (shown after regular user submits a deposit)-->
   <div class="modal-overlay" id="deposit-pending-modal" style="display:none;">
     <div class="tx-modal" style="max-width: 420px; text-align: center;">
       <div class="tx-modal-header" style="border-bottom: none; justify-content: center; padding-bottom: 8px;">
@@ -486,7 +484,7 @@
   </div>
   
   <script>
-  // open choice modal for +new group
+  //open choice modal for new group button
   const openChoiceBtn = document.getElementById('open-group-choice');
   const choiceModal = document.getElementById('group-choice-modal');
 
@@ -496,12 +494,12 @@
     });
   }
 
-  // close choice modal
+  //close choice modal
   function closeChoiceModal() {
     if (choiceModal) choiceModal.style.display = 'none';
   }
 
-  // click outside to close choice
+  //click outside to close choice
   if (choiceModal) {
     choiceModal.addEventListener('click', function(e) {
       if (e.target === choiceModal) {
@@ -510,14 +508,14 @@
     });
   }
 
-  // create group flow
+  //create group flow
   function chooseCreateGroup() {
     closeChoiceModal();
     const createModal = document.getElementById('modal-create');
     if (createModal) createModal.style.display = 'flex';
   }
 
-  // join group flow
+  //join group flow
   function chooseJoinGroup() {
     closeChoiceModal();
     const joinModal = document.getElementById('joinGroupModal');
@@ -529,7 +527,7 @@
     if (modal) modal.style.display = show ? 'flex' : 'none';
   }
 
-  // click out to close join modal
+  //click out to close join modal
   const joinModal = document.getElementById('joinGroupModal');
   if (joinModal) {
     joinModal.addEventListener('click', function(e) {
@@ -542,7 +540,7 @@
   function closeChoiceModal() {
   document.getElementById('group-choice-modal').style.display = 'none';
 }
-  // close create on outside click
+  //close create on outside click
   const createModal = document.getElementById('modal-create');
   if (createModal) {
     createModal.addEventListener('click', function(e) {
@@ -555,7 +553,7 @@
   const modalCreate = document.getElementById('modal-create');
   const modalCreateCloseBtn = modalCreate ? modalCreate.querySelector('.modal-close') : null;
 
-  // x button + outside click to close create modal
+  //x button + outside click to close create modal
   if (modalCreate) {
     modalCreate.addEventListener('click', function(e) {
       if (e.target === modalCreate) {
@@ -564,7 +562,7 @@
     });
   }
 
-  // invite code toggle (private groups)
+  //invite code toggle (private groups)
   function toggleInviteCode() {
     const privacySel = document.getElementById('cg-privacy');
     const container = document.getElementById('invite-code-container');
@@ -573,7 +571,7 @@
 
     if (privacySel.value === 'private') {
       container.style.display = 'block';
-      // preview code (server makes real one)
+      //preview code (server makes real one)
       if (codeInput && !codeInput.value) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let code = '';
@@ -586,16 +584,16 @@
     }
   }
 
-  // Initialize invite visibility on load if needed
+  //Initialize invite visibility on load if needed
   document.addEventListener('DOMContentLoaded', function() {
     const privacySel = document.getElementById('cg-privacy');
     if (privacySel) {
-      // run once on load
+      //run once on load
       setTimeout(toggleInviteCode, 0);
       privacySel.addEventListener('change', toggleInviteCode);
     }
 
-    // wallet modals (deposit/withdraw)
+    //wallet modals (deposit/withdraw)
     const btnDeposit = document.getElementById('btn-deposit');
     const btnWithdraw = document.getElementById('btn-withdraw');
     const depositModal = document.getElementById('deposit-modal');
@@ -615,7 +613,7 @@
       btnWithdraw.addEventListener('click', () => showModal(withdrawModal));
     }
 
-    // close btns
+    //close buttons
     const closeDep = document.getElementById('close-deposit');
     const cancelDep = document.getElementById('cancel-deposit');
     if (closeDep) closeDep.addEventListener('click', () => hideModal(depositModal));
@@ -626,7 +624,7 @@
     if (closeW) closeW.addEventListener('click', () => hideModal(withdrawModal));
     if (cancelW) cancelW.addEventListener('click', () => hideModal(withdrawModal));
 
-    // Click outside to close
+    //Click outside to close
     if (depositModal) {
       depositModal.addEventListener('click', function(e) {
         if (e.target === depositModal) hideModal(depositModal);
@@ -638,7 +636,7 @@
       });
     }
 
-    // Optional: reset form on close (simple)
+    //Optional: reset form on close (simple)
     if (depositModal) {
       const depForm = depositModal.querySelector('form');
       if (depForm) {
@@ -648,7 +646,7 @@
       }
     }
 
-    // show pending approval modal after deposit (regular users)
+    //show pending approval modal after deposit (regular users)
     <?php if (!empty($show_deposit_pending_modal) && $show_deposit_pending_modal): ?>
     (function() {
       const pendingModal = document.getElementById('deposit-pending-modal');
@@ -658,7 +656,7 @@
     })();
     <?php endif; ?>
 
-    // Attach live formatter to the improved join code input (safe, after DOM ready)
+    //Attach live formatter to the improved join code input (safe, after DOM ready)
     const joinCodeInput = document.getElementById('join-code-input');
     if (joinCodeInput) {
       joinCodeInput.addEventListener('input', function() {
@@ -666,7 +664,7 @@
         if (cleaned.length > 6) cleaned = cleaned.slice(0, 6);
         this.value = cleaned;
       });
-      // clean on paste too
+      //clean on paste too
       joinCodeInput.addEventListener('paste', function() {
         setTimeout(() => {
           let cleaned = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
@@ -675,20 +673,20 @@
       });
     }
 
-    // clean url after showing quick-pay success banner (so refresh doesn't re-show)
+    //clean url after showing quick-pay success banner (so refresh doesn't re-show)
     if (window.location.search.includes('payment_success')) {
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
     }
   });
 
-  // Close handler for the deposit pending approval modal
+  //Close handler for the deposit pending approval modal
   function closeDepositPendingModal() {
     const m = document.getElementById('deposit-pending-modal');
     if (m) m.style.display = 'none';
   }
 
-  // Also allow closing by clicking the overlay background
+  //Also allow closing by clicking the overlay background
   const pendingOverlay = document.getElementById('deposit-pending-modal');
   if (pendingOverlay) {
     pendingOverlay.addEventListener('click', function(e) {
@@ -698,7 +696,7 @@
     });
   }
 
-  // copy join code after private group create
+  //copy join code after private group create
   function copyInviteCode(e) {
     if (e) e.preventDefault();
     const box = document.getElementById('invite-code-box');
@@ -735,7 +733,7 @@
     setTimeout(() => { boxEl.textContent = original; }, 1400);
   }
 
-  // join code input: uppercase + clean
+  //join code input: uppercase and clean
   function formatJoinCode(input) {
     // keep alnum, upper, max 6
     let cleaned = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
