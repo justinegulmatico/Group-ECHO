@@ -104,15 +104,6 @@
               <div class="admin-card-count"><?= $total_groups ?> groups</div>
             </div>
           </a>
-
-          <a href="controls.php" class="admin-card">
-            <div class="admin-card-icon" style="background:#f3e8ff; color:#6b21a8;">⚙️</div>
-            <div class="admin-card-content">
-              <div class="admin-card-title">Admin Controls</div>
-              <div class="admin-card-desc">Advance cycles, force payments, release payouts, edit dates.</div>
-              <div class="admin-card-count">Simulation tools</div>
-            </div>
-          </a>
         </div>
 
         <div style="margin-top: 40px; font-size: 13px; color: #8a7f74;">

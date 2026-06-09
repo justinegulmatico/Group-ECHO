@@ -1,15 +1,5 @@
 <?php
-/**
- * process_join_group.php
- * 
- * OLTP Transaction: Join Paluwagan Group (assigns next available position)
- * 
- * Key Transactional Features:
- * - Uses SELECT ... FOR UPDATE to lock the roster for this group (prevents race conditions when multiple users join simultaneously).
- * - Entire operation (check capacity + assign position + insert + history log) is atomic.
- * - If the group fills up between the time the user saw it and when they submit, the transaction will correctly reject.
- */
-
+// join using invite code (with lock)
 session_start();
 require_once "../db.php";
 
@@ -35,7 +25,7 @@ try {
     $db = Database::getInstance();
 
     $result = $db->transaction(function($pdo) use ($user_id, $invite_code) {
-        // 1. Lock and validate the group (using FOR UPDATE on the group row)
+        // lock group + validate invite
         $stmt = $pdo->prepare(
             "SELECT * FROM groups WHERE invite_code = ? AND (status = 'active' OR status = 'pending') FOR UPDATE"
         );
@@ -49,7 +39,7 @@ try {
         $target_group_id = (int)$group['group_id'];
         $max_slots = (int)($group['cycle_length'] ?: $group['max_members'] ?: 5);
 
-        // 2. Lock all current active members of this group (prevents two people joining at the exact same time and both getting the last slot)
+        // lock members too (race safe)
         $stmt = $pdo->prepare(
             "SELECT COUNT(*) as current_slots FROM group_members 
              WHERE group_id = ? AND status = 'active' 
@@ -62,7 +52,7 @@ try {
             throw new Exception("This savings group is already full. No open slots remain.");
         }
 
-        // 3. Compute next position under lock
+        // next position under lock
         $stmt = $pdo->prepare(
             "SELECT COALESCE(MAX(position), 0) + 1 as next_pos 
              FROM group_members 
@@ -71,13 +61,13 @@ try {
         $stmt->execute([$target_group_id]);
         $nextPosition = (int)$stmt->fetchColumn();
 
-        // 4. Insert the new member
+        // insert member
         $stmt = $pdo->prepare(
             "INSERT INTO group_members (user_id, group_id, status, position) VALUES (?, ?, 'active', ?)"
         );
         $stmt->execute([$user_id, $target_group_id, $nextPosition]);
 
-        // 5. Log the join
+        // log join
         $hist = $pdo->prepare("
             INSERT INTO group_history (group_id, event_type, actor_user_id, target_user_id, description) 
             VALUES (?, 'member_joined', ?, ?, ?)

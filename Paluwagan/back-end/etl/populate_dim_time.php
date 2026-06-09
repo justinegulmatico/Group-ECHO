@@ -1,15 +1,5 @@
 <?php
-/**
- * etl/populate_dim_time.php
- * 
- * Safe PHP-based populator for dim_time dimension.
- * 
- * This is the most reliable way to populate the time dimension
- * because it avoids all MariaDB/MySQL DELIMITER headaches.
- * 
- * Usage:
- *   php back-end/etl/populate_dim_time.php 2024-01-01 2027-12-31
- */
+// pop dim_time (php way, no delimiter pain)
 
 require_once __DIR__ . '/../olap_db.php';
 

@@ -1,20 +1,5 @@
 <?php
-/**
- * api/analytics_data.php
- * 
- * Dedicated API endpoint for the OLAP Analytics Dashboard.
- * 
- * This file is intentionally kept simple and heavily commented for a BS IT student.
- * 
- * It accepts filter parameters via GET and returns clean JSON data.
- * All heavy OLAP logic (Slice, Dice, Roll-up, Drill-down) lives here.
- * 
- * Called via AJAX (fetch) from admin/analytics.php
- */
-
-// ============================================
-// 1. SECURITY & HEADERS
-// ============================================
+// analytics data api (slice/dice/rollup stuff for olap dash)
 session_start();
 header('Content-Type: application/json');
 
@@ -24,65 +9,47 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     exit();
 }
 
-// ============================================
-// 2. GET FILTER PARAMETERS (from the browser)
-// ============================================
+// get filters from url
 $year       = isset($_GET['year']) ? (int)$_GET['year'] : 0;           // 0 = All years
 $quarter    = isset($_GET['quarter']) ? (int)$_GET['quarter'] : 0;     // 0 = All quarters
 $group_key  = isset($_GET['group_key']) ? (int)$_GET['group_key'] : 0; // 0 = All groups
 $time_level = $_GET['time_level'] ?? 'month';                          // 'year', 'quarter', 'month'
 $trans_type = $_GET['trans_type'] ?? 'all';                            // 'all', 'contribution', 'payout'
 
-// ============================================
-// 3. CONNECT TO OLAP DATA WAREHOUSE
-// ============================================
+// olap connection
 require_once __DIR__ . '/../olap_db.php';
 $olap = OlapDatabase::getInstance()->getPdo();
 
-// ============================================
-// 4. BUILD DYNAMIC WHERE CLAUSE
-// This is where SLICE and DICE happen.
-// We safely build conditions using prepared statements.
-// ============================================
+// build where (slice/dice)
 $where = "1=1";
 $params = [];
 
 if ($year > 0) {
-    // SLICE on time dimension (one specific year).
-    // We also check YEAR(ft.created_at) so that the year filter stays functional
-    // even if some facts use a fallback time_key (common during early ETL or date population issues).
-    // This makes the dropdown options (populated from actual OLAP fact data) actually work.
+    // year slice (also check created_at fallback)
     $where .= " AND (dt.year = ? OR YEAR(ft.created_at) = ?)";
     $params[] = $year;
     $params[] = $year;
 }
 
 if ($quarter > 0) {
-    // DICE - adding another dimension
     $where .= " AND dt.quarter = ?";
     $params[] = $quarter;
 }
 
 if ($group_key > 0) {
-    // Classic SLICE on the Group dimension
     $where .= " AND ft.group_key = ?";
     $params[] = $group_key;
 }
 
 if ($trans_type !== 'all') {
-    // DICE on transaction type
     $where .= " AND ft.transaction_type = ?";
     $params[] = $trans_type;
 }
 
-// ============================================
-// 5. TIME GRANULARITY (ROLL-UP / DRILL-DOWN)
-// The GROUP BY changes based on what the user selects.
-// This is the core of OLAP aggregation.
-// ============================================
+// time grouping (rollup/drill)
 function getTimeGrouping($level) {
     if ($level === 'year') {
-        // ROLL-UP to the highest level
+        // year rollup
         return [
             'select' => "dt.year as period_label",
             'group'  => "dt.year",
@@ -95,7 +62,7 @@ function getTimeGrouping($level) {
             'order'  => "dt.year, dt.quarter"
         ];
     } else {
-        // Default = most detailed (DRILL-DOWN)
+        // default = drill to month
         return [
             'select' => "CONCAT(dt.year, '-', LPAD(dt.month, 2, '0')) as period_label",
             'group'  => "dt.year, dt.month",
@@ -106,11 +73,9 @@ function getTimeGrouping($level) {
 
 $timeGroup = getTimeGrouping($time_level);
 
-// ============================================
-// 6. RUN THE OLAP QUERIES
-// ============================================
+// run queries
 try {
-    // --- SUMMARY CARDS (KPI) ---
+    // summary kpis
     $summary_sql = "
         SELECT 
             COALESCE(SUM(ft.amount_contribution), 0) AS total_contributions,
@@ -125,8 +90,7 @@ try {
     $stmt->execute($params);
     $summary = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // --- DATA FOR BAR CHART + PIE CHART ---
-    // Grouped by Group (good for both contribution bars and payout pie)
+    // by group (for bar/pie)
     $group_sql = "
         SELECT 
             dg.group_name,
@@ -144,8 +108,7 @@ try {
     $stmt->execute($params);
     $by_group = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // --- DATA FOR LINE CHART (Trends) ---
-    // The GROUP BY is controlled by $timeGroup (Roll-up / Drill-down magic)
+    // time series (line chart)
     $time_sql = "
         SELECT 
             {$timeGroup['select']},
@@ -162,9 +125,7 @@ try {
     $stmt->execute($params);
     $time_series = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // ============================================
-    // 7. RETURN JSON TO THE FRONTEND
-    // ============================================
+    // return json
     echo json_encode([
         'success' => true,
         'summary' => $summary,

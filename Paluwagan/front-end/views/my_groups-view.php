@@ -260,7 +260,7 @@
           const memB = parseInt(b.cells[3].textContent.split('/')[0]) || 0;
           return memB - memA;
         } else if (sortBy === 'Recent') {
-          // No date info, fallback to original order or reverse
+          // no date, fallback order
           return 0;
         }
         return 0;
@@ -275,7 +275,7 @@
       document.getElementById('joinGroupModal').style.display = show ? 'flex' : 'none';
     }
 
-    // Default show Your Groups
+    // default show your groups
     window.onload = function() {
       document.getElementById('section-public').style.display = 'none';
       document.getElementById('section-my').style.display = 'block';
@@ -403,13 +403,13 @@
       }
     }
 
-    // Close create/join modals on outside click (extend existing)
+    // close modals on outside click
     (function(){
       const cm = document.getElementById('createGroupModal');
       if (cm) cm.addEventListener('click', function(e){ if (e.target === cm) cm.style.display='none'; });
       const jm = document.getElementById('joinGroupModal');
       if (jm) jm.addEventListener('click', function(e){ if (e.target === jm) jm.style.display='none'; });
-      // init privacy toggle if present
+      // init privacy toggle if there
       const p = document.getElementById('cg-privacy');
       if (p) p.addEventListener('change', toggleInviteCodeMy);
     })();

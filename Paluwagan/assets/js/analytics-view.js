@@ -1,11 +1,8 @@
-// =====================================================
-// analytics-view.js
-// Extracted JavaScript for the OLAP Analytics View
-// =====================================================
+// analytics-view.js - charts + filters for olap dash
 
-// GLOBAL VARIABLES
+// globals
 let barChart, lineChart, pieChart;
-let currentData = null;           // Stores the last data received from the API
+let currentData = null; // last api data
 let currentFilters = {
     year: (window.analyticsConfig && window.analyticsConfig.year) || 0,
     quarter: 0,
@@ -23,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load initial data from the API (AJAX)
     fetchAnalyticsData();
     
-    // STUDENT TIP: You can also pre-load data from PHP if you want,
+    // tip: could preload from php too,
     // but calling the API makes the page fully dynamic.
 });
 
@@ -73,7 +70,7 @@ async function fetchAnalyticsData() {
     });
     
     try {
-        // This is the AJAX call to our clean API
+        // ajax to our api
         const response = await fetch(`../../api/analytics_data.php?${params.toString()}`);
         const result = await response.json();
         
@@ -86,8 +83,8 @@ async function fetchAnalyticsData() {
         updateKPICards(result.summary);
         updateAllCharts(result);
         
-        // Optional: log the OLAP operations (great for showing during demo)
-        console.log('%c[OLAP Operations]', 'color:#166534', result.olap_operations);
+        // log olap ops (for demo) 
+        console.log('%c[OLAP]', 'color:#166534', result.olap_operations);
         
     } catch (error) {
         console.error('Analytics fetch failed:', error);
@@ -121,7 +118,7 @@ function updateKPICards(summary) {
         txEl.textContent = parseInt(summary.total_transactions || 0).toLocaleString();
     }
     
-    // We don't have "groups_involved" in every response, so we estimate from by_group length
+    // estimate from by_group len (no groups_involved in all responses)
     if (groupsEl) {
         const groupsCount = (currentData && currentData.by_group) ? currentData.by_group.length : '—';
         groupsEl.textContent = groupsCount;
@@ -135,7 +132,7 @@ function updateAllCharts(data) {
     updatePieChart(data.payout_distribution || data.by_group || []);
 }
 
-// ---------- CHART 1: BAR CHART (Contributions per Group) ----------
+// bar chart - contribs per group
 function updateBarChart(groupData) {
     const ctx = document.getElementById('barChart');
     if (!ctx) return;
@@ -170,7 +167,7 @@ function updateBarChart(groupData) {
     });
 }
 
-// ---------- CHART 2: LINE CHART (Trends over Time) ----------
+// line chart - trends over time
 function updateLineChart(timeData) {
     const ctx = document.getElementById('lineChart');
     if (!ctx) return;
@@ -217,7 +214,7 @@ function updateLineChart(timeData) {
     });
 }
 
-// ---------- CHART 3: PIE CHART (Payout Distribution) ----------
+// pie - payout dist
 function updatePieChart(payoutData) {
     const ctx = document.getElementById('pieChart');
     if (!ctx) return;
@@ -251,9 +248,9 @@ function updatePieChart(payoutData) {
     });
 }
 
-// =====================================================
+// ---
 // EXPORT FUNCTIONS (CSV + PDF)
-// =====================================================
+// ---
 
 // Robust CSV export — includes all visible analytics data + proper Excel compatibility
 function exportToCSV() {
@@ -271,7 +268,7 @@ function exportToCSV() {
     rows.push(['━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━']);
     rows.push([]);
     rows.push(['Generated', new Date().toLocaleString()]);
-    // Note: filters object may be in currentFilters (populated on fetch)
+    // filters may be in currentFilters after fetch
     const f = (typeof currentFilters !== 'undefined' && currentFilters) || {};
     rows.push(['Time Granularity', f.time_level || 'month']);
     rows.push(['Year', f.year || 'All']);
@@ -330,7 +327,7 @@ function exportToCSV() {
 
     // Footer / provenance (styled to match main export)
     rows.push(['──────────────────────────────────────────────────────────────────────────────────────────────']);
-    rows.push(['Exported from TrustFund OLAP data warehouse  •  Filters & granularity from current dashboard view']);
+    rows.push(['exported from olap']);
     rows.push(['──────────────────────────────────────────────────────────────────────────────────────────────']);
 
     // Proper CSV escaping
@@ -353,7 +350,7 @@ function exportToCSV() {
     document.body.removeChild(link);
 }
 
-// PDF Report using jsPDF (very easy for students)
+// pdf export with jspdf (easy)
 async function exportToPDF() {
     if (!currentData) {
         alert('Please wait for data to load first.');
@@ -365,7 +362,7 @@ async function exportToPDF() {
     
     // Title
     doc.setFontSize(18);
-    doc.text("TrustFund Paluwagan - OLAP Analytics Report", 20, 20);
+    doc.text("TrustFund - OLAP Report", 20, 20);
     
     doc.setFontSize(11);
     doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 28);
@@ -406,9 +403,7 @@ async function exportToPDF() {
         headStyles: { fillColor: [225, 82, 37] }
     });
     
-    // ============================================
-    // ANALYTICS CHARTS (embedded images)
-    // ============================================
+    // charts in the pdf (as images)
     let y = doc.lastAutoTable.finalY + 12;
     doc.setFontSize(13);
     doc.text("Analytics Charts", 20, y);
@@ -446,7 +441,7 @@ async function exportToPDF() {
     // Footer note
     if (y > 235) { doc.addPage(); y = 20; }
     doc.setFontSize(9);
-    doc.text("This report was generated from the TrustFund OLAP data warehouse using dynamic Slice/Dice/Roll-up queries. Charts included.", 20, y);
+    doc.text("From TrustFund OLAP. Filters applied.", 20, y);
     
     doc.save(`TrustFund_Analytics_Report_${new Date().toISOString().slice(0,10)}.pdf`);
 }
@@ -466,9 +461,9 @@ function downloadChartImage(chartVarName, filename) {
     link.click();
 }
 
-// =====================================================
+// ---
 // KEYBOARD SHORTCUT (nice touch for demo)
-// =====================================================
+// ---
 document.addEventListener('keydown', function(e) {
     if (e.key === '?' && document.activeElement.tagName === 'BODY') {
         e.preventDefault();
@@ -477,4 +472,4 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-console.log('%c[Analytics] Student-friendly OLAP dashboard loaded. All interactive logic is in this file + analytics_data.php', 'color:#6B6560');
+console.log('%c[analytics] olap dash loaded', 'color:#6B6560');

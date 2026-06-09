@@ -1,28 +1,10 @@
 <?php
-/**
- * etl/etl_sync.php
- * 
- * Incremental ETL Pipeline: OLTP (trustfund_db) → OLAP (trustfund_olap)
- * 
- * For Component 2: Multidimensional Modeling & OLAP Engine
- * 
- * Features for full marks:
- * - Uses PDO + transactions (ACID for loading)
- * - Incremental sync using etl_control watermark table
- * - Surrogate key management (lookup + insert if missing)
- * - Data cleansing & transformation
- * - Logging and control table updates
- * - Can be run manually or via cron job
- * 
- * Usage:
- *   php back-end/etl/etl_sync.php
- *   php back-end/etl/etl_sync.php --full   (force full reload)
- */
+// etl sync: oltp -> olap (incremental)
 
-require_once __DIR__ . '/../db.php';        // OLTP connection (mysqli + PDO hybrid)
-require_once __DIR__ . '/../olap_db.php';   // OLAP connection
+require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../olap_db.php';
 
-// ====================== CONFIG ======================
+// config
 $OLTP_PDO = Database::getInstance()->getPdo();   // From the hybrid db.php
 $OLAP_PDO = OlapDatabase::getInstance()->getPdo();
 
@@ -36,7 +18,7 @@ if ($isWeb) {
 
 $batchSize    = 500;
 
-// ====================== HELPER FUNCTIONS ======================
+// helpers
 
 function logMessage(string $msg): void
 {
@@ -67,9 +49,7 @@ function updateLastSync(string $entity, string $timestamp, int $rows = 0): void
     $stmt->execute([$entity, $timestamp, $rows]);
 }
 
-/**
- * Get or create surrogate key for a dimension
- */
+// get/create surrogate key for dim
 function getOrCreateSurrogate(string $table, string $naturalKeyCol, $naturalValue, array $extraData = []): int
 {
     global $OLAP_PDO;
@@ -99,7 +79,7 @@ function getOrCreateSurrogate(string $table, string $naturalKeyCol, $naturalValu
     return (int)$OLAP_PDO->lastInsertId();
 }
 
-// ====================== MAIN ETL ======================
+// main etl
 
 logMessage("=== Starting Paluwagan OLAP ETL Sync ===");
 
@@ -108,7 +88,7 @@ try {
         global $OLAP_PDO; // for helper functions inside closure if needed
 
         // -------------------------------------------------
-        // 1. DIM_TIME - Ensure dates exist (lightweight)
+        // 1. dim_time (make sure dates there)
         // -------------------------------------------------
         logMessage("Syncing dim_time...");
         $timeStmt = $OLTP_PDO->query("
@@ -132,7 +112,7 @@ try {
         logMessage("dim_time updated for " . count($dates) . " distinct dates.");
 
         // -------------------------------------------------
-        // 2. DIM_USER (incremental)
+        // 2. dim_user (inc)
         // -------------------------------------------------
         $lastUser = $isFullReload ? '2000-01-01' : (getLastSync('dim_user') ?? '2000-01-01');
         logMessage("Syncing dim_user since $lastUser");
@@ -164,7 +144,7 @@ try {
         logMessage("Processed $userCount users.");
 
         // -------------------------------------------------
-        // 3. DIM_GROUP
+        // 3. dim_group
         // -------------------------------------------------
         $lastGroup = $isFullReload ? '2000-01-01' : (getLastSync('dim_group') ?? '2000-01-01');
         $groups = $OLTP_PDO->prepare("
@@ -193,7 +173,7 @@ try {
         logMessage("Processed $groupCount groups.");
 
         // -------------------------------------------------
-        // 4. DIM_CYCLE + DIM_MEMBER (light sync)
+        // 4. dim_cycle + dim_member (light)
         // -------------------------------------------------
         // For brevity in student project we do a reasonably complete refresh of cycles & members
         logMessage("Syncing dim_cycle and dim_member...");
@@ -244,7 +224,7 @@ try {
         }
 
         // -------------------------------------------------
-        // 5. FACT_TRANSACTIONS (core incremental load)
+        // 5. fact_transactions (main load)
         // -------------------------------------------------
         $lastFact = $isFullReload ? '2000-01-01' : (getLastSync('fact_transactions') ?? '2000-01-01');
         logMessage("Loading fact_transactions since $lastFact");
@@ -366,7 +346,7 @@ try {
 
 } catch (Exception $e) {
     logMessage("ERROR: " . $e->getMessage());
-    // Log to OLAP control table as failed
+    // log fail to control table
     try {
         $OLAP_PDO->prepare("
             UPDATE etl_control SET status = 'error', updated_at = NOW() 

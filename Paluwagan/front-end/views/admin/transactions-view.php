@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="../../../assets/css/global.css?v=<?= filemtime(__DIR__ . '/../../../assets/css/global.css') ?>" />
   <link rel="stylesheet" href="../../../assets/css/admin-panel.css?v=<?= filemtime(__DIR__ . '/../../../assets/css/admin-panel.css') ?>" />
   <style>
-    /* Small scoped polish for this page only if needed */
+    /* small polish for this page */
     .tx-ledger { margin-bottom: 32px; }
 
     /* Match global header font + text for topbar and hero headers */

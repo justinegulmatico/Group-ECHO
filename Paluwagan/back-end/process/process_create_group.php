@@ -1,20 +1,5 @@
 <?php
-/**
- * process_create_group.php
- * 
- * OLTP Transaction: Create Paluwagan Group + Initial Roster + Pre-generate Cycles
- * 
- * ACID Compliance Notes (for documentation / rubric):
- * - Atomicity: All or nothing. If any insert fails (group, member, cycles, history), entire operation rolls back.
- * - Consistency: Enforces that a group always starts with its creator as position 1 and exactly `max_members` cycles.
- * - Isolation: Uses database transaction + implicit row locks. Concurrent group creation with same name is protected by unique index + explicit check inside tx.
- * - Durability: InnoDB ensures committed data is persisted.
- * 
- * Race condition protection:
- * - Duplicate group name check is performed inside the transaction.
- * - Uses Database transaction wrapper for guaranteed rollback.
- */
-
+// create group + members + prebuild cycles
 session_start();
 require_once "../db.php";   // New PDO-based db.php
 
@@ -48,19 +33,19 @@ $cycle_length = $max_members;
 try {
     $db = Database::getInstance();
 
-    // The entire multi-step creation is wrapped in one atomic transaction
+    // whole thing in 1 tx
     $new_group_id = $db->transaction(function($pdo) use (
         $owner_id, $group_name, $desc, $privacy, $amount, $max_members, 
         $freq, $invite_code, $cycle_length, $start_date
     ) {
-        // 1. Prevent duplicate names (inside transaction for isolation)
+        // no dup names (inside tx)
         $stmt = $pdo->prepare("SELECT group_id FROM groups WHERE group_name = ? LIMIT 1");
         $stmt->execute([$group_name]);
         if ($stmt->fetch()) {
             throw new Exception("A group with this name already exists.");
         }
 
-        // 2. Insert the group
+        // insert group
         $sql = "INSERT INTO groups 
             (group_name, description, privacy, contribution_amount, max_members, frequency, 
              cycle_length, invite_code, created_by, is_active, status, current_cycle) 
@@ -74,13 +59,13 @@ try {
         
         $new_group_id = (int)$pdo->lastInsertId();
 
-        // 3. Add creator as position #1
+        // creator = pos 1
         $stmt = $pdo->prepare(
             "INSERT INTO group_members (user_id, group_id, status, position) VALUES (?, ?, 'active', 1)"
         );
         $stmt->execute([$owner_id, $new_group_id]);
 
-        // 4. Log group creation + join events
+        // log creation + join
         $hist = $pdo->prepare("
             INSERT INTO group_history (group_id, event_type, actor_user_id, target_user_id, description) 
             VALUES (?, ?, ?, ?, ?)
@@ -88,9 +73,8 @@ try {
         $hist->execute([$new_group_id, 'group_created', $owner_id, $owner_id, 'Group created']);
         $hist->execute([$new_group_id, 'member_joined', $owner_id, $owner_id, 'Joined as position #1 (creator)']);
 
-        // 5. Pre-create ALL rotation cycles (this is a core Paluwagan rule)
-        // Only Cycle #1 uses the group's initialization start_date.
-        // Subsequent cycles increment by frequency interval for payout date rotation.
+        // pre create all cycles (paluwagan rule)
+        // cycle 1 uses start_date, rest +freq
         $cycleStmt = $pdo->prepare(
             "INSERT INTO cycles (group_id, cycle_number, start_date, status, payout_status) 
              VALUES (?, ?, ?, 'ongoing', 'pending')"
@@ -104,7 +88,7 @@ try {
                 } elseif ($freq === 'biweekly') {
                     $dt->modify('+' . (14 * ($c - 1)) . ' days');
                 } else {
-                    // monthly: add exact months (handles month length variations)
+                    // monthly (handle diff month lengths)
                     $dt->modify('+' . ($c - 1) . ' months');
                 }
                 $cycle_date = $dt->format('Y-m-d');

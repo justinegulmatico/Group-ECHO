@@ -1,20 +1,9 @@
 <?php
-/**
- * admin/analytics.php
- * OLAP Analytics Dashboard - Admin
- * 
- * This file follows the exact same structure and styling as other admin pages
- * (index.php and transactions.php) for consistency.
- * 
- * - Uses the same topbar, sidebar, admin-hero, stat-cards, and page-content layout.
- * - Fetches initial dropdown data and a default summary from the OLAP warehouse.
- * - The interactive filtering, charts, and updates are handled by vanilla JS + AJAX.
- */
+// admin olap analytics (layout matches other admin pages)
 
 session_start();
 
-// Include OLAP connection (separate from main OLTP db.php)
-require_once "../../olap_db.php";
+require_once "../../olap_db.php"; // olap conn
 
 // Admin-only access
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
@@ -24,15 +13,13 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
 
 $olap = OlapDatabase::getInstance()->getPdo();
 
-// ============================================
-// INITIAL DATA FOR DROPDOWNS (populated once on page load)
-// ============================================
+// dropdown data (load once)
 
-// Get all groups for the Group filter (from dim_group in OLAP)
+// groups from olap dim_group for filter
 $groups_stmt = $olap->query("SELECT group_key, group_name FROM dim_group ORDER BY group_name ASC");
 $groups = $groups_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get available years directly from the OLAP fact data (most reliable for "what years do I actually have?").
+// years from actual fact data (more reliable)
 // We prefer YEAR(created_at) on the facts themselves so the filter reflects real data in the warehouse
 // (e.g. 2026 transactions will appear even if dim_time join has issues or time_key fallback was used during ETL).
 // Falls back to the dim_time join if created_at is not populated.
@@ -71,7 +58,7 @@ if (empty($available_years)) {
 // Last ETL sync timestamp (shown in header)
 $lastSyncTimestamp = null;
 try {
-    $lsStmt = $olap->prepare("SELECT last_sync_timestamp FROM etl_control ORDER BY last_sync_timestamp DESC LIMIT 1");
+    $lsStmt = $olap->prepare("SELECT last_sync_timestamp FROM etl_control ORDER BY last_sync_timestamp DESC LIMIT 1"); // last etl run
     $lsStmt->execute();
     $row = $lsStmt->fetch(PDO::FETCH_ASSOC);
     $lastSyncTimestamp = $row['last_sync_timestamp'] ?? null;
@@ -81,6 +68,7 @@ try {
 }
 
 // Default summary for initial render (no filters)
+// default summary for first load
 $initial_summary_stmt = $olap->query("
     SELECT 
         COALESCE(SUM(amount_contribution), 0) AS total_contributions,
@@ -96,7 +84,7 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
     'active_groups' => 0
 ];
 
-// Include the full view (HTML + JS). We keep everything in one file for student simplicity
+// include the view (html+js all in one file for now)
 // while matching the controller pattern of other admin pages.
 ?>
 <!DOCTYPE html>
@@ -348,9 +336,9 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
   </div>
 
   <script>
-    // ============================================
+    // ---
     // STUDENT-FRIENDLY JAVASCRIPT (Vanilla only)
-    // ============================================
+    // ---
 
     let barChartInstance = null;
     let lineChartInstance = null;
@@ -898,9 +886,9 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
         margin: { right: 15 }
       });
 
-      // ============================================
+      // ---
       // ANALYTICS CHARTS (embedded images)
-      // ============================================
+      // ---
       let y = doc.lastAutoTable.finalY + 14;
       doc.setFontSize(14);
       doc.setTextColor(0);
@@ -960,9 +948,9 @@ $initial_summary = $initial_summary_stmt->fetch(PDO::FETCH_ASSOC) ?: [
       doc.save(filename);
     }
 
-    // ============================================
+    // ---
     // ETL SYNC / FULL SYNC (header buttons)
-    // ============================================
+    // ---
     async function triggerETLSync(isFull) {
       const btnSync = document.getElementById('btn-sync');
       const btnFull = document.getElementById('btn-full-sync');

@@ -26,7 +26,7 @@ if ($user_data) {
 
 // Payments history: use only columns that exist in schema (contributions + cycles + groups).
 // contributions has no payment_method / created_at / cycle_number directly; we pull what we can + cycle_number via join.
-// The view gracefully handles missing fields.
+// view handles missing fields ok
 $payments_log_q = "
     SELECT 
         c.contribution_id,
@@ -49,6 +49,6 @@ mysqli_stmt_execute($stmt);
 $payments_log_res = mysqli_stmt_get_result($stmt);
 mysqli_stmt_close($stmt); // result lives for the view include
 
-// 4. RENDER PHASE
+// render
 include "../../front-end/views/payments-view.php";
 ?>

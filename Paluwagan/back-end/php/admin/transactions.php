@@ -3,6 +3,8 @@ session_start();
 include "../../db.php";
 
 /*
+  small stuff for this page
+
   wallet_requests table is now AUTO-CREATED on first access if it does not exist.
   (The old manual SQL is kept here for reference.)
 

@@ -167,7 +167,7 @@
         : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`;
     }
 
-    // Modal Logic with Dynamic UI Handling
+    // modal logic + dynamic ui
     function openStatusModal(title, message, iconType, buttonType, username = "") {
         const modal = document.getElementById('status-modal');
         document.getElementById('modal-title').textContent = title;
@@ -199,7 +199,7 @@
         document.getElementById('status-modal').style.setProperty('display', 'none', 'important');
     }
 
-    // Clean single trigger for the modal
+    // single trigger for modal
     document.addEventListener("DOMContentLoaded", function() {
         <?php if (isset($status_trigger) && $status_trigger): ?>
             openStatusModal(

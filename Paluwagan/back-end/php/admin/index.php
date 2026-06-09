@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-// === Quick Stats for Dashboard ===
+// quick stats
 $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as total FROM users WHERE role != 'admin'");
 if (!$stmt) die("Prepare failed (users count): " . mysqli_error($conn));
 mysqli_stmt_execute($stmt);

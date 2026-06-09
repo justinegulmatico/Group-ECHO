@@ -1,15 +1,12 @@
 <?php
-/**
- * API endpoint to trigger OLAP ETL sync from the web UI.
- * Only accessible to admins.
- */
+// trigger etl sync (admin only)
 
-ob_start(); // Catch any early output
+ob_start(); // catch early output
 error_reporting(E_ALL);
 ini_set('display_errors', 0); // Prevent PHP errors from outputting HTML
 
 session_start();
-require_once "../olap_db.php";   // for consistency, though ETL loads its own
+require_once "../olap_db.php";
 
 header('Content-Type: application/json');
 

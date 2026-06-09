@@ -29,10 +29,10 @@ if ($user['status'] === 'activated') {
     exit();
 }
 
-// ================= DESTRUCTION AND ARCHIVE SECTOR =================
+// destroy/archive stuff
 if (isset($_POST['delete_account']) && $user['status'] === 'denied') {
     
-    // 1. Move registration details safely into historical logs 
+    // 1. archive reg details 
     $archive_stmt = mysqli_prepare($conn, "INSERT INTO user_creation_history 
         (original_user_id, username, first_name, last_name, email, phone, occupation, address, role, verification_status) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'denied')");
@@ -50,17 +50,17 @@ if (isset($_POST['delete_account']) && $user['status'] === 'denied') {
     );
     mysqli_stmt_execute($archive_stmt);
 
-    // 2. Clear out documents attached to registration to save storage
+    // 2. clear docs (save storage)
     $delete_docs = mysqli_prepare($conn, "DELETE FROM user_verifications WHERE user_id = ?");
     mysqli_stmt_bind_param($delete_docs, "i", $user_id);
     mysqli_stmt_execute($delete_docs);
 
-    // 3. Wipe account profile row to free up emails & usernames for re-use
+    // 3. wipe user row (free emails/usernames)
     $delete_user = mysqli_prepare($conn, "DELETE FROM users WHERE user_id = ?");
     mysqli_stmt_bind_param($delete_user, "i", $user_id);
     mysqli_stmt_execute($delete_user);
 
-    // 4. Terminate access tokens completely
+    // 4. kill tokens / session
     session_destroy();
     header("Location: ../../index.php?message=account_purged");
     exit();

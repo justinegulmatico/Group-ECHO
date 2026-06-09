@@ -1,19 +1,5 @@
 <?php
-/**
- * process_payout.php
- * 
- * Dedicated, reusable, transaction-safe Payout Release Handler.
- * 
- * This file demonstrates EXCELLENT transaction management for the rubric:
- * - Pessimistic locking with SELECT ... FOR UPDATE on the cycle row.
- * - Idempotency check inside the locked transaction.
- * - Multiple related writes (payouts, cycles, transactions fact, wallet_requests, group_history) are atomic.
- * - Re-verifies that the cycle is fully funded before releasing.
- * - Can be called from inside another transaction (process_contribution) or standalone.
- * 
- * Usage:
- *   perform_safe_payout($pdo, $group_id, $cycle_id, $cycle_number, $full_pot, $actor_user_id);
- */
+// safe payout handler (with lock + auto stuff)
 
 if (!function_exists('perform_safe_payout')) {
 
@@ -25,11 +11,9 @@ if (!function_exists('perform_safe_payout')) {
         float $full_pot, 
         int $actor_user_id
     ): bool {
-        // We do NOT start a new transaction here — the caller is responsible.
-        // This allows us to be called from inside process_contribution.php's transaction
-        // or from a standalone admin/manual release.
+        // caller handles tx (so we can nest from contribution)
 
-        // === 1. LOCK THE CYCLE ROW (prevents double payout / race condition) ===
+        // lock cycle row (no double payout)
         $stmt = $pdo->prepare(
             "SELECT * FROM cycles WHERE cycle_id = ? FOR UPDATE"
         );
@@ -44,7 +28,7 @@ if (!function_exists('perform_safe_payout')) {
             return true; // Already paid — idempotent success
         }
 
-        // === 2. VERIFY THE CYCLE IS ACTUALLY FULLY FUNDED (consistency check inside tx) ===
+        // make sure cycle is full
         $stmt = $pdo->prepare("
             SELECT COALESCE(SUM(amount), 0) 
             FROM contributions 
@@ -58,7 +42,7 @@ if (!function_exists('perform_safe_payout')) {
             return false;
         }
 
-        // === 3. Determine receiver by position (cycle_number == position in classic paluwagan) ===
+        // find who gets paid this cycle (by position)
         $stmt = $pdo->prepare("
             SELECT gm.member_id, gm.user_id 
             FROM group_members gm
@@ -75,20 +59,20 @@ if (!function_exists('perform_safe_payout')) {
         $receiver_member_id = (int)$receiver['member_id'];
         $receiver_user_id   = (int)$receiver['user_id'];
 
-        // === 4. INSERT PAYOUT RECORD ===
+        // insert payout
         $stmt = $pdo->prepare(
             "INSERT INTO payouts (cycle_id, member_id, amount, payout_date, status) 
              VALUES (?, ?, ?, CURDATE(), 'released')"
         );
         $stmt->execute([$cycle_id, $receiver_member_id, $full_pot]);
 
-        // === 5. MARK CYCLE AS RELEASED (under lock) ===
+        // mark cycle released
         $stmt = $pdo->prepare(
             "UPDATE cycles SET payout_member_id = ?, payout_status = 'released' WHERE cycle_id = ?"
         );
         $stmt->execute([$receiver_member_id, $cycle_id]);
 
-        // === 6. RECORD IN TRANSACTIONS FACT TABLE (OLAP) ===
+        // fact table for olap
         $stmt = $pdo->prepare(
             "INSERT INTO transactions 
              (group_id, cycle_id, member_id, user_id, transaction_type, amount, transaction_date, status, recorded_by) 
@@ -96,7 +80,7 @@ if (!function_exists('perform_safe_payout')) {
         );
         $stmt->execute([$group_id, $cycle_id, $receiver_member_id, $receiver_user_id, $full_pot, $actor_user_id]);
 
-        // === 7. CREDIT RECEIVER'S WALLET ===
+        // credit wallet (as approved deposit)
         $note = "Payout • Group #{$group_id} • Cycle #{$cycle_number}";
         $stmt = $pdo->prepare("
             INSERT INTO wallet_requests 
@@ -105,7 +89,7 @@ if (!function_exists('perform_safe_payout')) {
         ");
         $stmt->execute([$receiver_user_id, $full_pot, $note, $actor_user_id]);
 
-        // === 8. LOG TO GROUP HISTORY ===
+        // group history log
         $stmt = $pdo->prepare("
             INSERT INTO group_history 
             (group_id, event_type, actor_user_id, target_user_id, cycle_number, amount, description) 
@@ -123,9 +107,7 @@ if (!function_exists('perform_safe_payout')) {
         return true;
     }
 
-    /**
-     * Standalone safe payout for admin/manual release (starts its own transaction).
-     */
+    // standalone version (starts its own tx)
     function perform_safe_payout_standalone(
         int $group_id, 
         int $cycle_id, 
@@ -140,9 +122,7 @@ if (!function_exists('perform_safe_payout')) {
         });
     }
 
-    /**
-     * Helper used by the old group_details.php manual release (can be refactored to call this).
-     */
+    // old helper for full pot calc
     function get_cycle_full_pot(PDO $pdo, int $group_id): float
     {
         $stmt = $pdo->prepare("

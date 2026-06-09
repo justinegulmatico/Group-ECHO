@@ -486,7 +486,7 @@
   </div>
   
   <script>
-  // ==================== + NEW GROUP BUTTON → OPENS CHOICE MODAL ====================
+  // open choice modal for +new group
   const openChoiceBtn = document.getElementById('open-group-choice');
   const choiceModal = document.getElementById('group-choice-modal');
 
@@ -496,12 +496,12 @@
     });
   }
 
-  // Close Choice Modal
+  // close choice modal
   function closeChoiceModal() {
     if (choiceModal) choiceModal.style.display = 'none';
   }
 
-  // When clicking outside the choice modal
+  // click outside to close choice
   if (choiceModal) {
     choiceModal.addEventListener('click', function(e) {
       if (e.target === choiceModal) {
@@ -510,14 +510,14 @@
     });
   }
 
-  // ==================== CREATE GROUP ====================
+  // create group flow
   function chooseCreateGroup() {
     closeChoiceModal();
     const createModal = document.getElementById('modal-create');
     if (createModal) createModal.style.display = 'flex';
   }
 
-  // ==================== JOIN GROUP ====================
+  // join group flow
   function chooseJoinGroup() {
     closeChoiceModal();
     const joinModal = document.getElementById('joinGroupModal');
@@ -529,7 +529,7 @@
     if (modal) modal.style.display = show ? 'flex' : 'none';
   }
 
-  // Close Join Modal when clicking outside
+  // click out to close join modal
   const joinModal = document.getElementById('joinGroupModal');
   if (joinModal) {
     joinModal.addEventListener('click', function(e) {
@@ -542,7 +542,7 @@
   function closeChoiceModal() {
   document.getElementById('group-choice-modal').style.display = 'none';
 }
-  // Close Create Modal when clicking outside (keep your existing behavior)
+  // close create on outside click
   const createModal = document.getElementById('modal-create');
   if (createModal) {
     createModal.addEventListener('click', function(e) {
@@ -555,14 +555,7 @@
   const modalCreate = document.getElementById('modal-create');
   const modalCreateCloseBtn = modalCreate ? modalCreate.querySelector('.modal-close') : null;
 
-  // Close when clicking the ✕ button
-  if (modalCreateCloseBtn) {
-    modalCreateCloseBtn.addEventListener('click', function() {
-      modalCreate.style.display = 'none';
-    });
-  }
-
-  // Close when clicking outside the modal
+  // x button + outside click to close create modal
   if (modalCreate) {
     modalCreate.addEventListener('click', function(e) {
       if (e.target === modalCreate) {
@@ -571,7 +564,7 @@
     });
   }
 
-  // ==================== INVITE CODE TOGGLE (for create privacy select) ====================
+  // invite code toggle (private groups)
   function toggleInviteCode() {
     const privacySel = document.getElementById('cg-privacy');
     const container = document.getElementById('invite-code-container');
@@ -580,7 +573,7 @@
 
     if (privacySel.value === 'private') {
       container.style.display = 'block';
-      // Generate a preview code client-side (server will authoritative generate on submit)
+      // preview code (server makes real one)
       if (codeInput && !codeInput.value) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let code = '';
@@ -597,12 +590,12 @@
   document.addEventListener('DOMContentLoaded', function() {
     const privacySel = document.getElementById('cg-privacy');
     if (privacySel) {
-      // run once
+      // run once on load
       setTimeout(toggleInviteCode, 0);
       privacySel.addEventListener('change', toggleInviteCode);
     }
 
-    // ==================== WALLET DEPOSIT / WITHDRAW MODALS ====================
+    // wallet modals (deposit/withdraw)
     const btnDeposit = document.getElementById('btn-deposit');
     const btnWithdraw = document.getElementById('btn-withdraw');
     const depositModal = document.getElementById('deposit-modal');
@@ -622,7 +615,7 @@
       btnWithdraw.addEventListener('click', () => showModal(withdrawModal));
     }
 
-    // Close buttons
+    // close btns
     const closeDep = document.getElementById('close-deposit');
     const cancelDep = document.getElementById('cancel-deposit');
     if (closeDep) closeDep.addEventListener('click', () => hideModal(depositModal));
@@ -655,7 +648,7 @@
       }
     }
 
-    // Show "wait for admin approval" modal after a regular user deposit
+    // show pending approval modal after deposit (regular users)
     <?php if (!empty($show_deposit_pending_modal) && $show_deposit_pending_modal): ?>
     (function() {
       const pendingModal = document.getElementById('deposit-pending-modal');
@@ -673,7 +666,7 @@
         if (cleaned.length > 6) cleaned = cleaned.slice(0, 6);
         this.value = cleaned;
       });
-      // Also clean on paste
+      // clean on paste too
       joinCodeInput.addEventListener('paste', function() {
         setTimeout(() => {
           let cleaned = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
@@ -682,8 +675,7 @@
       });
     }
 
-    // After showing the "Record Payment" success banner from dashboard quick-pay,
-    // clean the URL so refreshing the page doesn't re-display the banner.
+    // clean url after showing quick-pay success banner (so refresh doesn't re-show)
     if (window.location.search.includes('payment_success')) {
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
@@ -706,7 +698,7 @@
     });
   }
 
-  // ==================== IMPROVED JOIN CODE: copy after private group create ====================
+  // copy join code after private group create
   function copyInviteCode(e) {
     if (e) e.preventDefault();
     const box = document.getElementById('invite-code-box');
@@ -720,7 +712,7 @@
         box.textContent = 'COPIED!';
         setTimeout(() => { box.textContent = originalText; }, 1400);
       }).catch(() => {
-        // fallback
+        // fallback (copy fail)
         fallbackCopy(code, box);
       });
     } else {
@@ -743,9 +735,9 @@
     setTimeout(() => { boxEl.textContent = original; }, 1400);
   }
 
-  // ==================== JOIN CODE INPUT FORMATTER (auto uppercase + clean) ====================
+  // join code input: uppercase + clean
   function formatJoinCode(input) {
-    // Keep only A-Z 0-9, force uppercase, max 6 chars
+    // keep alnum, upper, max 6
     let cleaned = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (cleaned.length > 6) cleaned = cleaned.slice(0, 6);
     input.value = cleaned;

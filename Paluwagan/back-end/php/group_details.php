@@ -2,7 +2,7 @@
 session_start();
 include "../db.php";
 
-// 1. Authentication Check
+// auth check
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../../index.php");
     exit();
@@ -18,7 +18,7 @@ function int_escape($link, $data) {
     return (int)mysqli_real_escape_string($link, trim((string)$data));
 }
 
-// 2. Fetch User Profile Context (prepared)
+// user context
 $stmt = mysqli_prepare($conn, "SELECT first_name, last_name, role FROM users WHERE user_id = ?");
 mysqli_stmt_bind_param($stmt, "i", $current_user_id);
 mysqli_stmt_execute($stmt);
@@ -34,7 +34,7 @@ if ($user_data) {
     $initials = strtoupper(substr($user_data['first_name'], 0, 1) . substr($user_data['last_name'] ?: '', 0, 1));
 }
 
-// 3. Group Validity & Membership Guard Check (prepared)
+// group + membership check
 $stmt = mysqli_prepare($conn, "SELECT g.*, m.member_id FROM groups g 
                   JOIN group_members m ON g.group_id = m.group_id 
                   WHERE g.group_id = ? AND m.user_id = ? AND m.status = 'active' LIMIT 1");
@@ -81,7 +81,7 @@ if (empty($current_group['cycle_length']) || (int)$current_group['cycle_length']
     $current_group['cycle_length'] = (int)($current_group['max_members'] ?: 5);
 }
 
-// 4. Financial Statistics (prepared)
+// stats
 $stmt = mysqli_prepare($conn, "SELECT COALESCE(SUM(c.amount), 0) as total_coll 
     FROM contributions c JOIN cycles cy ON c.cycle_id = cy.cycle_id 
     WHERE cy.group_id = ? AND c.status = 'paid'");
@@ -178,7 +178,7 @@ function log_group_history($conn, $group_id, $event_type, $actor_user_id = null,
     }
 }
 
-// === WALLET BALANCE (for Record Payment - use wallet instead of external method) ===
+// wallet balance for payments
 $wallet_balance = 0.00;
 $table_check = mysqli_query($conn, "SHOW TABLES LIKE 'wallet_requests'");
 if ($table_check && mysqli_num_rows($table_check) > 0) {
@@ -200,7 +200,7 @@ if ($table_check && mysqli_num_rows($table_check) > 0) {
   }
 }
 
-// === NEW PALUWAGAN CORE DATA (simple student style) ===
+// paluwagan core data (cycles etc)
 
 // Get all members with their positions (for showing who is in what slot)
 $stmt = mysqli_prepare($conn, "
@@ -253,7 +253,7 @@ while ($cy = mysqli_fetch_assoc($cycles_result)) {
 }
 mysqli_stmt_close($stmt);
 
-// === Determine Active Cycle for Overview Highlight + Auto Payout ===
+// active cycle + auto payout stuff
 $active_cycle = null;
 $full_pot = (float)$current_group['contribution_amount'] * count($group_members);
 
@@ -288,7 +288,7 @@ if ($active_cycle && $my_member_id > 0) {
   mysqli_stmt_close($upc_stmt);
 }
 
-// === AUTO-PAYOUT AUTOMATION (when cycle is fully funded) ===
+// auto payout if funded
 // Call this after loading cycles so that when all contributions are in, money moves to receiver wallet automatically.
 function try_auto_payout_cycle($conn, $group_id, $cycle, $receiver, $full_pot, $current_user_id) {
   if (!$cycle || empty($receiver) || $full_pot <= 0) return false;
@@ -323,20 +323,20 @@ function try_auto_payout_cycle($conn, $group_id, $cycle, $receiver, $full_pot, $
     return true;
   }
 
-  // 1. Record the payout
+  // 1. record payout
   $pstmt = mysqli_prepare($conn, "INSERT INTO payouts (cycle_id, member_id, amount, payout_date, status) VALUES (?, ?, ?, CURDATE(), 'released')");
   mysqli_stmt_bind_param($pstmt, "iid", $cycle_id, $receiver['member_id'], $full_pot);
   mysqli_stmt_execute($pstmt);
   mysqli_stmt_close($pstmt);
 
-  // 2. Mark cycle released
+  // 2. mark cycle released
   $upc = mysqli_prepare($conn, "UPDATE cycles SET payout_member_id=?, payout_status='released' WHERE cycle_id=?");
   mysqli_stmt_bind_param($upc, "ii", $receiver['member_id'], $cycle_id);
   mysqli_stmt_execute($upc);
   mysqli_stmt_close($upc);
 
-  // 3. Credit the receiver's wallet balance via an approved internal deposit
-  // Guard to prevent fatal error if wallet_requests table doesn't exist yet
+  // 3. credit receiver wallet (approved deposit)
+  // guard if wallet_requests table missing
   $wallet_table_exists = false;
   $tcheck = mysqli_query($conn, "SHOW TABLES LIKE 'wallet_requests'");
   if ($tcheck && mysqli_num_rows($tcheck) > 0) $wallet_table_exists = true;
@@ -362,14 +362,14 @@ function try_auto_payout_cycle($conn, $group_id, $cycle, $receiver, $full_pot, $
   return true;
 }
 
-// Run auto-payout check for the current active cycle (safe + idempotent)
+// run auto payout check for active cycle (idempotent)
 if ($active_cycle && !empty($active_cycle['receiver'])) {
   $did_auto = try_auto_payout_cycle($conn, $group_id, $active_cycle, $active_cycle['receiver'], $full_pot, $current_user_id);
 
-  // If we just auto-released, refresh the active cycle's payout status/collected in memory for this render
+  // refresh status after auto release
   if ($did_auto) {
     $active_cycle['payout_status'] = 'released';
-    // Recompute collected just in case (though it shouldn't have changed)
+    // recompute collected just in case
     $ref_stmt = mysqli_prepare($conn, "SELECT COALESCE(SUM(amount),0) as paid FROM contributions WHERE cycle_id = ? AND status='paid'");
     mysqli_stmt_bind_param($ref_stmt, "i", $active_cycle['cycle_id']);
     mysqli_stmt_execute($ref_stmt);
@@ -390,7 +390,7 @@ if ($active_cycle && !empty($active_cycle['receiver'])) {
 $action_msg = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // === ACTIVATE PALUWAGAN (allow partial activation once >= 3 members; freezes roster) ===
+    // activate paluwagan (min 3 members, freeze roster)
     if (isset($_POST['activate_paluwagan'])) {
         // Only the real group creator can activate
         if ((int)$current_group['created_by'] === $current_user_id && $current_group['status'] === 'pending') {
@@ -457,7 +457,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cycle_id = (int)$_POST['cycle_id'];
         $amount = (float)$_POST['amount'];
 
-        // === Load cycle info + group status for validation
+        // load cycle + status for checks
         $cycStmt = mysqli_prepare($conn, "SELECT cy.cycle_number, cy.payout_status, g.status FROM cycles cy JOIN groups g ON g.group_id = cy.group_id WHERE cy.cycle_id = ? LIMIT 1");
         mysqli_stmt_bind_param($cycStmt, "i", $cycle_id);
         mysqli_stmt_execute($cycStmt);
@@ -467,14 +467,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $chosen_cycle_number = (int)($cycRow['cycle_number'] ?? 0);
         $group_status        = $cycRow['status'] ?? 'pending';
 
-        // === CRITICAL: Prevent contributions before activation
+        // block if not active yet
         if ($group_status !== 'active') {
             $action_msg = "This group has not been activated yet. Contributions are only allowed after activation.";
             header("Location: group_details.php?id=$group_id&error=" . urlencode($action_msg));
             exit();
         }
 
-        // === CRITICAL: Receiver cannot contribute to their own cycle
+        // receiver cant pay own cycle
         if ($my_position > 0 && $my_position === $chosen_cycle_number) {
             $action_msg = "You are the receiver for Cycle #{$chosen_cycle_number}. Receivers do not contribute to their own payout cycle.";
             header("Location: group_details.php?id=$group_id&error=" . urlencode($action_msg));
@@ -541,7 +541,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             log_group_history($conn, $group_id, 'payment', $current_user_id, $current_user_id, null, $amount, 
                 "Paid ₱" . number_format($amount, 2) . " for cycle");
 
-            // === Try to auto-release this cycle if it is now fully funded ===
+            // try auto release if full now
             // Find the cycle object
             $just_paid_cycle = null;
             foreach ($cycles as $cyc) {
@@ -558,7 +558,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // Release payout for a cycle (owner or admin can do this - simulation)
+    // Release payout for a cycle (owner or admin can do this)
     if (isset($_POST['release_payout'])) {
         $cycle_id = (int)$_POST['cycle_id'];
         $payout_amount = (float)$_POST['payout_amount'];
@@ -587,7 +587,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_execute($pstmt);
                 mysqli_stmt_close($pstmt);
 
-                // Also record in transactions fact table for OLAP
+                // fact table too (olap)
                 $trans_stmt = mysqli_prepare($conn, "INSERT INTO transactions (group_id, cycle_id, member_id, user_id, transaction_type, amount, transaction_date, status, recorded_by) 
                                                     VALUES (?, ?, ?, ?, 'payout', ?, CURDATE(), 'completed', ?)");
                 mysqli_stmt_bind_param($trans_stmt, "iiidii", $group_id, $cycle_id, $receiver_id, $current_user_id, $payout_amount, $current_user_id);
@@ -634,7 +634,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// 5. RENDER PHASE
+// render phase
 
 // Fetch group history for the History tab (payments, payouts, joins, activations, closures etc.)
 $group_history = [];

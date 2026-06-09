@@ -2,8 +2,7 @@
 session_start();
 include "../db.php";
 
-// Note: process/ is one level below php/, so redirects to controllers must use ../php/...
-// e.g. ../php/group_details.php instead of ../group_details.php (which would 404)
+// redirects go to ../php/ cos process/ is deeper
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../index.php");
@@ -46,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         mysqli_query($conn, $create_sql);
     }
 
-    // === WALLET BALANCE CHECK (replaces payment method) ===
+    // wallet balance (instead of external pay)
     $wallet_balance = 0.00;
     $table_check = mysqli_query($conn, "SHOW TABLES LIKE 'wallet_requests'");
     if ($table_check && mysqli_num_rows($table_check) > 0) {
@@ -85,7 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // === CRITICAL BUSINESS RULES ===
+    // basic rules
     if (($membership['status'] ?? 'pending') !== 'active') {
         header("Location: ../php/group_details.php?id=" . $group_id . "&error=" . urlencode("This group has not been activated yet. Contributions are only allowed after activation."));
         exit();
@@ -123,15 +122,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     mysqli_stmt_close($stmt);
 
     if ($success) {
-        // Also record in transactions fact table for OLAP
+        // also to fact table (olap)
         $trans_stmt = mysqli_prepare($conn, "INSERT INTO transactions (group_id, cycle_id, member_id, user_id, transaction_type, amount, transaction_date, status, recorded_by) 
                                             VALUES (?, ?, ?, ?, 'contribution', ?, CURDATE(), 'completed', ?)");
         mysqli_stmt_bind_param($trans_stmt, "iiidii", $group_id, $cycle_id, $member_id, $user_id, $amount, $user_id);
         mysqli_stmt_execute($trans_stmt);
         mysqli_stmt_close($trans_stmt);
 
-        // === AUTO-DEDUCT FROM WALLET (internal transfer) ===
-        // Guard + create payments/documents folders for future proofs
+        // auto deduct wallet + make sure folders exist
         $assets_uploads_base = __DIR__ . '/../../assets/uploads';
         $documents_dir = $assets_uploads_base . '/documents';
         $payments_dir = $assets_uploads_base . '/payments';
@@ -169,7 +167,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             mysqli_stmt_close($hist_stmt);
         }
 
-        // Auto-payout will be attempted on the next page load of group_details (via automation logic)
+        // auto payout check happens on group_details load
         header("Location: ../php/group_details.php?id=" . $group_id . "&tab=payments&success=" . urlencode("Payment recorded for cycle #$cycle_number. (Deducted from wallet)"));
         exit();
     } else {

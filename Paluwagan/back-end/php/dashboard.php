@@ -9,15 +9,15 @@ if (!isset($_SESSION['user_id'])) {
 
 $current_user_id = (int)$_SESSION['user_id'];
 
-// Flags for post-deposit "awaiting admin approval" modal (only for regular users)
+// deposit pending modal flag
 $show_deposit_pending_modal = false;
 $pending_deposit_amount = 0;
 
-// Post-create invite code sharing (improved join code UX)
+// invite code for new private group
 $newly_created_invite_code = null;
 $newly_created_group_name = null;
 
-// ─── LOGIC: CREATE GROUP (prepared, full fields, seed cycle, consistent) ───
+// create group logic
 if (isset($_POST['action_create_group'])) {
     $group_name = trim($_POST['group_name'] ?? '');
     $desc = trim($_POST['group_desc'] ?? '');
@@ -33,7 +33,7 @@ if (isset($_POST['action_create_group'])) {
     }
     $cycle_length = $max;
 
-    // Prevent duplicate group names
+    // dup name check
     $check_stmt = mysqli_prepare($conn, "SELECT group_id FROM groups WHERE group_name = ? LIMIT 1");
     mysqli_stmt_bind_param($check_stmt, "s", $group_name);
     mysqli_stmt_execute($check_stmt);
@@ -53,14 +53,13 @@ if (isset($_POST['action_create_group'])) {
             $gid = mysqli_insert_id($conn);
             mysqli_stmt_close($stmt);
 
-            // Creator gets position 1
+            // creator pos 1
             $stmt2 = mysqli_prepare($conn, "INSERT INTO group_members (user_id, group_id, status, position) VALUES (?, ?, 'active', 1)");
             mysqli_stmt_bind_param($stmt2, "ii", $current_user_id, $gid);
             mysqli_stmt_execute($stmt2);
             mysqli_stmt_close($stmt2);
 
-            // Pre-generate full cycles for paluwagan (position N receives in cycle N)
-            // Payout date rotation logic: Cycle #1 = start_date; +freq interval for each next cycle.
+            // prebuild all cycles (pos N gets cycle N)
             for ($c = 1; $c <= $max; $c++) {
                 $cycle_date = $start_date;
                 if ($c > 1) {
@@ -96,7 +95,7 @@ if (isset($_POST['action_create_group'])) {
     }
 }
 
-// ─── LOGIC: JOIN GROUP (prepared, supports pending public too) ───
+// join group logic
 if (isset($_POST['action_join_group'])) {
     $code = strtoupper(trim($_POST['join_code'] ?? ''));
 
@@ -609,7 +608,7 @@ foreach ($active_memberships as $mem) {
   $cyc_id  = (int)$active_cyc['cycle_id'];
   $cyc_num = (int)$active_cyc['cycle_number'];
 
-  // === FIX: Receivers never "pay" into their own receiving cycle ===
+  // fix: receivers dont pay their own cycle
   // Check via position (fast path for creator) + fallback query (for members whose position was assigned later)
   $my_position = (int)($mem['position'] ?: 0);
   $is_receiver_for_cycle = false;

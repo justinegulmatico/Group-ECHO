@@ -175,10 +175,10 @@
               $ac_status = ($ac_collected + 0.5 >= $ac_full) ? 'Ready to Collect' : 'Awaiting Pool Completion';
               $ac_status_class = ($ac_collected + 0.5 >= $ac_full) ? 'ready' : 'awaiting';
 
-              // Has the logged-in user paid for this active cycle?
+              // did current user pay this cycle?
               $user_paid_active = false;
               if (!empty($my_member_id)) {
-                // We compute this in controller and expose as $user_paid_for_active_cycle
+                // computed in controller
                 $user_paid_active = !empty($user_paid_for_active_cycle);
               }
             ?>
@@ -362,7 +362,7 @@
                     $recName = $rec ? htmlspecialchars($rec['first_name']) : 'Pos ' . $cy['cycle_number'];
                     // Check if current user paid this cycle
                     $myPaid = 0;
-                    // Simple: we can query but for student code we show collected
+                    // student code just shows collected (no extra query)
                   ?>
                     <tr>
                       <td><strong>#<?= $cy['cycle_number'] ?></strong></td>
@@ -481,7 +481,7 @@
   <?php endif; ?>
 
   <script>
-    // Activation modal functions (available when the activate button is shown)
+    // activate modal funcs
     function openActivationModal(memberCount) {
       const modal = document.getElementById('activationModal');
       const countEl = document.getElementById('activationMemberCount');
@@ -497,13 +497,13 @@
     function confirmAndActivate() {
       const form = document.getElementById('activateForm');
       if (form) {
-        // Submit the original form to trigger the activate_paluwagan POST
+        // submit hidden form for activate
         form.submit();
       }
       closeActivationModal();
     }
 
-    // Close activation modal on backdrop click
+    // close activate modal on backdrop
     (function() {
       const actModal = document.getElementById('activationModal');
       if (actModal) {
@@ -549,7 +549,7 @@
               <label class="input-label">Cycle #</label>
               <select name="cycle_number" class="input-field">
                 <?php 
-                  // Compute current user's position for receiver filtering
+                  // user pos for receiver filter
                   $current_user_pos = 0;
                   foreach ($group_members as $m) {
                       if ((int)$m['user_id'] === $current_user_id) {
@@ -563,7 +563,7 @@
                     $is_my_payout_cycle = ($current_user_pos > 0 && $current_user_pos === $cyc_num);
                     $is_released = (($cyc['payout_status'] ?? 'pending') === 'released');
 
-                    // Skip cycles where user is the receiver or already paid out
+                    // skip if user is receiver or already paid
                     if ($is_my_payout_cycle || $is_released) {
                         continue;
                     }
@@ -621,7 +621,7 @@
         if (amountInput) {
           amountInput.addEventListener('input', checkBalance);
           amountInput.addEventListener('change', checkBalance);
-          // initial
+          // init
           setTimeout(checkBalance, 50);
         }
       })();

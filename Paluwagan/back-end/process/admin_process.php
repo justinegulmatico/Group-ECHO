@@ -2,7 +2,7 @@
 session_start();
 include "../db.php";
 
-// Note: process/ is one level below php/, so admin redirects must use ../php/admin/...
+// note: redirects from process/ need ../php/admin/...
 // e.g. ../php/admin/index.php instead of ../admin/index.php (which would 404)
 
 // Security

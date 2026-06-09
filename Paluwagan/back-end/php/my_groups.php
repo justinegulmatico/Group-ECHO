@@ -11,7 +11,7 @@ $current_user_id = (int)$_SESSION['user_id'];
 
 $error_message = "";
 
-// ==================== CREATE GROUP (prepared + cycle init, same logic) ====================
+// create group + cycles
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action_create_group'])) {
     $group_name = trim($_POST['group_name'] ?? '');
     $description = trim($_POST['group_desc'] ?? '');
@@ -86,7 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action_create_group'])
     }
 }
 
-// ==================== JOIN GROUP (prepared) - supports invite code or direct public join ====================
+// join group (invite or public)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['action_join_group']) || isset($_POST['action_join_public']))) {
     $group_id = 0;
     $group = null;
@@ -113,7 +113,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['action_join_group']) 
     }
 
     if ($group && $group_id > 0) {
-        // Check if already member (using effective for simulation)
+        // Check if already member
         $stmt = mysqli_prepare($conn, "SELECT 1 FROM group_members WHERE user_id = ? AND group_id = ? AND status='active' LIMIT 1");
         mysqli_stmt_bind_param($stmt, "ii", $current_user_id, $group_id);
         mysqli_stmt_execute($stmt);
@@ -158,8 +158,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['action_join_group']) 
     }
 }
 
-// ==================== PUBLIC GROUPS (only show public groups the current user has NOT yet joined) ====================
-// This prevents groups the user has already joined from appearing in the "Public Groups" discovery tab.
+// public groups list (not joined yet)
+// hide groups user already joined (public tab)
 $public_stmt = mysqli_prepare($conn, "
     SELECT g.*, 
         (SELECT COUNT(*) FROM group_members WHERE group_id = g.group_id AND status = 'active') AS member_count,
@@ -186,7 +186,7 @@ if ($public_stmt) {
     $public_groups = false;
 }
 
-// ==================== MY GROUPS ====================
+// my groups
 $my_query = "SELECT g.*, 
     (SELECT COUNT(*) FROM group_members WHERE group_id = g.group_id AND status = 'active') AS member_count,
     g.current_cycle,

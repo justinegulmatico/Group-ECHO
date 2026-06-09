@@ -1,26 +1,8 @@
 <?php
-/**
- * process_contribution.php
- * 
- * OLTP Transaction: Record a Contribution (Payment) + Wallet Deduction + OLAP Fact + History
- * 
- * This is the core financial transaction in the Paluwagan system.
- * 
- * ACID Guarantees Demonstrated:
- * - Atomicity: If wallet deduction, contribution insert, transactions fact insert, or history log fails → everything rolls back.
- * - Consistency: Wallet balance is never deducted without a corresponding contribution record.
- * - Isolation: Uses transaction + FOR UPDATE on wallet_requests when computing balance (prevents double-spend).
- * - Durability: Committed changes are permanent.
- * 
- * Race Condition Protection:
- * - Balance is computed with locking inside the transaction.
- * - After recording the contribution we re-check if the cycle is now fully funded inside the same transaction
- *   and trigger payout atomically if conditions are met (see process_payout.php).
- */
-
+// contribution + wallet deduct + fact table
 session_start();
 require_once "../db.php";
-require_once "process_payout.php";   // We will call the safe payout handler
+require_once "process_payout.php";   // for the safe payout call
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../index.php");
@@ -48,7 +30,7 @@ try {
 
     $db->transaction(function($pdo) use ($db, $user_id, $group_id, $member_id, $amount, $cycle_number) {
 
-        // === 1. VERIFY MEMBERSHIP (security) ===
+        // check membership
         $stmt = $pdo->prepare(
             "SELECT gm.position, g.status, g.group_name 
              FROM group_members gm
@@ -63,19 +45,19 @@ try {
             throw new Exception("Not authorized for this group.");
         }
 
-        // === CRITICAL BUSINESS RULE: Group must be activated before contributions ===
+        // group must be active first
         if (($membership['status'] ?? 'pending') !== 'active') {
             throw new Exception("This group has not been activated yet. Contributions are only allowed after the creator activates the Paluwagan.");
         }
 
         $user_position = (int)$membership['position'];
 
-        // === CRITICAL BUSINESS RULE: Receiver does not contribute to their own cycle ===
+        // receiver cant pay their own cycle
         if ($user_position === $cycle_number) {
             throw new Exception("You are the receiver for Cycle #{$cycle_number}. Receivers do not make contributions for their own payout cycle.");
         }
 
-        // === 2. GET CYCLE ID + ensure it is not already released ===
+        // get cycle + make sure not paid yet
         $stmt = $pdo->prepare(
             "SELECT c.cycle_id, c.payout_status 
              FROM cycles c 
@@ -91,10 +73,7 @@ try {
         }
         $cycle_id = (int)$cycle['cycle_id'];
 
-        // === 3. WALLET BALANCE CHECK WITH LOCKING (prevent double spend / race) ===
-        // We lock the user's wallet_requests rows conceptually by computing inside the tx.
-        // For stronger protection we can lock the specific rows, but for this student project
-        // the transaction + re-verification is sufficient and demonstrates isolation.
+        // wallet check (inside tx)
         $stmt = $pdo->prepare("
             SELECT 
                 COALESCE(SUM(CASE WHEN type = 'deposit' AND status = 'approved' THEN amount ELSE 0 END), 0) -
@@ -109,14 +88,14 @@ try {
             throw new Exception("Insufficient wallet balance. Please deposit funds from the Dashboard.");
         }
 
-        // === 4. RECORD THE CONTRIBUTION ===
+        // save the payment
         $stmt = $pdo->prepare(
             "INSERT INTO contributions (cycle_id, member_id, amount, due_date, paid_at, status) 
              VALUES (?, ?, ?, CURDATE(), CURDATE(), 'paid')"
         );
         $stmt->execute([$cycle_id, $member_id, $amount]);
 
-        // === 5. RECORD IN TRANSACTIONS FACT TABLE (for OLAP / analytics) ===
+        // also write to fact table
         $transStmt = $pdo->prepare(
             "INSERT INTO transactions 
              (group_id, cycle_id, member_id, user_id, transaction_type, amount, transaction_date, status, recorded_by) 
@@ -124,7 +103,7 @@ try {
         );
         $transStmt->execute([$group_id, $cycle_id, $member_id, $user_id, $amount, $user_id]);
 
-        // === 6. DEDUCT FROM WALLET (internal transfer) ===
+        // deduct from wallet
         $note = "Group contribution - Group #{$group_id} Cycle #{$cycle_number}";
         $deduct = $pdo->prepare("
             INSERT INTO wallet_requests 
@@ -133,7 +112,7 @@ try {
         ");
         $deduct->execute([$user_id, $amount, $note, $user_id]);
 
-        // === 7. LOG TO GROUP HISTORY ===
+        // history log
         $hist = $pdo->prepare("
             INSERT INTO group_history (group_id, event_type, actor_user_id, target_user_id, cycle_number, amount, description) 
             VALUES (?, 'payment', ?, ?, ?, ?, ?)
@@ -143,9 +122,7 @@ try {
             "Paid ₱" . number_format($amount, 2) . " for cycle #{$cycle_number}"
         ]);
 
-        // === 8. ATOMIC AUTO-PAYOUT CHECK ===
-        // We pass control to the dedicated payout processor which also runs inside this same transaction
-        // because we are still inside the callback.
+        // auto payout if cycle full
         $full_pot = get_group_contribution_amount($pdo, $group_id) * get_active_member_count($pdo, $group_id);
 
         // Only attempt if this cycle might now be complete
@@ -167,7 +144,7 @@ try {
     exit();
 }
 
-// ==================== HELPER FUNCTIONS (used inside transaction) ====================
+// helpers used in tx
 
 function get_group_contribution_amount(PDO $pdo, int $group_id): float
 {

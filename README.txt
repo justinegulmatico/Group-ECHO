@@ -78,3 +78,26 @@ If your MySQL password is not blank, change it in:
 The real documentation / extra explanations are inside the SQL files themselves (lots of comments). The old day-by-day notes are still in the old `README.txt`.
 
 Made for school project. Works on XAMPP with MariaDB 10.4+ (the default one).
+
+## Demo / Presentation Data (3 years of realistic activity)
+
+For demos and presentations you want the site to look lived-in for ~3 years:
+
+1. Import the two schema files first:
+   - `sql/trustfund_oltp.sql`
+   - `sql/trustfund_olap.sql` (for the analytics side)
+
+2. Run the seeder (produces 120 users, ~28 groups — mostly public, 1000s of contributions/payouts/transactions/wallet rows with dates from 2023-2026):
+   - Easiest: open in browser while XAMPP is running
+     `http://localhost/Group-ECHO/sql/seed_demo_data.php?reset=1`
+   - Or via CLI: `C:\xampp\php\php.exe sql\seed_demo_data.php`
+
+3. All seeded accounts use the password hash: `$2y$10$GKfh18Ysah5fH9O7w2o0puPVdUo3E7hREQAR52DgPuPpLP8tD891u`
+
+4. After seeding the OLTP data, log in as an admin and run the ETL/OLAP sync from the Admin Analytics page so the charts, ROLLUPs, and fact tables show rich historical data.
+
+5. Explore:
+   - Admin → Users, Groups, Transactions, Verifications, Analytics
+   - Regular member accounts: My Groups, public group discovery, Group Details (full history + who got paid when), Payments, Wallet activity
+
+To start fresh: run the seeder again with ?reset=1 (or set $RESET_FIRST).

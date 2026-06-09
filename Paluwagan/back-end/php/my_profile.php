@@ -53,7 +53,7 @@ if ($user_data) {
     $initials = strtoupper(substr($first_name, 0, 1) . ($last_name ? substr($last_name, 0, 1) : ''));
 }
 
-// === STATS (reused pattern from dashboard - simple & student friendly) ===
+// stats (reused from dash)
 $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as total FROM group_members WHERE user_id = ? AND status = 'active'");
 mysqli_stmt_bind_param($stmt, "i", $current_user_id);
 mysqli_stmt_execute($stmt);

@@ -1,10 +1,5 @@
 <?php
-/**
- * API endpoint for OLAP Analytics (AJAX)
- * Returns JSON for charts and tables based on filters.
- * Admin access assumed (called from admin pages).
- */
-
+// olap data for charts (ajax)
 session_start();
 require_once "../olap_db.php";
 
@@ -30,7 +25,7 @@ if ($year) { $where .= " AND YEAR(ft.created_at) = ?"; $params[] = $year; }
 if ($trans_type !== 'all') { $where .= " AND ft.transaction_type = ?"; $params[] = $trans_type; }
 
 try {
-    // Time series
+    // time series
     $time_stmt = $olap->prepare("
         SELECT YEAR(ft.created_at) as year, MONTH(ft.created_at) as month, 
                DATE_FORMAT(ft.created_at, '%b') as month_name,
@@ -45,7 +40,7 @@ try {
     $time_stmt->execute($params);
     $time_data = $time_stmt->fetchAll();
 
-    // By group
+    // by group
     $group_stmt = $olap->prepare("
         SELECT dg.group_name,
                SUM(ft.amount_contribution) AS contributions,
@@ -59,7 +54,7 @@ try {
     $group_stmt->execute($params);
     $group_data = $group_stmt->fetchAll();
 
-    // Members
+    // members
     $member_stmt = $olap->prepare("
         SELECT du.full_name, dg.group_name,
                SUM(ft.amount_contribution) AS contributed,
@@ -75,7 +70,7 @@ try {
     $member_stmt->execute($params);
     $member_data = $member_stmt->fetchAll();
 
-    // Summary - do not require dim_time join (filters use created_at in many paths)
+    // summary (no dim_time join needed)
     $sum_stmt = $olap->prepare("
         SELECT 
             COALESCE(SUM(ft.amount_contribution),0) AS total_contributions,

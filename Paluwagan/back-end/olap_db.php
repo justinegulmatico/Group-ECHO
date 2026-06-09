@@ -1,11 +1,5 @@
 <?php
-/**
- * olap_db.php
- * Dedicated connection for the OLAP data warehouse (trustfund_olap)
- * 
- * This keeps OLTP and OLAP concerns cleanly separated.
- * Use this in ETL scripts and analytics API endpoints.
- */
+// olap db connection (separate warehouse)
 
 class OlapDatabase
 {
@@ -54,17 +48,13 @@ class OlapDatabase
         return $this->pdo;
     }
 
-    /**
-     * Helper to get a fresh connection (useful in long-running ETL)
-     */
+    // fresh conn helper (for etl)
     public static function getConnection(): PDO
     {
         return self::getInstance()->getPdo();
     }
 
-    /**
-     * Run a query with parameters (safe wrapper)
-     */
+    // safe query helper
     public static function query(string $sql, array $params = []): array
     {
         $stmt = self::getInstance()->getPdo()->prepare($sql);
@@ -72,9 +62,7 @@ class OlapDatabase
         return $stmt->fetchAll();
     }
 
-    /**
-     * Execute within a transaction (critical for ETL)
-     */
+    // tx for etl
     public static function transaction(callable $callback)
     {
         $pdo = self::getInstance()->getPdo();

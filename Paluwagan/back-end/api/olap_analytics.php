@@ -1,16 +1,5 @@
 <?php
-/**
- * api/olap_analytics.php
- * 
- * Simple REST-like API for OLAP analytics.
- * Returns JSON that the dashboard (or any frontend) can consume.
- * 
- * Usage examples:
- *   /back-end/api/olap_analytics.php?action=monthly_summary&year=2025
- *   /back-end/api/olap_analytics.php?action=group_performance
- *   /back-end/api/olap_analytics.php?action=slice&group=Paluwagan%20Alpha
- */
-
+// simple olap api (actions: monthly etc)
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
@@ -28,7 +17,7 @@ $response = ['success' => false, 'data' => [], 'meta' => ['action' => $action]];
 try {
     switch ($action) {
 
-        // 1. Monthly roll-up summary (great for charts)
+        // monthly summary
         case 'monthly_summary':
             $stmt = $olap->prepare("
                 SELECT 
@@ -49,7 +38,7 @@ try {
             $response['data'] = $stmt->fetchAll();
             break;
 
-        // 2. Group performance with ROLLUP simulation
+        // group perf w/ rollup
         case 'group_performance':
             $stmt = $olap->prepare("
                 SELECT 
@@ -69,7 +58,7 @@ try {
             $response['data'] = $stmt->fetchAll();
             break;
 
-        // 3. Slice - specific group
+        // slice one group
         case 'slice':
             $stmt = $olap->prepare("
                 SELECT 
@@ -89,7 +78,7 @@ try {
             $response['data'] = $stmt->fetchAll();
             break;
 
-        // 4. Dice - multi filter
+        // dice multi filter
         case 'dice':
             $stmt = $olap->prepare("
                 SELECT 
@@ -111,7 +100,7 @@ try {
             $response['data'] = $stmt->fetchAll();
             break;
 
-        // 5. Top contributors (window function style via PHP aggregation)
+        // top contributors
         case 'top_contributors':
             $stmt = $olap->prepare("
                 SELECT 
@@ -131,7 +120,7 @@ try {
             break;
 
         default:
-            $response['data'] = ['message' => 'Available actions: monthly_summary, group_performance, slice, dice, top_contributors'];
+            $response['data'] = ['message' => 'actions: monthly_summary, group_performance, slice, dice, top_contributors'];
     }
 
     $response['success'] = true;

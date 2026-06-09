@@ -7,7 +7,7 @@ $register_error = "";
 $success = "";
 $status_trigger = null;
 
-// ================= LOGIN PROCESSING =================
+// login processing
 if (isset($_POST['login'])) {
     $username = mysqli_real_escape_string($conn, $_POST['login_username']);
     $password = $_POST['login_password'];
@@ -24,7 +24,7 @@ if (isset($_POST['login'])) {
     } elseif (!password_verify($password, $row['password_hash'])) {
         $login_error = "Invalid Password!";
     } else {
-        // Status Routing
+        // status routing
         if ($row['status'] === 'suspended') {
             $status_trigger = [
                 'title' => "Account Suspended",
@@ -51,7 +51,7 @@ if (isset($_POST['login'])) {
             $_SESSION['user_id'] = $row['user_id'];
             $_SESSION['username'] = $row['username'];
             $_SESSION['role'] = $row['role'];
-            // Populate name for immediate sidebar display (same logic)
+            // populate name for sidebar right away
             $_SESSION['first_name'] = $row['first_name'] ?? '';
             $_SESSION['last_name'] = $row['last_name'] ?? '';
 
@@ -65,7 +65,7 @@ if (isset($_POST['login'])) {
     }
 }
 
-// ================= REGISTRATION PROCESSING =================
+// registration processing
 if (isset($_POST['register'])) {
     $username   = mysqli_real_escape_string($conn, $_POST['username']);
     $email      = mysqli_real_escape_string($conn, $_POST['email']);
@@ -118,7 +118,7 @@ if (isset($_POST['register'])) {
     }
 }
 
-// Delete denied (also prepared for safety)
+// delete denied (safety)
 if (isset($_POST['delete_account'])) {
     $del_user = mysqli_real_escape_string($conn, $_POST['delete_username']);
     $stmt = mysqli_prepare($conn, "DELETE FROM users WHERE username = ? AND status = 'denied'");

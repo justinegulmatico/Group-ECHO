@@ -40,10 +40,10 @@
               </thead>
               <tbody>
                 <?php while ($pay_row = mysqli_fetch_assoc($payments_log_res)): 
-                    $is_payout = false; // payouts table separate; contributions here are inbound
+                    $is_payout = false; // payouts are separate table
                     $status_raw = strtolower($pay_row['status'] ?? 'pending');
                     $badge_class = (in_array($status_raw, ['paid','success','approved','released'])) ? 'badge-paid' : 'badge-pending';
-                    $method = 'N/A'; // schema note: record handler accepts it; display defaults until extended
+                    $method = 'N/A'; // default display until extended
                     $dateStr = !empty($pay_row['paid_at']) ? date('M d, Y', strtotime($pay_row['paid_at'])) : (!empty($pay_row['due_date']) ? date('M d, Y', strtotime($pay_row['due_date'])) : date('M d, Y'));
                 ?>
                   <tr>
