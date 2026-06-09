@@ -30,7 +30,7 @@
           </div>
         <?php endif; ?>
 
-        <!-- HERO -->
+        <!-- Hero -->
         <div class="profile-hero">
           <div class="profile-hero-avatar" id="profile-avatar" onclick="document.getElementById('avatar-file').click()" title="Click to change photo">
             <span class="avatar-initials"><?= htmlspecialchars($initials); ?></span>
@@ -50,7 +50,7 @@
           </div>
         </div>
 
-        <!-- STATS ROW -->
+        <!-- Stats Row -->
         <div class="stat-cards profile-stats">
           <div class="stat-card">
             <div class="stat-card-label">Active Groups</div>
@@ -74,7 +74,7 @@
           </div>
         </div>
 
-        <!-- PERSONAL INFORMATION (full width, stretched now that side content is removed) -->
+        <!-- Personal Information -->
         <div class="profile-card">
           <div class="profile-card-header">
             <div>
@@ -122,7 +122,7 @@
   </div>
 
   <script>
-    // Avatar preview (client only)
+    // Avatar preview
     function previewAvatar(event) {
       const file = event.target.files[0];
       if (!file) return;
