@@ -144,7 +144,6 @@ $js_version = file_exists($js_file) ? filemtime($js_file) : time();
 
     function showLogoutModal() {
       modal.style.display = 'flex';
-      // Focus the cancel button for accessibility
       setTimeout(() => {
         const cancel = modal.querySelector('button');
         if (cancel) cancel.focus();
