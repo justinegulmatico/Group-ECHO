@@ -7,10 +7,8 @@
   <link rel="stylesheet" href="../../../assets/css/global.css?v=<?= filemtime(__DIR__ . '/../../../assets/css/global.css') ?>" />
   <link rel="stylesheet" href="../../../assets/css/admin-panel.css?v=<?= filemtime(__DIR__ . '/../../../assets/css/admin-panel.css') ?>" />
   <style>
-    /* small polish for this page */
     .tx-ledger { margin-bottom: 32px; }
 
-    /* Match global header font + text for topbar and hero headers */
     .topbar-title {
       font-family: var(--font-body);
       font-weight: 700;
@@ -58,7 +56,7 @@
           </div>
         </div>
 
-        <!-- Admin Direct Deposit / Credit Form -->
+        <!-- Admin Direct Deposit/ Credit Form -->
         <div class="table-wrap" style="margin-bottom: 28px; padding: 20px 24px;">
           <div style="margin-bottom: 12px;">
             <div class="section-title" style="font-size:15px; margin-bottom: 4px;">Admin Direct Wallet Credit</div>
@@ -283,7 +281,7 @@
     </div>
   </div>
 
-  <!-- Approve Confirmation Modal - Polished Design -->
+  <!-- Approve Confirmation Modal-->
   <div id="approve-confirm-modal" 
        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
     <div style="background: #fff; width: 92%; max-width: 420px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); overflow: hidden; border: 1.5px solid #E4DDD4;">
@@ -307,7 +305,6 @@
         <!-- Request Details Card -->
         <div id="approve-confirm-details" 
              style="background: #fff; border: 1.5px solid #E4DDD4; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; font-size: 14px; line-height: 1.45;">
-          <!-- Dynamically filled by JS -->
         </div>
 
         <div style="background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #92400E; margin-bottom: 8px;">
@@ -372,7 +369,6 @@
 
     function submitApprove() {
       if (currentApproveForm) {
-        // Create a hidden submit button for approve and click it
         const hiddenBtn = document.createElement('button');
         hiddenBtn.type = 'submit';
         hiddenBtn.name = 'action_approve';
@@ -380,7 +376,6 @@
         hiddenBtn.style.display = 'none';
         currentApproveForm.appendChild(hiddenBtn);
         hiddenBtn.click();
-        // The form will submit and the modal will close on page reload
       }
       closeApproveConfirmModal();
     }
@@ -395,7 +390,7 @@
       });
     }
 
-    // Also support pressing Escape key to close the approve modal
+    // Escape key support to close the approve modal
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
         const modal = document.getElementById('approve-confirm-modal');
@@ -404,8 +399,6 @@
         }
       }
     });
-
-    // Success/error messages are shown via GET query params + inline banners.
   </script>
 </body>
 </html>
