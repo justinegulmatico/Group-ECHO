@@ -72,7 +72,7 @@
           $ps_cycle    = isset($_GET['cycle']) ? (int)$_GET['cycle'] : 0;
           $ps_group    = isset($_GET['group']) ? htmlspecialchars($_GET['group']) : 'Group';
         ?>
-          <!-- Visible "Record Payment" style confirmation (what users see in group details) -->
+          <!-- Record Payment style confirmation -->
           <div class="payment-record-success" style="background:#E8F5EE; border:1px solid #a7f3d0; color:#166534; padding:14px 18px; border-radius:12px; margin-bottom:20px; font-size:14px; display:flex; align-items:flex-start; gap:12px;">
             <span style="font-size:20px; line-height:1; margin-top:1px;">✅</span>
             <div style="flex:1;">
@@ -172,7 +172,6 @@
         <?php endif; ?>
 
         <?php if (!empty($newly_created_invite_code)): ?>
-          <!--Improved post-create join code sharing (high-visibility, copyable)-->
           <div class="invite-share-card">
             <div class="invite-header">
               <span class="invite-icon">🔑</span>
@@ -305,7 +304,7 @@
   </div>
 </div>
 
-<!--Join Group Modal (improved join code UX)-->
+<!--Join Group Modal-->
 <div class="modal-overlay" id="joinGroupModal" style="display:none;">
   <div class="modal">
     
@@ -448,7 +447,7 @@
     </div>
   </div>
 
-  <!--Deposit Pending Approval Modal (shown after regular user submits a deposit)-->
+  <!--Deposit Pending Approval Modal-->
   <div class="modal-overlay" id="deposit-pending-modal" style="display:none;">
     <div class="tx-modal" style="max-width: 420px; text-align: center;">
       <div class="tx-modal-header" style="border-bottom: none; justify-content: center; padding-bottom: 8px;">
@@ -553,7 +552,7 @@
   const modalCreate = document.getElementById('modal-create');
   const modalCreateCloseBtn = modalCreate ? modalCreate.querySelector('.modal-close') : null;
 
-  //x button + outside click to close create modal
+  //x button and outside click to close create modal
   if (modalCreate) {
     modalCreate.addEventListener('click', function(e) {
       if (e.target === modalCreate) {
@@ -636,7 +635,7 @@
       });
     }
 
-    //Optional: reset form on close (simple)
+    //Optional: reset form on close
     if (depositModal) {
       const depForm = depositModal.querySelector('form');
       if (depForm) {
@@ -646,7 +645,7 @@
       }
     }
 
-    //show pending approval modal after deposit (regular users)
+    //show pending approval modal after deposit
     <?php if (!empty($show_deposit_pending_modal) && $show_deposit_pending_modal): ?>
     (function() {
       const pendingModal = document.getElementById('deposit-pending-modal');
@@ -656,7 +655,7 @@
     })();
     <?php endif; ?>
 
-    //Attach live formatter to the improved join code input (safe, after DOM ready)
+    //Attach live formatter to the improved join code input
     const joinCodeInput = document.getElementById('join-code-input');
     if (joinCodeInput) {
       joinCodeInput.addEventListener('input', function() {
