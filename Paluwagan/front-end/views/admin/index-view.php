@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="../../../assets/css/global.css?v=<?= filemtime(__DIR__ . '/../../../assets/css/global.css') ?>" />
   <link rel="stylesheet" href="../../../assets/css/admin-panel.css?v=<?= filemtime(__DIR__ . '/../../../assets/css/admin-panel.css') ?>" />
   <style>
-    /* Ensure global header font + text for topbar and Welcome back hero */
     .topbar-title {
       font-family: var(--font-body);
       font-weight: 700;
