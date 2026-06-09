@@ -115,7 +115,7 @@
   font-weight: 600;
 }
 
-/*Auth Form Heading */
+/*Auth Form Heading*/
 .auth-heading {
   font-family: var(--font-display);
   font-size: 28px;
@@ -130,7 +130,7 @@
   margin-bottom: 16px;
 }
 
-/*Form Groups */
+/*Form Groups*/
 .form-group {
   margin-bottom: 16px;
 }
@@ -142,7 +142,7 @@
   margin-bottom: 16px;
 }
 
-/*Password Field */
+/*Password Field*/
 .password-wrap {
   position: relative;
 }
@@ -168,21 +168,21 @@
 
 .password-toggle:hover { color: var(--color-text-secondary); }
 
-/* ── File Input ── */
+/*File Input*/
 .file-input-hidden { display: none; }
 
-/* Hide inactive tab contents by default */
+/*Hide inactive tab contents by default*/
 .tab-content {
     display: none;
 }
 
-/* Display active tab content with smooth fade-in animation */
+/*Display active tab content with smooth fade-in animation*/
 .tab-content.active {
     display: block;
     animation: authFadeIn 0.3s ease;
 }
 
-/* Keyframes for the tab switching entry effect */
+/*Keyframes for the tab switching entry effect*/
 @keyframes authFadeIn {
     from {
         opacity: 0;
@@ -194,7 +194,7 @@
     }
 }
 
-/* Dynamic Notification Alert Typography */
+/*Dynamic Notification Alert Typography*/
 .error-msg {
     color: #e8481a;
     font-size: 0.85rem;
@@ -211,7 +211,7 @@
     text-align: center;
 }
 
-/* Grid layout splitting for inline registration fields (e.g., Email & Phone) */
+/*Grid layout splitting for inline registration fields*/
 .form-row {
     display: flex;
     gap: 12px;
@@ -221,16 +221,16 @@
     flex: 1;
 }
 
-/* Viewport restriction & custom scrolling logic for the long registration form */
+/*Viewport restriction & custom scrolling logic for the long registration form*/
 .auth-right-inner {
     max-height: 92vh;
     overflow-y: auto;
     padding-right: 10px;
     scrollbar-width: thin;
 }
-/* Modal Overlay: Makes the background dark and centers the box */
+/*Modal Overlay*/
 .tf-modal-overlay {
-    position: fixed !important; /* Forces it to ignore page flow */
+    position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;
@@ -239,22 +239,22 @@
     display: none; 
     align-items: center;
     justify-content: center;
-    z-index: 99999 !important; /* Keeps it on top of everything */
+    z-index: 99999 !important;
 }
 
-/* Modal Box: The white window */
+/*Modal Box: The white window*/
 .tf-modal-box {
     background: #ffffff !important;
-    padding: 40px !important; /* More breathing room */
-    border-radius: 20px !important; /* Softer, modern edges */
+    padding: 40px !important;
+    border-radius: 20px !important;
     text-align: center !important;
     border: 1px solid rgba(0,0,0,0.05);
     box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
 }
 
-/* Make the button stand out more */
+/*Make the button stand out more*/
 .tf-modal-box .btn-primary {
-    background-color: #f47321 !important; /* Your brand orange */
+    background-color: #f47321 !important;
     color: white !important;
     border: none;
     border-radius: 8px !important;
