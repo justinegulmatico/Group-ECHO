@@ -21,7 +21,7 @@
 
       <div class="page-content">
 
-        <!-- Success / Error Messages -->
+        <!-- Success/ Error Messages -->
         <?php if (isset($_GET['success'])): ?>
           <div style="background:#E8F5EE; border:1px solid #a7f3d0; color:#166534; padding:12px 16px; border-radius:12px; margin-bottom:20px;">
             <?= htmlspecialchars($_GET['success']) ?>
@@ -66,7 +66,7 @@
           </div>
         </div>
 
-        <!-- YOUR GROUPS -->
+        <!-- Your Groups -->
         <div id="section-my">
           <div class="table-wrap">
             <table id="my-table">
@@ -128,7 +128,7 @@
           </div>
         </div>
 
-        <!-- PUBLIC GROUPS -->
+        <!-- Public Groups -->
         <div id="section-public" style="display: none;">
           <div class="table-wrap">
             <table id="public-table">
@@ -201,8 +201,6 @@
   </div>
 
   <!-- Modals -->
-  <!-- (Keep your Create and Join modals here) -->
-
   <script>
     function switchTab(tab) {
       const publicSection = document.getElementById('section-public');
@@ -284,7 +282,7 @@
     }
   </script>
 
-  <!-- ==================== CREATE GROUP MODAL (exact visual match to system) ==================== -->
+  <!--Create Group Modal-->
   <div class="modal-overlay" id="createGroupModal" style="display:none;">
     <div class="modal">
       <div class="modal-header">
@@ -347,7 +345,7 @@
     </div>
   </div>
 
-  <!-- ==================== JOIN GROUP MODAL (exact visual match) ==================== -->
+  <!--Join Group Modal-->
   <div class="modal-overlay" id="joinGroupModal" style="display:none;">
     <div class="modal">
       <div class="modal-header">
