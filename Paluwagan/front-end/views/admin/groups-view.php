@@ -113,7 +113,7 @@
     </div>
   </div>
 
-  <!-- Group Detail Modal -->
+  <!--Group Detail Modal-->
   <div id="group-modal" class="tf-modal-overlay">
     <div class="tf-modal-box" style="max-width:520px;">
       <div class="tf-modal-header">
