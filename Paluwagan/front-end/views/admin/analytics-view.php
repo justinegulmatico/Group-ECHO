@@ -4,19 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TrustFund • OLAP Analytics Dashboard</title>
-    
-    <!-- Project CSS (keeps consistent look with the rest of the admin panel) -->
+
     <link rel="stylesheet" href="../../../assets/css/global.css">
     <link rel="stylesheet" href="../../../assets/css/admin-panel.css">
     <link rel="stylesheet" href="../../../assets/css/analytics-view.css">
-    
-    <!-- Chart.js via CDN - the only charting library we use (very student-friendly) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- jsPDF for PDF export (no server library needed - pure client side) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-d>
 <body>
     <div class="app-layout">
         <?php include __DIR__ . '/../components/sidebar-view.php'; ?>
@@ -24,7 +18,7 @@ d>
         <div class="main-content">
             <div class="analytics-container">
                 
-                <!-- ==================== HEADER ==================== -->
+                <!--Header-->
                 <div class="analytics-header">
                     <div>
                         <h1>📊 OLAP Analytics Dashboard</h1>
@@ -32,7 +26,7 @@ d>
                     </div>
                 </div>
 
-                <!-- ==================== KPI SUMMARY CARDS ==================== -->
+                <!--KPI Summary Cards-->
                 <div class="kpi-grid" id="kpi-grid">
                     <div class="kpi-card">
                         <div class="kpi-label">Total Contributions</div>
@@ -52,7 +46,7 @@ d>
                     </div>
                 </div>
 
-                <!-- ==================== FILTERS (SLICE + DICE + ROLL-UP) ==================== -->
+                <!--Filters (Slice + Dice + Roll-up)-->
                 <div class="filters-card">
                     <div class="filters-title">
                         🔍 Analysis Filters 
@@ -61,7 +55,7 @@ d>
                     
                     <div class="filters-grid">
                         
-                        <!-- Year Filter -->
+                        <!--Year Filter-->
                         <div class="filter-group">
                             <label>Year (Time Slice)</label>
                             <select id="filter-year" onchange="applyFilters()">
@@ -74,7 +68,7 @@ d>
                             </select>
                         </div>
                         
-                        <!-- Quarter Filter -->
+                        <!--Quarter Filter-->
                         <div class="filter-group">
                             <label>Quarter (Dice Dimension)</label>
                             <select id="filter-quarter" onchange="applyFilters()">
@@ -86,7 +80,7 @@ d>
                             </select>
                         </div>
                         
-                        <!-- Group Filter (Classic Slice) -->
+                        <!--Group Filter-->
                         <div class="filter-group">
                             <label>Group (Slice by Group)</label>
                             <select id="filter-group" onchange="applyFilters()">
@@ -100,7 +94,7 @@ d>
                             </select>
                         </div>
                         
-                        <!-- Transaction Type -->
+                        <!--Transaction Type-->
                         <div class="filter-group">
                             <label>Transaction Type</label>
                             <select id="filter-type" onchange="applyFilters()">
@@ -112,7 +106,7 @@ d>
                         
                     </div>
                     
-                    <!-- TIME GRANULARITY = ROLL-UP / DRILL-DOWN CONTROL -->
+                    <!--Time Granularity = Roll-up/ Drill-Down Control-->
                     <div class="granularity-section">
                         <label class="granularity-label">
                             Time Granularity (Roll-up ↔ Drill-down)
@@ -127,10 +121,10 @@ d>
                     
                 </div>
 
-                <!-- ==================== THE THREE CHARTS ==================== -->
+                <!--The Three Charts-->
                 <div class="charts-grid">
                     
-                    <!-- CHART 1: BAR - Contributions per Group -->
+                    <!--Chart 1: BAR - Contributions per Group-->
                     <div class="chart-card">
                         <div class="chart-header">
                             <div class="chart-title">📊 Contributions by Group (Bar)</div>
@@ -147,7 +141,7 @@ d>
                         </div>
                     </div>
                     
-                    <!-- CHART 2: LINE - Trends over Time -->
+                    <!--Chart 2: Line - Trends over Time-->
                     <div class="chart-card">
                         <div class="chart-header">
                             <div class="chart-title">📈 Trends Over Time (Line)</div>
@@ -164,7 +158,7 @@ d>
                         </div>
                     </div>
                     
-                    <!-- CHART 3: PIE - Payout Distribution -->
+                    <!--Chart 3: PIE - Payout Distribution-->
                     <div class="chart-card">
                         <div class="chart-header">
                             <div class="chart-title">🥧 Payout Distribution (Pie)</div>
@@ -183,7 +177,7 @@ d>
                     
                 </div>
 
-                <!-- ==================== EXPORT SECTION ==================== -->
+                <!--Export Section-->
                 <div class="export-section">
                     <strong class="export-label">Export Current View:</strong>
                     
@@ -200,7 +194,6 @@ d>
                     </span>
                 </div>
                 
-                <!-- Educational note for the professor / panel -->
                 <div class="student-note">
                     <strong>Student Note (for defense):</strong> 
                     All filtering uses the separate <code>trustfund_olap</code> data warehouse. 
@@ -212,8 +205,6 @@ d>
         </div>
     </div>
 
-    <!-- ==================== MAIN JAVASCRIPT (Vanilla JS - No jQuery) ==================== -->
-    <!-- Initial config from server (used by external JS) -->
     <script>
         window.analyticsConfig = {
             year: <?= (int)$initial_year ?>,
@@ -222,7 +213,7 @@ d>
         };
     </script>
 
-    <!-- External JS (separated for cleanliness) -->
+    <!--External JS-->
     <script src="../../../assets/js/analytics-view.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/analytics-view.js') ?>"></script>
 </body>
 </html>
