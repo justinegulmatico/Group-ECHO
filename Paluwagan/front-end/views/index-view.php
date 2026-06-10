@@ -41,13 +41,16 @@
           <form method="POST" action="index.php">
             <div class="form-group">
               <label class="input-label">Username</label>
-              <input type="text" name="login_username" class="input-field" required />
+              <input type="text" name="login_username" class="input-field" required autocomplete="username"
+                     pattern="[A-Za-z0-9_.-]{3,30}" minlength="3" maxlength="30"
+                     title="Enter your username (letters, numbers, underscore, dot or hyphen)." />
             </div>
 
             <div class="form-group">
               <label class="input-label">Password</label>
               <div class="password-wrap">
-                <input id="pass_log" type="password" name="login_password" class="input-field" placeholder="••••••••" required />
+                <input id="pass_log" type="password" name="login_password" class="input-field" placeholder="••••••••" required minlength="6" autocomplete="current-password"
+                       title="Enter your password (minimum 6 characters)." />
                 <button class="password-toggle" type="button" onclick="togglePass('pass_log', this)">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
@@ -68,44 +71,58 @@
             <div class="form-row">
               <div class="form-group">
                 <label class="input-label">First Name</label>
-                <input type="text" name="firstname" class="input-field" placeholder="Juan" required />
+                <input type="text" name="firstname" class="input-field" placeholder="Juan" required autocomplete="given-name"
+                       pattern="^[A-Za-z]+(?:\s[A-Za-z]+)*$" minlength="2" maxlength="50"
+                       title="First name: letters and single spaces only (e.g. Juan, Juan Dela). No numbers, dashes, or other special characters. Must start and end with a letter." />
               </div>
               <div class="form-group">
                 <label class="input-label">Last Name</label>
-                <input type="text" name="lastname" class="input-field" placeholder="Dela Cruz" required />
+                <input type="text" name="lastname" class="input-field" placeholder="Dela Cruz" required autocomplete="family-name"
+                       pattern="^[A-Za-z]+(?:\s[A-Za-z]+)*$" minlength="2" maxlength="50"
+                       title="Last name: letters and single spaces only (e.g. Dela Cruz). No numbers, dashes, or other special characters. Must start and end with a letter." />
               </div>
             </div>
 
             <div class="form-group">
               <label class="input-label">Username</label>
-              <input type="text" name="username" class="input-field" required />
+              <input type="text" name="username" class="input-field" required
+                     pattern="[A-Za-z0-9_]{3,20}" minlength="3" maxlength="20"
+                     title="Username must be 3–20 characters long and can only contain letters (A-Z), numbers (0-9), or underscore (_). No spaces or special characters." />
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label class="input-label">Email</label>
-                <input type="email" name="email" class="input-field" required />
+                <input type="email" name="email" class="input-field" required autocomplete="email"
+                       pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                       title="Please enter a valid email address (example: juan@gmail.com, name@yahoo.com.ph, or user@outlook.com)." />
               </div>
               <div class="form-group">
                 <label class="input-label">Phone</label>
-                <input type="text" name="phone" class="input-field" />
+                <input type="tel" name="phone" class="input-field" placeholder="09171234567" autocomplete="tel"
+                       pattern="^09[0-9]{9}$" minlength="11" maxlength="11"
+                       title="Philippine mobile numbers must be exactly 11 digits and start with 09 (e.g. 09123456789). Only digits allowed." />
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label class="input-label">Occupation</label>
-                <input type="text" name="occupation" class="input-field" />
+                <input type="text" name="occupation" class="input-field" maxlength="100"
+                       pattern="[A-Za-z0-9\s.,\-'/&amp;]+" 
+                       title="Occupation may contain letters, numbers, spaces and common punctuation." />
               </div>
               <div class="form-group">
                 <label class="input-label">Address</label>
-                <input type="text" name="address" class="input-field" />
+                <input type="text" name="address" class="input-field" maxlength="150"
+                       title="Please enter your full address." />
               </div>
             </div>
 
             <div class="form-group">
               <label class="input-label">Password</label>
-              <input type="password" name="password" class="input-field" required />
+              <input type="password" name="password" class="input-field" required minlength="6" autocomplete="new-password"
+                     title="Password must be at least 6 characters long." />
             </div>
 
             <div class="form-group file-group-wrapper">
@@ -199,6 +216,45 @@
         document.getElementById('status-modal').style.setProperty('display', 'none', 'important');
     }
 
+    // Live strict input enforcement
+    function enforceStrictNameInput(el) {
+      if (!el) return;
+      el.addEventListener('input', function () {
+        // Only letters and spaces
+        let cleaned = this.value.replace(/[^A-Za-z\s]/g, '');
+        // Collapse multiple spaces into one (while typing)
+        cleaned = cleaned.replace(/\s{2,}/g, ' ');
+        this.value = cleaned;
+      });
+      // On blur: trim leading/trailing spaces
+      el.addEventListener('blur', function () {
+        this.value = this.value.trim().replace(/\s+/g, ' ');
+      });
+    }
+
+    function enforceStrictUsernameInput(el) {
+      if (!el) return;
+      el.addEventListener('input', function () {
+        // Letters, numbers, underscore, dot, hyphen
+        this.value = this.value.replace(/[^A-Za-z0-9_.\-]/g, '');
+      });
+    }
+
+    function enforcePhoneDigitsOnly(el) {
+      if (!el) return;
+      el.addEventListener('input', function () {
+        let digits = this.value.replace(/\D/g, ''); // keep digits only
+        if (digits.length > 11) digits = digits.substring(0, 11);
+        this.value = digits;
+      });
+      // Also enforce on paste / blur if needed
+      el.addEventListener('blur', function () {
+        if (this.value && !/^09[0-9]{9}$/.test(this.value)) {
+          // Optional: you could show a hint, but pattern + :invalid will handle visual
+        }
+      });
+    }
+
     //single trigger for modal
     document.addEventListener("DOMContentLoaded", function() {
         <?php if (isset($status_trigger) && $status_trigger): ?>
@@ -210,6 +266,15 @@
                 "<?= isset($status_trigger['username']) ? $status_trigger['username'] : '' ?>"
             );
         <?php endif; ?>
+
+        // Wire up strict real-time input filters on register form
+        enforceStrictNameInput(document.querySelector('input[name="firstname"]'));
+        enforceStrictNameInput(document.querySelector('input[name="lastname"]'));
+        enforceStrictUsernameInput(document.querySelector('input[name="username"]'));
+        enforcePhoneDigitsOnly(document.querySelector('input[name="phone"]'));
+
+        // Also apply username filter on login for consistency
+        enforceStrictUsernameInput(document.querySelector('input[name="login_username"]'));
     });
 
     <?php if (isset($_POST['register']) && !isset($status_trigger)): ?>

@@ -1,0 +1,12 @@
+# Hide directory listing
+Options -Indexes
+
+<Files .htaccess>
+    Order allow,deny
+    Deny from all
+</Files>
+
+<FilesMatch "\.(php|php3|php4|php5|phtml|pl|py|jsp|asp|sh|cgi|exe|dll|bat|cmd)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

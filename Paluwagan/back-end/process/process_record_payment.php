@@ -136,6 +136,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (!is_dir($documents_dir)) @mkdir($documents_dir, 0755, true);
         if (!is_dir($payments_dir)) @mkdir($payments_dir, 0755, true);
 
+        // Auto-protect upload folders from directory listing (hide assets/uploads)
+        $uploads_root = $assets_uploads_base;
+        foreach ([$uploads_root, $documents_dir, $payments_dir] as $dir) {
+            if (!is_dir($dir)) continue;
+            $ht = $dir . '/.htaccess';
+            if (!file_exists($ht)) {
+                @file_put_contents($ht, "Options -Indexes\n\n<Files .htaccess>\n    Order allow,deny\n    Deny from all\n</Files>\n\n<FilesMatch \"\\.(php|php3|php4|php5|phtml|pl|py|jsp|asp|sh|cgi|exe|dll|bat|cmd)$\">\n    Order allow,deny\n    Deny from all\n</FilesMatch>\n");
+            }
+            $idx = $dir . '/index.html';
+            if (!file_exists($idx)) {
+                @file_put_contents($idx, "<!DOCTYPE html><html><head><title>403 Forbidden</title></head><body><h1>403 Forbidden</h1><p>Directory listing is not allowed.</p></body></html>");
+            }
+        }
+
         $wallet_table_exists = false;
         $tcheck = mysqli_query($conn, "SHOW TABLES LIKE 'wallet_requests'");
         if ($tcheck && mysqli_num_rows($tcheck) > 0) $wallet_table_exists = true;

@@ -32,7 +32,7 @@
         <div class="admin-hero" style="margin-bottom: 20px;">
           <div>
             <div class="admin-hero-title">Pending Identity Verifications</div>
-            <div class="admin-hero-sub">Review documents and approve or reject new members.</div>
+            <div class="admin-hero-sub">Review new account submissions (document optional) and approve or reject members.</div>
           </div>
         </div>
 
@@ -69,6 +69,11 @@
                     </td>
                     <td style="color:#6B6560; font-size:13px;">
                       <?= date('M d, Y', strtotime($v['created_at'])) ?>
+                      <?php if (!empty($v['document'])): ?>
+                        <span style="display:inline-block; background:#dbeafe; color:#1e40af; font-size:10px; font-weight:600; padding:1px 6px; border-radius:999px; margin-left:6px; vertical-align:middle;">Doc</span>
+                      <?php else: ?>
+                        <span style="display:inline-block; background:#fef3c7; color:#854d0e; font-size:10px; font-weight:600; padding:1px 6px; border-radius:999px; margin-left:6px; vertical-align:middle;">No doc</span>
+                      <?php endif; ?>
                     </td>
                     <td style="text-align:right;">
                       <button class="btn-row-view" 
@@ -95,7 +100,7 @@
           <div class="table-wrap" style="display: flex; align-items: center; justify-content: center; min-height: 220px; text-align: center;">
             <div>
               <div style="font-size: 17px; font-weight: 600; color: #1A1A1A; margin-bottom: 6px;">No pending verifications.</div>
-              <div style="font-size: 14px; color: #6B6560;">New account submissions will appear here for review.</div>
+              <div style="font-size: 14px; color: #6B6560;">New registrations (with or without proof document) will appear here for admin review.</div>
             </div>
           </div>
         <?php endif; ?>
@@ -161,7 +166,23 @@
       document.getElementById('modal-phone').textContent = d.phone || '—';
       document.getElementById('modal-occupation').textContent = d.occupation || '—';
       document.getElementById('modal-address').textContent = d.address || '—';
-      document.getElementById('modal-doc').href = '../../../assets/uploads/' + d.doc;
+
+      // Handle document link gracefully (document is now optional)
+      const docLink = document.getElementById('modal-doc');
+      if (d.doc && d.doc.trim() !== '') {
+          docLink.href = '../../../assets/uploads/' + d.doc;
+          docLink.textContent = 'View Document';
+          docLink.style.pointerEvents = 'auto';
+          docLink.style.opacity = '1';
+          docLink.style.cursor = 'pointer';
+      } else {
+          docLink.removeAttribute('href');
+          docLink.textContent = 'No document uploaded';
+          docLink.style.pointerEvents = 'none';
+          docLink.style.opacity = '0.7';
+          docLink.style.cursor = 'default';
+      }
+
       document.getElementById('modal-vid').value = d.vid;
       document.getElementById('modal-uid').value = d.uid;
 

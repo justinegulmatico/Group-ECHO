@@ -300,6 +300,20 @@ function try_auto_payout_cycle($conn, $group_id, $cycle, $receiver, $full_pot, $
   if (!is_dir($documents_dir)) @mkdir($documents_dir, 0755, true);
   if (!is_dir($payments_dir)) @mkdir($payments_dir, 0755, true);
 
+  // Auto-protect upload folders from directory listing (hide assets/uploads)
+  $uploads_root = $assets_uploads_base;
+  foreach ([$uploads_root, $documents_dir, $payments_dir] as $dir) {
+      if (!is_dir($dir)) continue;
+      $ht = $dir . '/.htaccess';
+      if (!file_exists($ht)) {
+          @file_put_contents($ht, "Options -Indexes\n\n<Files .htaccess>\n    Order allow,deny\n    Deny from all\n</Files>\n\n<FilesMatch \"\\.(php|php3|php4|php5|phtml|pl|py|jsp|asp|sh|cgi|exe|dll|bat|cmd)$\">\n    Order allow,deny\n    Deny from all\n</FilesMatch>\n");
+      }
+      $idx = $dir . '/index.html';
+      if (!file_exists($idx)) {
+          @file_put_contents($idx, "<!DOCTYPE html><html><head><title>403 Forbidden</title></head><body><h1>403 Forbidden</h1><p>Directory listing is not allowed.</p></body></html>");
+      }
+  }
+
   $cycle_id = (int)$cycle['cycle_id'];
   $pstat = $cycle['payout_status'] ?? 'pending';
   if ($pstat === 'released') return false;

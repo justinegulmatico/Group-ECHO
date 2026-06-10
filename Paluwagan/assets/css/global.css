@@ -147,6 +147,14 @@ input, select {
   color: var(--color-text-muted);
 }
 
+/* HTML5 client-side validation visuals (used on auth + other forms for strict inputs) */
+.input-field:invalid:not(:placeholder-shown) {
+  border-color: #e8481a;
+}
+.input-field:invalid:not(:placeholder-shown):focus {
+  box-shadow: 0 0 0 3px rgba(232, 72, 26, 0.15);
+}
+
 /*Shared Label*/
 .input-label {
   display: block;
